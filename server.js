@@ -17,7 +17,7 @@ import cookieParser from "cookie-parser";
 connectDB();
 
 const corsOptions = {
-  origin: 'https://tether-p2p-exchang-backend.onrender.com',
+  origin: 'https://tether-p2p.vercel.app',
   credentials: true,
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
 };
