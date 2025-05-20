@@ -104,11 +104,11 @@ export const loginUser = async (req, res) => {
 
     // Send the token via a secure, HttpOnly cookie
     res.cookie("token", token, {
-      httpOnly: true, // This makes the cookie inaccessible to JavaScript
+      httpOnly: true,
       // secure: process.env.NODE_ENV === "production", // Only set cookies over HTTPS in production
-      secure: false,
+      secure: true,
       // sameSite: "Strict", // This helps mitigate CSRF attacks
-      maxAge: 3600000, // 1 hour expiration for the cookie (same as JWT expiration)
+      maxAge: 3600000, 
     });
 
     const { password: _, ...userData } = user.toObject(); // Destructure and remove the password field
