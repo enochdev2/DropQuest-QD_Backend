@@ -8,7 +8,6 @@ import {
   updateUserByNickname,
   userModel,
 } from "../models/userModel.js";
-import { createNotification } from "../models/notification.js";
 import { createNewUserNotification } from "./notificationController.js";
 
 // Helper function to generate JWT token

@@ -4,23 +4,16 @@ const Schema = mongoose.Schema;
 // Notification schema definition
 const notificationSchema = new Schema(
   {
-    message: {
+    message: { type: String, required: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true }, // user who triggered event
+    type: {
       type: String,
-      required: true,
+      enum: ["registration", "sellOrder", "buyOrder", "general"],
+      default: "general",
     },
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',  // Reference to the User model
-      required: true,
-    },
-    isRead: {
-      type: Boolean,
-      default: false,  // Notification is unread by default
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
+    isForAdmin: { type: Boolean, default: false }, // visible in admin dashboard if true
+    referenceId: { type: Schema.Types.ObjectId, default: null },
+    isRead: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
@@ -28,17 +21,61 @@ const notificationSchema = new Schema(
 // Model export
 export const Notification = mongoose.model("Notification", notificationSchema);
 
-// Utility functions for notifications
-export const createNotification = async (message, userId) => {
+export const createAdminNotification = async (
+  message,
+  userId,
+  type,
+  referenceId = null
+) => {
   const notification = new Notification({
     message,
     userId,
+    type,
+    isForAdmin: true,
+    referenceId,
   });
   await notification.save();
   return notification.toObject();
 };
 
-export const getUnreadNotifications = () => Notification.find({ isRead: false });
+export const createUserNotification = async (
+  message,
+  userId,
+  type,
+  referenceId = null
+) => {
+  const notification = new Notification({
+    message,
+    userId,
+    type,
+    isForAdmin: false,
+    referenceId,
+  });
+  await notification.save();
+  return notification.toObject();
+};
 
-export const getNotifications = () => Notification.find();
-export const markAsRead = (notificationId) => Notification.findByIdAndUpdate(notificationId, { isRead: true }, { new: true });
+export const getUnreadNotifications = (userId = null) => {
+  if (userId) {
+    // User notifications (not for admin)
+    return Notification.find({ userId, isForAdmin: false, isRead: false });
+  } else {
+    // Admin dashboard notifications (not user-specific)
+    return Notification.find({ isForAdmin: true, isRead: false });
+  }
+};
+
+export const getNotifications = (userId = null) => {
+  if (userId) {
+    return Notification.find({ userId, isForAdmin: false });
+  } else {
+    return Notification.find({ isForAdmin: true });
+  }
+};
+
+export const markAsRead = (notificationId) =>
+  Notification.findByIdAndUpdate(
+    notificationId,
+    { isRead: true },
+    { new: true }
+  );

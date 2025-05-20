@@ -1,12 +1,46 @@
-import { createNotification, getUnreadNotifications, getNotifications, markAsRead } from '../models/notification.js';
+import {
+  getUnreadNotifications,
+  getNotifications,
+  markAsRead,
+  createUserNotification,
+  createAdminNotification,
+} from "../models/notification.js";
 
 // Create a notification when a new user registers
-export const createNewUserNotification = async (userId, message) => {
+export const createNewUserNotification = async (
+  message,
+  userId,
+  type,
+  referenceId
+) => {
   try {
-    const notification = await createNotification(message, userId);
+    const notification = await createUserNotification(
+      message,
+      userId,
+      type,
+      referenceId
+    );
     return notification;
   } catch (err) {
-    throw new Error('Error creating notification');
+    throw new Error("Error creating notification");
+  }
+};
+export const createNewAdminNotification = async (
+  message,
+  userId,
+  type,
+  referenceId
+) => {
+  try {
+    const notification = await createAdminNotification(
+      message,
+      userId,
+      type,
+      referenceId
+    );
+    return notification;
+  } catch (err) {
+    throw new Error("Error creating notification");
   }
 };
 
@@ -16,7 +50,7 @@ export const fetchUnreadNotifications = async (req, res) => {
     const notifications = await getUnreadNotifications();
     return res.status(200).json(notifications);
   } catch (err) {
-    return res.status(500).json({ error: 'Error fetching notifications.' });
+    return res.status(500).json({ error: "Error fetching notifications." });
   }
 };
 
@@ -26,7 +60,7 @@ export const fetchAllNotifications = async (req, res) => {
     const notifications = await getNotifications();
     return res.status(200).json(notifications);
   } catch (err) {
-    return res.status(500).json({ error: 'Error fetching all notifications.' });
+    return res.status(500).json({ error: "Error fetching all notifications." });
   }
 };
 
@@ -37,11 +71,13 @@ export const markNotificationAsRead = async (req, res) => {
     const updatedNotification = await markAsRead(notificationId);
 
     if (!updatedNotification) {
-      return res.status(404).json({ error: 'Notification not found.' });
+      return res.status(404).json({ error: "Notification not found." });
     }
 
     return res.status(200).json(updatedNotification);
   } catch (err) {
-    return res.status(500).json({ error: 'Error updating notification status.' });
+    return res
+      .status(500)
+      .json({ error: "Error updating notification status." });
   }
 };
