@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { SellOrder } from "../models/sellOrder.js";
 import {
   createNewAdminNotification,
@@ -6,17 +7,25 @@ import {
 
 export const createSellOrder = async (req, res) => {
   try {
-    const userId = req.user._id; // assume authenticated user middleware
-    const { amount, price, krwAmount } = req.body;
+    // const userId = req.user._id; // assume authenticated user middleware
+    const { amount, price, krwAmount, nickname } = req.body;
+    const userId = new mongoose.Types.ObjectId(nickname); // assume authenticated user middleware
+    console.log("🚀 ~ createSellOrder ~ userId:", userId)
 
     const newOrder = new SellOrder({ userId, amount, price, krwAmount });
     await newOrder.save();
 
-    await createNewAdminNotification(message, userId, type, referenceId);
+    const message = `New sell order created by ${nickname || 'a user'}: ${amount} USDT at price ${price} KRW (Total: ${krwAmount} KRW).`;
+    const type = 'sellOrder';  // example type for notification categorization
+    const referenceId = newOrder._id;
 
+    await createNewUserNotification(message, userId, type, referenceId);
+ 
     res.status(201).json(newOrder);
   } catch (error) {
+    console.error("Error creating sell order or notification:", error);
     res.status(500).json({ error: error.message });
+
   }
 };
 
@@ -46,13 +55,12 @@ export const approveSellOrder = async (req, res) => {
 
     order.status = "On Sale";
     await order.save();
-
     // Notify user
     await createNewUserNotification(
       `Your sell order #${orderId} has been approved and is now On Sale.`,
       order.userId,
-      type,
-      referenceId
+      "sellOrder",
+      order._id
     );
 
     res.json(order);
@@ -69,14 +77,14 @@ export const rejectSellOrder = async (req, res) => {
     if (!order) return res.status(404).json({ error: "Order not found" });
 
     // You might want to delete or mark rejected orders differently
-    await order.remove();
+    await order.deleteOne();
 
     // Notify user about rejection
      await createNewUserNotification(
       `Your sell order #${orderId}  has been rejected.`,
-      order.userId,
-      type,
-      referenceId
+      order.userId, 
+      "sellOrder",
+      order._id
     );
 
     res.json({ message: "Order rejected and removed" });

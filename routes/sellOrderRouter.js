@@ -3,16 +3,18 @@ import express from 'express';
 // import asyncHandler from '../utils/asyncHandler';
 import { createUserProfile, deleteUserProfile, getAllUsers, getUserProfile, loginUser, logoutUser, updateUserProfile } from "../controllers/userController.js";
 import { authenticate } from '../middleware/autheticate.js';
-import { approveSellOrder, rejectSellOrder } from '../controllers/sellOrderController.js';
+import { approveSellOrder, createSellOrder, getPendingSellOrders, rejectSellOrder } from '../controllers/sellOrderController.js';
 const router = express.Router();
 
 
 
 
-router.post("/", createUserProfile); // Register new user
-router.get("/admin/sell-orders/pending", getAllUsers); // Get all users
+
+router.post("/", createSellOrder); // Register new user
+router.get("/admin/sell-orders/pending", getPendingSellOrders); // Get all users
+router.get("/", getAllUsers); // Get all users
 router.post("/admin/sell-orders/:orderId/approve", approveSellOrder); // Get user by nickname
-router.post("/admin/sell-orders/:orderId/reject",authenticate, rejectSellOrder); // Update user profile
+router.post("/admin/sell-orders/:orderId/reject", rejectSellOrder); // Update user profile
 router.get("/sell-orders",authenticate, updateUserProfile); // /api/sell-orders?status=On Sale
 
 

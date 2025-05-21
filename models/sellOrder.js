@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const sellOrderSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  amount: { type: Number, required: true }, 
+  amount: { type: Number, required: true },
   krwAmount: { type: Number, required: true },
   price: { type: Number, required: true },             // example field
   status: {

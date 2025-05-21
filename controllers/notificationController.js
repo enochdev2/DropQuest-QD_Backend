@@ -22,9 +22,12 @@ export const createNewUserNotification = async (
     );
     return notification;
   } catch (err) {
-    throw new Error("Error creating notification");
+    console.error("Error inside createNewUserNotification:", err);
+    throw new Error("Error creating notification: " + err.message);
   }
 };
+
+
 export const createNewAdminNotification = async (
   message,
   userId,

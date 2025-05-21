@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
 // Notification schema definition
-const notificationSchema = new Schema(
+const notificationsSchema = new Schema(
   {
     message: { type: String, required: true },
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true }, // user who triggered event
@@ -19,7 +19,7 @@ const notificationSchema = new Schema(
 );
 
 // Model export
-export const Notification = mongoose.model("Notification", notificationSchema);
+export const Notification = mongoose.model("Notification", notificationsSchema);
 
 export const createAdminNotification = async (
   message,
@@ -44,6 +44,8 @@ export const createUserNotification = async (
   type,
   referenceId = null
 ) => {
+  console.log("🚀 ~ message",message, userId, type, referenceId)
+
   const notification = new Notification({
     message,
     userId,
