@@ -1,3 +1,4 @@
+import { BuyOrder } from "../models/buyOrder.js";
 import mongoose from "mongoose";
 import { SellOrder } from "../models/sellOrder.js";
 import {
@@ -7,25 +8,26 @@ import {
 
 export const createSellOrder = async (req, res) => {
   try {
-    // const userId = req.user._id; // assume authenticated user middleware
-    const { amount, price, krwAmount, nickname } = req.body;
-    const userId = new mongoose.Types.ObjectId(nickname); // assume authenticated user middleware
-    console.log("🚀 ~ createSellOrder ~ userId:", userId)
+    const userId = req.user.id; // assume authenticated user middleware
+    console.log("🚀 ~ createSellOrder ~ userId:", userId);
+    const { amount, price, krwAmount } = req.body;
+    // const userId = new mongoose.Types.ObjectId(nickname); // assume authenticated user middleware
 
     const newOrder = new SellOrder({ userId, amount, price, krwAmount });
     await newOrder.save();
 
-    const message = `New sell order created by ${nickname || 'a user'}: ${amount} USDT at price ${price} KRW (Total: ${krwAmount} KRW).`;
-    const type = 'sellOrder';  // example type for notification categorization
+    const message = `New sell order created by ${
+      userId || "a user"
+    }: ${amount} USDT at price ${price} KRW (Total: ${krwAmount} KRW).`;
+    const type = "sellOrder"; // example type for notification categorization
     const referenceId = newOrder._id;
 
-    await createNewUserNotification(message, userId, type, referenceId);
- 
+    // await createNewUserNotification(message, userId, type, referenceId);
+
     res.status(201).json(newOrder);
   } catch (error) {
     console.error("Error creating sell order or notification:", error);
     res.status(500).json({ error: error.message });
-
   }
 };
 
@@ -80,9 +82,9 @@ export const rejectSellOrder = async (req, res) => {
     await order.deleteOne();
 
     // Notify user about rejection
-     await createNewUserNotification(
+    await createNewUserNotification(
       `Your sell order #${orderId}  has been rejected.`,
-      order.userId, 
+      order.userId,
       "sellOrder",
       order._id
     );
@@ -95,7 +97,8 @@ export const rejectSellOrder = async (req, res) => {
 
 export const getUserSellOrders = async (req, res) => {
   try {
-    const userId = req.user._id; // authenticated user ID
+    const userId = req.user.id; // authenticated user ID
+    console.log("🚀 ~ getUserSellOrders ~ userId:", userId);
     const statusFilter = req.query.status; // optional status filter
 
     // Base filter: only this user's sell orders
@@ -106,37 +109,84 @@ export const getUserSellOrders = async (req, res) => {
       filter.status = statusFilter;
     }
 
-    // If no specific status filter, get all statuses sorted in custom order
-    // We use aggregation with $addFields and $sort to custom sort by status
-
     let orders;
 
-    if (!statusFilter) {
-      orders = await SellOrder.aggregate([
-        { $match: { userId } },
-        {
-          $addFields: {
-            statusOrder: {
-              $switch: {
-                branches: [
-                  { case: { $eq: ["$status", "On Sale"] }, then: 1 },
-                  { case: { $eq: ["$status", "Pending Approval"] }, then: 2 },
-                  { case: { $eq: ["$status", "Sale Completed"] }, then: 3 },
-                ],
-                default: 4,
-              },
-            },
-          },
-        },
-        { $sort: { statusOrder: 1, createdAt: -1 } }, // sort by custom order, then newest first
-      ]);
-    } else {
-      // If filtered by status, simple find + sort by createdAt descending
-      orders = await SellOrder.find(filter).sort({ createdAt: -1 });
-    }
+    orders = await SellOrder.find(filter)
+      .populate(
+        "userId",
+        "username nickname fullName phone bankName bankAccount"
+      )
+      .sort({ createdAt: -1 });
+
+    // if (!statusFilter) {
+    //   orders = await SellOrder.aggregate([
+    //     { $match: { userId } },
+    //     {
+    //       $addFields: {
+    //         statusOrder: {
+    //           $switch: {
+    //             branches: [
+    //               { case: { $eq: ["$status", "On Sale"] }, then: 1 },
+    //               { case: { $eq: ["$status", "Pending Approval"] }, then: 2 },
+    //               { case: { $eq: ["$status", "Sale Completed"] }, then: 3 },
+    //             ],
+    //             default: 4,
+    //           },
+    //         },
+    //       },
+    //     },
+    //     { $sort: { statusOrder: 1, createdAt: -1 } }, // sort by custom order, then newest first
+    //   ]);
+    // } else {
+    //   // If filtered by status, simple find + sort by createdAt descending
+    //   orders = await SellOrder.find(filter).sort({ createdAt: -1 });
+    // }
 
     res.json(orders);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getAllCompletedOrders = async (req, res) => {
+  try {
+    // Define completed statuses for sell and buy
+    const completedSellStatus = "Sale Completed";
+    const completedBuyStatus = "Buy Completed";
+
+    // Fetch completed sell orders with user info populated
+    const completedSellOrders = await SellOrder.find({
+      status: completedSellStatus,
+    })
+      .populate(
+        "userId",
+        "username nickname fullName phone bankName bankAccount"
+      )
+      .sort({ createdAt: -1 });
+
+    // Fetch completed buy orders with user info populated
+    const completedBuyOrders = await BuyOrder.find({
+      status: completedBuyStatus,
+    })
+      .populate(
+        "userId",
+        "username nickname fullName phone bankName bankAccount"
+      )
+      .sort({ createdAt: -1 });
+
+    // Optionally, you can merge and sort both lists by createdAt descending
+    // If you want a single combined list sorted by date:
+    const combinedOrders = [...completedSellOrders, ...completedBuyOrders].sort(
+      (a, b) => b.createdAt - a.createdAt
+    );
+
+    res.json({
+      sellOrders: completedSellOrders,
+      buyOrders: completedBuyOrders,
+      combinedOrders, // optional
+    });
+  } catch (error) {
+    console.error("Error fetching completed orders:", error);
     res.status(500).json({ error: error.message });
   }
 };
