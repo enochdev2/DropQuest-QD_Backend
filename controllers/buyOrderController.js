@@ -8,13 +8,12 @@ import {
 // Create new Buy Order
 export const createBuyOrder = async (req, res) => {
   try {
-
-    const userId = req.user.id; // 
-    console.log("🚀 ~ createBuyOrder ~ userId:", userId)
+    const userId = req.user.id; //
+    console.log("🚀 ~ createBuyOrder ~ userId:", userId);
     const { amount, krwAmount, price } = req.body;
     // const userId = new mongoose.Types.ObjectId(nickname);
 
-    const newBuyOrder = new BuyOrder({ userId, amount,krwAmount, price });
+    const newBuyOrder = new BuyOrder({ userId, amount, krwAmount, price });
     await newBuyOrder.save();
 
     const message = `New buy order created by ${
