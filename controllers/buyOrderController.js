@@ -8,14 +8,24 @@ import {
 // Create new Buy Order
 export const createBuyOrder = async (req, res) => {
   try {
-    const { amount, price, nickname } = req.body;
-    const userId = new mongoose.Types.ObjectId(nickname); 
 
-    const newBuyOrder = new BuyOrder({ userId, amount, price });
+    const userId = req.user.id; // 
+    console.log("🚀 ~ createBuyOrder ~ userId:", userId)
+    const { amount, krwAmount, price } = req.body;
+    // const userId = new mongoose.Types.ObjectId(nickname);
+
+    const newBuyOrder = new BuyOrder({ userId, amount,krwAmount, price });
     await newBuyOrder.save();
 
-    const message = `New buy order created by ${nickname || "a user"}: ${amount} units.`;
-    await createNewAdminNotification(message, userId, "buyOrder", newBuyOrder._id);
+    const message = `New buy order created by ${
+      userId || "a user"
+    }: ${amount} units.`;
+    await createNewAdminNotification(
+      message,
+      userId,
+      "buyOrder",
+      newBuyOrder._id
+    );
 
     res.status(201).json(newBuyOrder);
   } catch (error) {
@@ -28,7 +38,10 @@ export const createBuyOrder = async (req, res) => {
 export const getPendingBuyOrders = async (req, res) => {
   try {
     const pendingOrders = await BuyOrder.find({ status: "Waiting for Buy" })
-      .populate("userId", "username nickname fullName phone bankName bankAccount")
+      .populate(
+        "userId",
+        "username nickname fullName phone bankName bankAccount"
+      )
       .sort({ createdAt: -1 });
 
     res.json(pendingOrders);
@@ -87,7 +100,8 @@ export const rejectBuyOrder = async (req, res) => {
 // Get user's buy orders (with optional status filter and custom sort)
 export const getUserBuyOrders = async (req, res) => {
   try {
-    const userId = req.user._id; // authenticated user ID
+    const userId = req.user.id; // authenticated user ID
+    console.log("🚀 ~ getUserBuyOrders ~ userId:", userId);
     const statusFilter = req.query.status;
 
     let filter = { userId };
@@ -97,28 +111,34 @@ export const getUserBuyOrders = async (req, res) => {
     }
 
     let orders;
+    orders = await BuyOrder.find(filter)
+      .populate(
+        "userId",
+        "username nickname fullName phone bankName bankAccount"
+      )
+      .sort({ createdAt: -1 });
 
-    if (!statusFilter) {
-      orders = await BuyOrder.aggregate([
-        { $match: { userId } },
-        {
-          $addFields: {
-            statusOrder: {
-              $switch: {
-                branches: [
-                  { case: { $eq: ["$status", "Waiting for Buy"] }, then: 1 },
-                  { case: { $eq: ["$status", "Buy Completed"] }, then: 2 },
-                ],
-                default: 3,
-              },
-            },
-          },
-        },
-        { $sort: { statusOrder: 1, createdAt: -1 } },
-      ]);
-    } else {
-      orders = await BuyOrder.find(filter).sort({ createdAt: -1 });
-    }
+    // if (!statusFilter) {
+    //   orders = await BuyOrder.aggregate([
+    //     { $match: { userId } },
+    //     {
+    //       $addFields: {
+    //         statusOrder: {
+    //           $switch: {
+    //             branches: [
+    //               { case: { $eq: ["$status", "Waiting for Buy"] }, then: 1 },
+    //               { case: { $eq: ["$status", "Buy Completed"] }, then: 2 },
+    //             ],
+    //             default: 3,
+    //           },
+    //         },
+    //       },
+    //     },
+    //     { $sort: { statusOrder: 1, createdAt: -1 } },
+    //   ]);
+    // } else {
+    //   orders = await BuyOrder.find(filter).sort({ createdAt: -1 });
+    // }
 
     res.json(orders);
   } catch (error) {
