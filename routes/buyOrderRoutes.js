@@ -11,10 +11,11 @@ import { authenticate } from '../middleware/autheticate.js';
 
 const router = express.Router();
 
-router.post("/", createBuyOrder); // Create new buy order (user)
+router.post("/", authenticate, createBuyOrder); // Create new buy order (user)
 router.get("/admin/buy-orders/pending", getPendingBuyOrders); // Admin view pending
 router.post("/admin/buy-orders/:orderId/approve", approveBuyOrder); // Admin approve
 router.post("/admin/buy-orders/:orderId/reject", rejectBuyOrder); // Admin reject
 router.get("/buy-orders", authenticate, getUserBuyOrders); // Get user buy orders with optional status filter
 
 export default router;
+ 
