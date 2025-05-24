@@ -20,7 +20,7 @@ const generateToken = (user) => {
       admin: user.admin,
     },
     "your-secret-key", // Use a more secure secret key
-    { expiresIn: "1h" } // Token expires in 1 hour
+    { expiresIn: "1d" } // Token expires in 1 day
   );
 };
 
