@@ -104,8 +104,8 @@ export const loginUser = async (req, res) => {
     // Send the token via a secure, HttpOnly cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Only set cookies over HTTPS in production
-      // secure: true,
+      // secure: process.env.NODE_ENV === "production", // Only set cookies over HTTPS in production
+      secure: true,
       sameSite: "none", // This helps mitigate CSRF attacks
       maxAge: 24 * 60 * 60 * 1000, 
     });
@@ -116,6 +116,7 @@ export const loginUser = async (req, res) => {
     res.status(200).json({
       message: "Login successful",
       user: userData, // Send user data without the password field
+      token, 
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
