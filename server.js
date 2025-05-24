@@ -19,8 +19,7 @@ import cookieParser from "cookie-parser";
 connectDB();
 
 const corsOptions = {
-  origin: 'https://tether-p2p.vercel.app',
-  origin: "http://localhost:5173",
+  origin:[ 'https://tether-p2p.vercel.app', "http://localhost:5173",],
   credentials: true,
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
 };
