@@ -104,10 +104,10 @@ export const loginUser = async (req, res) => {
     // Send the token via a secure, HttpOnly cookie
     res.cookie("token", token, {
       httpOnly: true,
-      // secure: process.env.NODE_ENV === "production", // Only set cookies over HTTPS in production
-      secure: true,
-      // sameSite: "Strict", // This helps mitigate CSRF attacks
-      maxAge: 3600000, 
+      secure: process.env.NODE_ENV === "production", // Only set cookies over HTTPS in production
+      // secure: true,
+      sameSite: "none", // This helps mitigate CSRF attacks
+      maxAge: 24 * 60 * 60 * 1000, 
     });
 
     const { password: _, ...userData } = user.toObject(); // Destructure and remove the password field
