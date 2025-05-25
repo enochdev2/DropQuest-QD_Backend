@@ -18,3 +18,18 @@ export const authenticate = (req, res, next) => {
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
 };
+
+export const authorizeAdmin = (req, res, next) => {
+  // Make sure authenticate middleware ran before this and set req.user
+  if (!req.user) {
+    return res.status(401).json({ message: "Unauthorized: No user info found" });
+  }
+
+  // Check if user has admin role - adjust field name as per your user model / JWT payload
+  if (req.user.role && req.user.role.toLowerCase() === "admin") {
+    return next();
+  }
+
+  return res.status(403).json({ message: "Forbidden: Admins only" });
+};
+

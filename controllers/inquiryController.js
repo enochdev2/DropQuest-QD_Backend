@@ -1,7 +1,7 @@
 import { Inquiry } from "../models/inquiry.js";
 import {
-  createAdminNotification,
-  createUserNotification,
+  createNewAdminNotification,
+  createNewUserNotification,
 } from "./notificationController.js";
 
 // Create new inquiry - notify admin
@@ -19,7 +19,7 @@ export const createInquiry = async (req, res) => {
     await newInquiry.save();
 
     // Notify admin about new inquiry
-    await createAdminNotification(
+    await createNewAdminNotification(
       `New inquiry titled "${title}" from user ${userId}`,
       userId,
       "inquiry",
@@ -47,7 +47,7 @@ export const addInquiryComment = async (req, res) => {
     await inquiry.save();
 
     // Notify user about comment
-    await createUserNotification(
+    await createNewUserNotification(
       `Admin commented on your inquiry "${inquiry.title}": ${comment}`,
       inquiry.userId,
       "inquiry",
