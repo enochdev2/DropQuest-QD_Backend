@@ -13,6 +13,7 @@ import cartRouter from "./routes/cartRouter.js";
 import notificationRouter from "./routes/notificationRouter.js";
 import sellOrderRouter from "./routes/sellOrderRouter.js";
 import buyOrderRouter from "./routes/buyOrderRoutes.js";
+import inquiryRouter from "./routes/inquiryRouter.js";
 import cookieParser from "cookie-parser";
 
 // connect db
@@ -42,6 +43,7 @@ app.use("/api/v1/cart", cartRouter);
 app.use("/api/v1/notification", notificationRouter);
 app.use("/api/v1/sell", sellOrderRouter);
 app.use("/api/v1/buy", buyOrderRouter);
+app.use("/api/v1/inquiry", inquiryRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>
