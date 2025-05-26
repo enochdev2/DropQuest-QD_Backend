@@ -9,6 +9,7 @@ export const createInquiry = async (req, res) => {
   try {
     const userId = req.user.id; // authenticated user
     const { title, description } = req.body;
+    console.log("🚀 ~ createInquiry ~ title:", title)
 
     const newInquiry = new Inquiry({
       userId,

@@ -8,7 +8,7 @@ const notificationsSchema = new Schema(
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true }, // user who triggered event
     type: {
       type: String,
-      enum: ["registration", "sellOrder", "buyOrder", "general"],
+      enum: ["registration", "sellOrder", "buyOrder", "inquiry", "general"],
       default: "general",
     },
     isForAdmin: { type: Boolean, default: false }, // visible in admin dashboard if true

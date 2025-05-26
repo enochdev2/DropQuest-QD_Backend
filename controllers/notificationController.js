@@ -43,7 +43,8 @@ export const createNewAdminNotification = async (
     );
     return notification;
   } catch (err) {
-    throw new Error("Error creating notification");
+    console.error("Error inside createNewAdminNotification:", err);
+    throw new Error("Error creating notification: " + err.message);
   }
 };
 
