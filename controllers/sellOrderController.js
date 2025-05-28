@@ -148,6 +148,24 @@ export const getUserSellOrders = async (req, res) => {
   }
 };
 
+export const getAllOnSaleOrders = async (req, res) => {
+  try {
+    const onSaleStatus = "On Sale";
+
+    const onSaleSellOrders = await SellOrder.find({ status: onSaleStatus })
+      .populate(
+        "userId",
+        "username nickname fullName phone bankName bankAccount"
+      )
+      .sort({ createdAt: 1 });
+
+    res.json({ sellOrders: onSaleSellOrders });
+  } catch (error) {
+    console.error("Error fetching on-sale sell orders:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const getAllCompletedOrders = async (req, res) => {
   try {
     // Define completed statuses for sell and buy

@@ -5,6 +5,7 @@ import {
   approveBuyOrder,
   rejectBuyOrder,
   getUserBuyOrders,
+  getAllOnBuyOrders,
 } from "../controllers/buyOrderController.js";
 
 import { authenticate } from '../middleware/autheticate.js';
@@ -16,6 +17,7 @@ router.get("/admin/buy-orders/pending", getPendingBuyOrders); // Admin view pend
 router.post("/admin/buy-orders/:orderId/approve", approveBuyOrder); // Admin approve
 router.post("/admin/buy-orders/:orderId/reject", rejectBuyOrder); // Admin reject
 router.get("/buy-orders", authenticate, getUserBuyOrders); // Get user buy orders with optional status filter
+router.get("/allonbuy-orders", getAllOnBuyOrders);
 
 export default router;
  

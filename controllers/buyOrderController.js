@@ -144,3 +144,23 @@ export const getUserBuyOrders = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+export const getAllOnBuyOrders = async (req, res) => {
+  try {
+    const onBuyStatus = "Waiting for Buy"; 
+
+    const onBuyOrders = await BuyOrder.find({ status: onBuyStatus })
+      .populate(
+        "userId",
+        "username nickname fullName phone bankName bankAccount"
+      )
+      .sort({ createdAt: 1 }); // oldest date first
+
+    res.json({ buyOrders: onBuyOrders });
+  } catch (error) {
+    console.error("Error fetching on-buy orders:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
