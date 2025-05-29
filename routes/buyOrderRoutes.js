@@ -6,10 +6,10 @@ import {
   rejectBuyOrder,
   getUserBuyOrders,
   getAllOnBuyOrders,
+  getAllPendingBuyApprovalOrders,
 } from "../controllers/buyOrderController.js";
 
 import { authenticate } from '../middleware/autheticate.js';
-import { getAllPendingApprovalOrders } from "../controllers/sellOrderController.js";
 
 const router = express.Router();
 
@@ -19,7 +19,7 @@ router.post("/admin/buy-orders/:orderId/approve", approveBuyOrder); // Admin app
 router.post("/admin/buy-orders/:orderId/reject", rejectBuyOrder); // Admin reject
 router.get("/buy-orders", authenticate, getUserBuyOrders); // Get user buy orders with optional status filter
 router.get("/admin/all/onbuy-orders", getAllOnBuyOrders);
-router.get("/admin/all/pending-orders", getAllPendingApprovalOrders);
+router.get("/admin/all/pending-orders", getAllPendingBuyApprovalOrders);
 
 export default router;
  

@@ -149,7 +149,7 @@ export const getUserBuyOrders = async (req, res) => {
   }
 };
 
-export const getAllPendingApprovalOrders = async (req, res) => {
+export const getAllPendingBuyApprovalOrders = async (req, res) => {
   try {
     const onBuyStatus = "Pending Approval";
 
