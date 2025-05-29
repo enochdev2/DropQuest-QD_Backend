@@ -55,10 +55,13 @@ export const approveBuyOrder = async (req, res) => {
     const { orderId } = req.params;
 
     const order = await BuyOrder.findById(orderId);
+    console.log("🚀 ~ approveBuyOrder ~ order:", order);
     if (!order) return res.status(404).json({ error: "Buy order not found" });
 
-    order.status = "Buy Completed";
+    order.status = "Waiting for Buy";
+    order.amountRemaining = order.amount;
     await order.save();
+    console.log("🚀 ~ approveBuyOrder ~ order:", order);
 
     await createNewUserNotification(
       `Your buy order #${orderId} has been approved and marked as Buy Completed.`,
@@ -69,6 +72,7 @@ export const approveBuyOrder = async (req, res) => {
 
     res.json(order);
   } catch (error) {
+    console.log("🚀 ~ approveBuyOrder ~ error:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -145,19 +149,18 @@ export const getUserBuyOrders = async (req, res) => {
   }
 };
 
-
 export const getAllPendingApprovalOrders = async (req, res) => {
   try {
-    const onBuyStatus = "Pending Approval"; 
+    const onBuyStatus = "Pending Approval";
 
     const onBuyOrders = await BuyOrder.find({ status: onBuyStatus })
       .populate(
         "userId",
         "username nickname fullName phone bankName bankAccount"
       )
-      .sort({ createdAt: -1 }); 
+      .sort({ createdAt: -1 });
 
-      const buyOrders = onBuyOrders
+    const buyOrders = onBuyOrders;
 
     res.json(buyOrders);
   } catch (error) {
@@ -167,16 +170,16 @@ export const getAllPendingApprovalOrders = async (req, res) => {
 };
 export const getAllOnBuyOrders = async (req, res) => {
   try {
-    const onBuyStatus = "Waiting for Buy"; 
+    const onBuyStatus = "Waiting for Buy";
 
     const onBuyOrders = await BuyOrder.find({ status: onBuyStatus })
       .populate(
         "userId",
         "username nickname fullName phone bankName bankAccount"
       )
-      .sort({ createdAt: 1 }); 
+      .sort({ createdAt: 1 });
 
-      const buyOrders = onBuyOrders
+    const buyOrders = onBuyOrders;
 
     res.json(buyOrders);
   } catch (error) {
@@ -184,4 +187,3 @@ export const getAllOnBuyOrders = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
