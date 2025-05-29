@@ -17,7 +17,7 @@ router.get('/notifications', fetchAllNotifications);
 // Route to mark a notification as read
 router.put('/notifications/mark-read/:id', markNotificationAsRead);
 // router.patch("/notifications/mark-read/:id", markNotificationAsRead);
-router.get("/notifications/unread/sellOrders", fetchUnreadSellOrderNotifications);
+router.get("/unread/sellOrders", fetchUnreadSellOrderNotifications);
 
 
 export default router;
