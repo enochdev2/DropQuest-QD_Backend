@@ -1,7 +1,7 @@
 import { BuyOrder } from "../models/buyOrder.js";
 import { SellOrder } from "../models/sellOrder.js";
-import { userModel } from '../models/userModel.js';
-import { TransactionFee } from '../models/feeModel.js';
+import { userModel } from "../models/userModel.js";
+import { TransactionFee } from "../models/feeModel.js";
 
 import {
   createNewAdminNotification,
@@ -11,20 +11,23 @@ import {
 export const createSellOrder = async (req, res) => {
   try {
     const userId = req.user.id; // assume authenticated user middleware
-    console.log("🚀 ~ createSellOrder ~ userId:", userId);
     const { amount, price, krwAmount } = req.body;
-    // const userId = new mongoose.Types.ObjectId(nickname); // assume authenticated user middleware
+
+    const user = await userModel
+      .findById(userId)
+      .select("nickname username")
+      .lean();
+
+    const userName = user?.nickname || user?.username || "a user";
 
     const newOrder = new SellOrder({ userId, amount, price, krwAmount });
     await newOrder.save();
 
-    const message = `New sell order created by ${
-      userId || "a user"
-    }: ${amount} USDT at price ${price} KRW (Total: ${krwAmount} KRW).`;
-    const type = "sellOrder"; // example type for notification categorization
+    const message = `New sell order created by ${userName}: ${amount} USDT at price ${price} KRW (Total: ${krwAmount} KRW).`;
+    const type = "sellOrder";
     const referenceId = newOrder._id;
 
-    // await createNewUserNotification(message, userId, type, referenceId);
+    await createNewUserNotification(message, userId, type, referenceId);
 
     res.status(201).json(newOrder);
   } catch (error) {
@@ -55,7 +58,7 @@ export const approveSellOrder = async (req, res) => {
     const { orderId } = req.params;
 
     const order = await SellOrder.findById(orderId);
-    console.log("🚀 ~ approveSellOrder ~ order:", order)
+    console.log("🚀 ~ approveSellOrder ~ order:", order);
     if (!order) return res.status(404).json({ error: "Order not found" });
 
     order.status = "On Sale";
@@ -71,7 +74,7 @@ export const approveSellOrder = async (req, res) => {
 
     res.json(order);
   } catch (error) {
-    console.log("🚀 ~ approveSellOrder ~ error:", error)
+    console.log("🚀 ~ approveSellOrder ~ error:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -163,10 +166,6 @@ export const getAllPendingApprovalOrders = async (req, res) => {
         "username nickname fullName phone bankName bankAccount"
       )
       .sort({ createdAt: -1 });
-    console.log(
-      "🚀 ~ getAllOnSaleOrders ~ onSaleSellOrders:",
-      onSaleSellOrders
-    );
 
     const sellOrders = onSaleSellOrders;
 
@@ -336,7 +335,7 @@ export const getSummaryStats = async (req, res) => {
     // Total sales (sum of krwAmount on completed SellOrders)
     const totalSalesPromise = SellOrder.aggregate([
       { $match: { status: "Sale Completed" } },
-      { $group: { _id: null, totalKrwAmount: { $sum: "$krwAmount" } } }
+      { $group: { _id: null, totalKrwAmount: { $sum: "$krwAmount" } } },
     ]);
 
     // Total buys (sum of buy orders' cash amounts)
@@ -348,21 +347,21 @@ export const getSummaryStats = async (req, res) => {
             $cond: [
               { $ifNull: ["$price", false] },
               { $multiply: ["$price", "$amount"] },
-              "$amount"
-            ]
-          }
-        }
+              "$amount",
+            ],
+          },
+        },
       },
       {
         $group: {
           _id: null,
-          totalCashAmount: { $sum: "$cashAmount" }
-        }
-      }
+          totalCashAmount: { $sum: "$cashAmount" },
+        },
+      },
     ]);
 
     // Total fees (sum of fees from TransactionFee)
-    // We'll sum fixedFee + (feePercentage * some base amount) — 
+    // We'll sum fixedFee + (feePercentage * some base amount) —
     // but since we only have feePercentage and fixedFee and no base amount here,
     // You might want to sum fixedFee only or sum fees from BuyOrders' fee fields if available.
 
@@ -372,9 +371,9 @@ export const getSummaryStats = async (req, res) => {
         $group: {
           _id: null,
           totalFixedFees: { $sum: "$fixedFee" },
-          totalFeePercentages: { $sum: "$feePercentage" }
-        }
-      }
+          totalFeePercentages: { $sum: "$feePercentage" },
+        },
+      },
     ]);
 
     // Run all concurrently
@@ -382,14 +381,14 @@ export const getSummaryStats = async (req, res) => {
       totalUsersPromise,
       totalSalesPromise,
       totalBuysPromise,
-      totalFeesPromise
+      totalFeesPromise,
     ]);
 
     res.json({
       totalUsers,
       totalSales: totalSales.length ? totalSales[0].totalKrwAmount : 0,
       totalBuys: totalBuys.length ? totalBuys[0].totalCashAmount : 0,
-      totalFees: totalFees.length ? (totalFees[0].totalFixedFees) : 0,
+      totalFees: totalFees.length ? totalFees[0].totalFixedFees : 0,
       // You can adjust fees calculation here as needed
     });
   } catch (error) {
@@ -397,4 +396,3 @@ export const getSummaryStats = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-

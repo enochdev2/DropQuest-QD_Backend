@@ -4,6 +4,7 @@ import {
   markAsRead,
   createUserNotification,
   createAdminNotification,
+  Notification,
 } from "../models/notification.js";
 
 // Create a notification when a new user registers
@@ -71,6 +72,7 @@ export const fetchAllNotifications = async (req, res) => {
 export const markNotificationAsRead = async (req, res) => {
   try {
     const notificationId = req.params.id;
+    console.log("🚀 ~ markNotificationAsRead ~ notificationId:", notificationId)
     const updatedNotification = await markAsRead(notificationId);
 
     if (!updatedNotification) {
@@ -100,10 +102,13 @@ export const fetchUnreadSellOrderNotifications = async (req, res) => {
 
     // If admin wants all unread sellOrder notifications (no user filter):
     const notifications = await Notification.find({
-      isForAdmin: false, // or true if admin notifications
-      isRead: false,
-      type: "sellOrder",
-    }).sort({ createdAt: -1 });
+  isForAdmin: true,
+  isRead: false,
+  type: "sellOrder",
+})
+.sort({ createdAt: -1 })
+.populate("userId", "username nickname");
+console.log("🚀 ~ fetchUnreadSellOrderNotifications ~ notifications:", notifications)
 
     return res.status(200).json(notifications);
   } catch (error) {
