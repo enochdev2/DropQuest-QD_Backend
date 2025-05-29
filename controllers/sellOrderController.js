@@ -2,7 +2,7 @@ import { BuyOrder } from "../models/buyOrder.js";
 import { SellOrder } from "../models/sellOrder.js";
 import {
   createNewAdminNotification,
-  createNewUserNotification,               
+  createNewUserNotification,
 } from "./notificationController.js";
 
 export const createSellOrder = async (req, res) => {
@@ -52,9 +52,11 @@ export const approveSellOrder = async (req, res) => {
     const { orderId } = req.params;
 
     const order = await SellOrder.findById(orderId);
+    console.log("🚀 ~ approveSellOrder ~ order:", order)
     if (!order) return res.status(404).json({ error: "Order not found" });
 
     order.status = "On Sale";
+    order.amountRemaining = order.amount;
     await order.save();
     // Notify user
     await createNewUserNotification(
@@ -66,6 +68,7 @@ export const approveSellOrder = async (req, res) => {
 
     res.json(order);
   } catch (error) {
+    console.log("🚀 ~ approveSellOrder ~ error:", error)
     res.status(500).json({ error: error.message });
   }
 };
@@ -237,7 +240,6 @@ export const getAllCompletedOrders = async (req, res) => {
   }
 };
 
-
 export const matchOrders = async (req, res) => {
   try {
     const { sellOrderId, buyOrderMatches } = req.body;
@@ -277,19 +279,15 @@ export const matchOrders = async (req, res) => {
           buyOrder.status
         )
       ) {
-        return res
-          .status(400)
-          .json({
-            error: `Buy order ${match.buyOrderId} not available for matching`,
-          });
+        return res.status(400).json({
+          error: `Buy order ${match.buyOrderId} not available for matching`,
+        });
       }
 
       if (match.matchAmount > buyOrder.amountRemaining) {
-        return res
-          .status(400)
-          .json({
-            error: `Match amount exceeds buy order remaining amount for ${match.buyOrderId}`,
-          });
+        return res.status(400).json({
+          error: `Match amount exceeds buy order remaining amount for ${match.buyOrderId}`,
+        });
       }
 
       // Update buy order
