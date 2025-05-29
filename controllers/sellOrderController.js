@@ -158,8 +158,14 @@ export const getAllOnSaleOrders = async (req, res) => {
         "username nickname fullName phone bankName bankAccount"
       )
       .sort({ createdAt: 1 });
+    console.log(
+      "🚀 ~ getAllOnSaleOrders ~ onSaleSellOrders:",
+      onSaleSellOrders
+    );
 
-    res.json({ sellOrders: onSaleSellOrders });
+    const sellOrders = onSaleSellOrders;
+
+    res.json(sellOrders);
   } catch (error) {
     console.error("Error fetching on-sale sell orders:", error);
     res.status(500).json({ error: error.message });

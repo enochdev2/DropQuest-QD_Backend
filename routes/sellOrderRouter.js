@@ -16,7 +16,7 @@ router.post("/admin/sell-orders/:orderId/approve", approveSellOrder); // Get use
 router.post("/admin/sell-orders/:orderId/reject", rejectSellOrder); // Update user profile
 router.get("/sell-orders",authenticate, getUserSellOrders); // /api/sell-orders?status=On Sale
 router.get("/all-orders", getAllCompletedOrders); // /api/sell-orders?status=On Sale
-router.get("/allonsale-orders", getAllOnSaleOrders); 
+router.get("/admin/all/onsale-orders", getAllOnSaleOrders); 
 
 
 
