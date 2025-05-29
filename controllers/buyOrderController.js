@@ -155,9 +155,11 @@ export const getAllOnBuyOrders = async (req, res) => {
         "userId",
         "username nickname fullName phone bankName bankAccount"
       )
-      .sort({ createdAt: 1 }); // oldest date first
+      .sort({ createdAt: 1 }); 
 
-    res.json({ buyOrders: onBuyOrders });
+      const buyOrders = onBuyOrders
+
+    res.json(buyOrders);
   } catch (error) {
     console.error("Error fetching on-buy orders:", error);
     res.status(500).json({ error: error.message });
