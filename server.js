@@ -9,7 +9,7 @@ const app = express();
 // const { readdirSync } = require("fs");
 
 import userRouter from "./routes/userRouter.js";
-import cartRouter from "./routes/cartRouter.js";
+// import feeRouter from "./routes/feeRouter.js";
 import notificationRouter from "./routes/notificationRouter.js";
 import sellOrderRouter from "./routes/sellOrderRouter.js";
 import buyOrderRouter from "./routes/buyOrderRoutes.js";
@@ -39,7 +39,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/user", userRouter);
-app.use("/api/v1/cart", cartRouter);
+// app.use("/api/v1/fee", feeRouter);
 app.use("/api/v1/notification", notificationRouter);
 app.use("/api/v1/sell", sellOrderRouter);
 app.use("/api/v1/buy", buyOrderRouter);

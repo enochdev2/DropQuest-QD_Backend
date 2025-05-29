@@ -27,7 +27,6 @@ export const createNewUserNotification = async (
   }
 };
 
-
 export const createNewAdminNotification = async (
   message,
   userId,
@@ -83,5 +82,32 @@ export const markNotificationAsRead = async (req, res) => {
     return res
       .status(500)
       .json({ error: "Error updating notification status." });
+  }
+};
+
+export const fetchUnreadSellOrderNotifications = async (req, res) => {
+  try {
+    // If you want to filter by userId (optional, e.g. from req.user.id)
+    // const userId = req.user.id;
+
+    // If userId is required:
+    // const notifications = await Notification.find({
+    //   userId,
+    //   isForAdmin: false,
+    //   isRead: false,
+    //   type: "sellOrder"
+    // }).sort({ createdAt: -1 });
+
+    // If admin wants all unread sellOrder notifications (no user filter):
+    const notifications = await Notification.find({
+      isForAdmin: false, // or true if admin notifications
+      isRead: false,
+      type: "sellOrder",
+    }).sort({ createdAt: -1 });
+
+    return res.status(200).json(notifications);
+  } catch (error) {
+    console.error("Error fetching unread sellOrder notifications:", error);
+    return res.status(500).json({ error: "Error fetching notifications." });
   }
 };

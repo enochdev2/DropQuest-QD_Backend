@@ -3,6 +3,7 @@ import {
   fetchUnreadNotifications,
   fetchAllNotifications,
   markNotificationAsRead,
+  fetchUnreadSellOrderNotifications,
 } from '../controllers/notificationController.js';
 
 const router = express.Router();
@@ -14,7 +15,10 @@ router.get('/notifications/unread', fetchUnreadNotifications);
 router.get('/notifications', fetchAllNotifications);
 
 // Route to mark a notification as read
-router.put('/notifications/:id/read', markNotificationAsRead);
+router.put('/notifications/mark-read/:id', markNotificationAsRead);
+// router.patch("/notifications/mark-read/:id", markNotificationAsRead);
+router.get("/notifications/unread/sellOrders", fetchUnreadSellOrderNotifications);
+
 
 export default router;
  

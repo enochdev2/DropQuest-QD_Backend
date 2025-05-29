@@ -1,5 +1,8 @@
 import { BuyOrder } from "../models/buyOrder.js";
 import { SellOrder } from "../models/sellOrder.js";
+import { userModel } from '../models/userModel.js';
+import { TransactionFee } from '../models/feeModel.js';
+
 import {
   createNewAdminNotification,
   createNewUserNotification,
@@ -324,3 +327,74 @@ export const matchOrders = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+
+export const getSummaryStats = async (req, res) => {
+  try {
+    // Total users
+    const totalUsersPromise = userModel.countDocuments();
+
+    // Total sales (sum of krwAmount on completed SellOrders)
+    const totalSalesPromise = SellOrder.aggregate([
+      { $match: { status: "Sale Completed" } },
+      { $group: { _id: null, totalKrwAmount: { $sum: "$krwAmount" } } }
+    ]);
+
+    // Total buys (sum of buy orders' cash amounts)
+    // assuming BuyOrder.price * amount if price exists, else amount only
+    const totalBuysPromise = BuyOrder.aggregate([
+      {
+        $project: {
+          cashAmount: {
+            $cond: [
+              { $ifNull: ["$price", false] },
+              { $multiply: ["$price", "$amount"] },
+              "$amount"
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalCashAmount: { $sum: "$cashAmount" }
+        }
+      }
+    ]);
+
+    // Total fees (sum of fees from TransactionFee)
+    // We'll sum fixedFee + (feePercentage * some base amount) — 
+    // but since we only have feePercentage and fixedFee and no base amount here,
+    // You might want to sum fixedFee only or sum fees from BuyOrders' fee fields if available.
+
+    // For simplicity, let's sum fixedFee from TransactionFee collection.
+    const totalFeesPromise = TransactionFee.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalFixedFees: { $sum: "$fixedFee" },
+          totalFeePercentages: { $sum: "$feePercentage" }
+        }
+      }
+    ]);
+
+    // Run all concurrently
+    const [totalUsers, totalSales, totalBuys, totalFees] = await Promise.all([
+      totalUsersPromise,
+      totalSalesPromise,
+      totalBuysPromise,
+      totalFeesPromise
+    ]);
+
+    res.json({
+      totalUsers,
+      totalSales: totalSales.length ? totalSales[0].totalKrwAmount : 0,
+      totalBuys: totalBuys.length ? totalBuys[0].totalCashAmount : 0,
+      totalFees: totalFees.length ? (totalFees[0].totalFixedFees) : 0,
+      // You can adjust fees calculation here as needed
+    });
+  } catch (error) {
+    console.error("Error fetching summary stats:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
