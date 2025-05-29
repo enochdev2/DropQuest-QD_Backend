@@ -1,9 +1,8 @@
 import { BuyOrder } from "../models/buyOrder.js";
-import mongoose from "mongoose";
 import { SellOrder } from "../models/sellOrder.js";
 import {
   createNewAdminNotification,
-  createNewUserNotification,
+  createNewUserNotification,               
 } from "./notificationController.js";
 
 export const createSellOrder = async (req, res) => {
@@ -148,6 +147,29 @@ export const getUserSellOrders = async (req, res) => {
   }
 };
 
+export const getAllPendingApprovalOrders = async (req, res) => {
+  try {
+    const onSaleStatus = "Pending Approval";
+
+    const onSaleSellOrders = await SellOrder.find({ status: onSaleStatus })
+      .populate(
+        "userId",
+        "username nickname fullName phone bankName bankAccount"
+      )
+      .sort({ createdAt: -1 });
+    console.log(
+      "🚀 ~ getAllOnSaleOrders ~ onSaleSellOrders:",
+      onSaleSellOrders
+    );
+
+    const sellOrders = onSaleSellOrders;
+
+    res.json(sellOrders);
+  } catch (error) {
+    console.error("Error fetching on-sale sell orders:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
 export const getAllOnSaleOrders = async (req, res) => {
   try {
     const onSaleStatus = "On Sale";
@@ -212,5 +234,95 @@ export const getAllCompletedOrders = async (req, res) => {
   } catch (error) {
     console.error("Error fetching completed orders:", error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+
+export const matchOrders = async (req, res) => {
+  try {
+    const { sellOrderId, buyOrderMatches } = req.body;
+
+    // 1. Fetch sell order
+    const sellOrder = await SellOrder.findById(sellOrderId);
+    if (!sellOrder)
+      return res.status(404).json({ error: "Sell order not found" });
+
+    if (!["On Sale", "Partially Matched"].includes(sellOrder.status)) {
+      return res
+        .status(400)
+        .json({ error: "Sell order not available for matching" });
+    }
+
+    // Calculate total match amount requested
+    const totalMatchAmount = buyOrderMatches.reduce(
+      (sum, m) => sum + m.matchAmount,
+      0
+    );
+    if (totalMatchAmount > sellOrder.amountRemaining) {
+      return res
+        .status(400)
+        .json({ error: "Match amount exceeds sell order remaining amount" });
+    }
+
+    // 2. Process each buy order match
+    for (const match of buyOrderMatches) {
+      const buyOrder = await BuyOrder.findById(match.buyOrderId);
+      if (!buyOrder)
+        return res
+          .status(404)
+          .json({ error: `Buy order ${match.buyOrderId} not found` });
+
+      if (
+        !["Pending", "Waiting for Fill", "Partially Matched"].includes(
+          buyOrder.status
+        )
+      ) {
+        return res
+          .status(400)
+          .json({
+            error: `Buy order ${match.buyOrderId} not available for matching`,
+          });
+      }
+
+      if (match.matchAmount > buyOrder.amountRemaining) {
+        return res
+          .status(400)
+          .json({
+            error: `Match amount exceeds buy order remaining amount for ${match.buyOrderId}`,
+          });
+      }
+
+      // Update buy order
+      buyOrder.amountRemaining -= match.matchAmount;
+      buyOrder.matchedSellOrders.push({
+        orderId: sellOrder._id,
+        matchModel: "SellOrder",
+        amount: match.matchAmount,
+      });
+
+      buyOrder.status =
+        buyOrder.amountRemaining === 0 ? "Buy Completed" : "Partially Matched";
+      await buyOrder.save();
+
+      // Update sell order matchedBuyOrders inside loop to keep partial matches
+      sellOrder.matchedBuyOrders.push({
+        orderId: buyOrder._id,
+        matchModel: "BuyOrder",
+        amount: match.matchAmount,
+      });
+    }
+
+    // 3. Update sell order after all matches
+    sellOrder.amountRemaining -= totalMatchAmount;
+    sellOrder.status =
+      sellOrder.amountRemaining === 0 ? "Sale Completed" : "Partially Matched";
+    await sellOrder.save();
+
+    // 4. Notify users or handle other business logic here
+
+    res.json({ message: "Orders matched successfully", sellOrder });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
   }
 };
