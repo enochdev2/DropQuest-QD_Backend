@@ -1,7 +1,7 @@
 import express from 'express';
 
 // import asyncHandler from '../utils/asyncHandler';
-import { approveSellOrder, createSellOrder, getAllCompletedOrders, getAllOnSaleOrders, getAllPendingApprovalOrders, getPendingSellOrders, getSummaryStats, getUserSellOrders, rejectSellOrder } from '../controllers/sellOrderController.js';
+import { approveSellOrder, createSellOrder, getAllCompletedOrders, getAllOnSaleOrders, getAllPendingApprovalOrders, getPendingSellOrders, getSummaryStats, getUserSellOrders, matchOrders, rejectSellOrder } from '../controllers/sellOrderController.js';
 import { authenticate } from '../middleware/autheticate.js';
 const router = express.Router();
 
@@ -19,6 +19,7 @@ router.get("/all-orders", getAllCompletedOrders); // /api/sell-orders?status=On 
 router.get("/admin/all/onsale-orders", getAllOnSaleOrders); 
 router.get("/admin/all/pending-orders", getAllPendingApprovalOrders); 
 router.get("/admin/get-stats", getSummaryStats); 
+router.post("/admin/match-orders", matchOrders); 
 
 
 

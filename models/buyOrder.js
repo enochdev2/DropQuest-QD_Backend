@@ -33,7 +33,7 @@ const buyOrderSchema = new Schema({
  status: {
     type: String,
     enum: ["Pending Approval", "Waiting for Buy", "Partially Matched", "Buy Completed"],
-    default: "Pending",
+    default: "Pending Approval",
   },
    matchedSellOrders: [ matchSchema ],
   createdAt: { type: Date, default: Date.now },

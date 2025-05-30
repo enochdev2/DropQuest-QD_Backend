@@ -4,7 +4,11 @@ import {
   fetchAllNotifications,
   markNotificationAsRead,
   fetchUnreadSellOrderNotifications,
+  fetchUnreadBuyOrderNotifications,
+  fetchUnreadUserBuyOrderNotifications,
+  fetchUnreadUserSellOrderNotifications,
 } from '../controllers/notificationController.js';
+import { authenticate } from '../middleware/autheticate.js';
 
 const router = express.Router();
 
@@ -18,6 +22,9 @@ router.get('/notifications', fetchAllNotifications);
 router.put('/mark-read/:id', markNotificationAsRead);
 // router.patch("/notifications/mark-read/:id", markNotificationAsRead);
 router.get("/unread/sellOrders", fetchUnreadSellOrderNotifications);
+router.get("/unread/buyOrders", fetchUnreadBuyOrderNotifications);
+router.get("/unread/user/buyOrders", authenticate, fetchUnreadUserBuyOrderNotifications);
+router.get("/unread/user/sellOrder", authenticate, fetchUnreadUserSellOrderNotifications);
 
 
 export default router;

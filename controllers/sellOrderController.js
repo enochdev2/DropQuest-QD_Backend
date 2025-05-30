@@ -177,17 +177,14 @@ export const getAllPendingApprovalOrders = async (req, res) => {
 };
 export const getAllOnSaleOrders = async (req, res) => {
   try {
-    const onSaleStatus = "On Sale";
+    const onSaleStatuses = ["On Sale", "Partially Matched"]; // An array of statuses
 
-    const onSaleSellOrders = await SellOrder.find({ status: onSaleStatus })
-      .populate(
-        "userId",
-        "username nickname fullName phone bankName bankAccount"
-      )
-      .sort({ createdAt: 1 });
-    console.log(
-      "🚀 ~ getAllOnSaleOrders ~ onSaleSellOrders:",
-      onSaleSellOrders
+    // Use the $in operator to check if the status is one of the desired statuses
+    const onSaleSellOrders = await SellOrder.find({
+      status: { $in: onSaleStatuses },
+    }).populate(
+      "userId",
+      "username nickname fullName phone bankName bankAccount"
     );
 
     const sellOrders = onSaleSellOrders;
@@ -244,85 +241,144 @@ export const getAllCompletedOrders = async (req, res) => {
 
 export const matchOrders = async (req, res) => {
   try {
-    const { sellOrderId, buyOrderMatches } = req.body;
+    const { buyerOrderId, sellerOrderId } = req.body;
+
+    const buyOrderMatches = buyerOrderId;
 
     // 1. Fetch sell order
-    const sellOrder = await SellOrder.findById(sellOrderId);
+    const sellOrder = await SellOrder.findById(sellerOrderId);
     if (!sellOrder)
       return res.status(404).json({ error: "Sell order not found" });
-
     if (!["On Sale", "Partially Matched"].includes(sellOrder.status)) {
       return res
         .status(400)
         .json({ error: "Sell order not available for matching" });
     }
 
-    // Calculate total match amount requested
-    const totalMatchAmount = buyOrderMatches.reduce(
-      (sum, m) => sum + m.matchAmount,
-      0
+    // 2. Fetch the buy order based on the buyerOrderId
+    const buyOrder = await BuyOrder.findById(buyerOrderId);
+    if (!buyOrder) {
+      return res.status(404).json({ error: "Buy order not found" });
+    }
+
+    // if (!["Waiting for Fill", "Partially Matched"].includes(buyOrder.status)) {
+    //   return res.status(400).json({
+    //     error: `Buy order ${buyerOrderId} not available for matching`,
+    //   });
+    // }
+
+    // 3. Ensure the match amount doesn't exceed available amounts
+    const matchAmount = Math.min(
+      buyOrder.amountRemaining,
+      sellOrder.amountRemaining
     );
-    if (totalMatchAmount > sellOrder.amountRemaining) {
-      return res
-        .status(400)
-        .json({ error: "Match amount exceeds sell order remaining amount" });
+    console.log("🚀 ~ matchOrders ~ matchAmount:", matchAmount);
+
+    if (matchAmount <= 0) {
+      console.log("🚀 ~ matchOrders ~ matchAmount:", matchAmount);
+      return res.status(400).json({ error: "No available amount to match" });
     }
 
-    // 2. Process each buy order match
-    for (const match of buyOrderMatches) {
-      const buyOrder = await BuyOrder.findById(match.buyOrderId);
-      if (!buyOrder)
-        return res
-          .status(404)
-          .json({ error: `Buy order ${match.buyOrderId} not found` });
+    // 4. Process the match: Update both buy and sell orders
+    // Update buy order
+    buyOrder.amountRemaining -= matchAmount;
+    buyOrder.matchedSellOrders.push({
+      orderId: sellOrder._id,
+      matchModel: "SellOrder",
+      amount: matchAmount,
+    });
 
-      if (
-        !["Pending", "Waiting for Fill", "Partially Matched"].includes(
-          buyOrder.status
-        )
-      ) {
-        return res.status(400).json({
-          error: `Buy order ${match.buyOrderId} not available for matching`,
-        });
-      }
+    buyOrder.status =
+      buyOrder.amountRemaining === 0 ? "Buy Completed" : "Partially Matched";
+    await buyOrder.save();
 
-      if (match.matchAmount > buyOrder.amountRemaining) {
-        return res.status(400).json({
-          error: `Match amount exceeds buy order remaining amount for ${match.buyOrderId}`,
-        });
-      }
-
-      // Update buy order
-      buyOrder.amountRemaining -= match.matchAmount;
-      buyOrder.matchedSellOrders.push({
-        orderId: sellOrder._id,
-        matchModel: "SellOrder",
-        amount: match.matchAmount,
-      });
-
-      buyOrder.status =
-        buyOrder.amountRemaining === 0 ? "Buy Completed" : "Partially Matched";
-      await buyOrder.save();
-
-      // Update sell order matchedBuyOrders inside loop to keep partial matches
-      sellOrder.matchedBuyOrders.push({
-        orderId: buyOrder._id,
-        matchModel: "BuyOrder",
-        amount: match.matchAmount,
-      });
-    }
-
-    // 3. Update sell order after all matches
-    sellOrder.amountRemaining -= totalMatchAmount;
+    // Update sell order
+    sellOrder.amountRemaining -= matchAmount;
     sellOrder.status =
       sellOrder.amountRemaining === 0 ? "Sale Completed" : "Partially Matched";
+    sellOrder.matchedBuyOrders.push({
+      orderId: buyOrder._id,
+      matchModel: "BuyOrder",
+      amount: matchAmount,
+    });
     await sellOrder.save();
 
-    // 4. Notify users or handle other business logic here
+    // If there is remaining amount in the buy order, it can be matched with another sell order later.
+    if (buyOrder.amountRemaining > 0) {
+      // Optionally, you can flag this remaining amount in the buy order so that it can be used for future matching
+      console.log(
+        `Buy order ${buyerOrderId} still has remaining amount: ${buyOrder.amountRemaining}`
+      );
+    }
 
+    // 5. Notify users or handle other business logic here
     res.json({ message: "Orders matched successfully", sellOrder });
+
+    // // Calculate total match amount requested
+    // const totalMatchAmount = buyOrder.amount;
+    // let balance;
+
+    // if (totalMatchAmount > sellOrder.amountRemaining) {
+    //   balance = totalMatchAmount - sellOrder.amountRemaining;
+    // } else {
+    //   balance = sellOrder.amountRemaining - totalMatchAmount;
+    //   // 3. Update sell order after all matches
+    //   sellOrder.amountRemaining -= totalMatchAmount;
+    //   sellOrder.status =
+    //     sellOrder.amountRemaining === 0
+    //       ? "Sale Completed"
+    //       : "Partially Matched";
+    //   await sellOrder.save();
+
+    // }
+
+    //  // 2. Process each buy order match
+    // for (const match of buyOrderMatches) {
+    //   const buyOrder = await BuyOrder.findById(match.buyOrderId);
+    //   if (!buyOrder)
+    //     return res
+    //       .status(404)
+    //       .json({ error: `Buy order ${match.buyOrderId} not found` });
+
+    //   if (
+    //     !["Pending", "Waiting for Fill", "Partially Matched"].includes(
+    //       buyOrder.status
+    //     )
+    //   ) {
+    //     return res.status(400).json({
+    //       error: `Buy order ${match.buyOrderId} not available for matching`,
+    //     });
+    //   }
+
+    //   if (match.matchAmount > buyOrder.amountRemaining) {
+    //     return res.status(400).json({
+    //       error: `Match amount exceeds buy order remaining amount for ${match.buyOrderId}`,
+    //     });
+    //   }
+
+    //   // Update buy order
+    //   buyOrder.amountRemaining -= match.matchAmount;
+    //   buyOrder.matchedSellOrders.push({
+    //     orderId: sellOrder._id,
+    //     matchModel: "SellOrder",
+    //     amount: match.matchAmount,
+    //   });
+
+    //   buyOrder.status =
+    //     buyOrder.amountRemaining === 0 ? "Buy Completed" : "Partially Matched";
+    //   await buyOrder.save();
+
+    //   // Update sell order matchedBuyOrders inside loop to keep partial matches
+    //   sellOrder.matchedBuyOrders.push({
+    //     orderId: buyOrder._id,
+    //     matchModel: "BuyOrder",
+    //     amount: match.matchAmount,
+    //   });
+    // }
+
+    // 4. Notify users or handle other business logic here
   } catch (error) {
-    console.error(error);
+    console.log(error);
     res.status(500).json({ error: "Server error" });
   }
 };
