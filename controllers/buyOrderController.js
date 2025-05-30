@@ -170,14 +170,15 @@ export const getAllPendingBuyApprovalOrders = async (req, res) => {
 };
 export const getAllOnBuyOrders = async (req, res) => {
   try {
-    const onBuyStatus = "Waiting for Buy";
+    const onBuyStatus = ["Waiting for Buy", "Partially Matched"]; // An array of statuses
 
-    const onBuyOrders = await BuyOrder.find({ status: onBuyStatus })
-      .populate(
-        "userId",
-        "username nickname fullName phone bankName bankAccount"
-      )
-      .sort({ createdAt: 1 });
+    // Use the $in operator to check if the status is one of the desired statuses
+    const onBuyOrders = await BuyOrder.find({
+      status: { $in: onBuyStatus },
+    }).populate(
+      "userId",
+      "username nickname fullName phone bankName bankAccount"
+    );
 
     const buyOrders = onBuyOrders;
 
