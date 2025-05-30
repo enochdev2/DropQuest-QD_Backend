@@ -175,6 +175,7 @@ export const getAllPendingApprovalOrders = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 export const getAllOnSaleOrders = async (req, res) => {
   try {
     const onSaleStatuses = ["On Sale", "Partially Matched"]; // An array of statuses
@@ -238,6 +239,60 @@ export const getAllCompletedOrders = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const getAllCompletedMatchedOrders = async (req, res) => {
+  try {
+    // Define completed statuses for sell and buy
+    const completedSellStatus = "Sale Completed";
+    const completedBuyStatus = "Buy Completed";
+
+    // Fetch completed sell orders with user info and matched buy orders populated
+    const completedSellOrders = await SellOrder.find({
+      status: completedSellStatus,
+    })
+      .populate(
+        "userId",
+        "username nickname fullName phone bankName bankAccount"
+      )
+      .populate({
+        path: "matchedBuyOrders.orderId",  // Populating matchedBuyOrders
+        select: "userId amount price status",  // Fields to populate from BuyOrder
+      })
+      .sort({ createdAt: -1 });
+
+    // Fetch completed buy orders with user info and matched sell orders populated
+    const completedBuyOrders = await BuyOrder.find({
+      status: completedBuyStatus,
+    })
+      .populate(
+        "userId",
+        "username nickname fullName phone bankName bankAccount"
+      )
+      .populate({
+        path: "matchedSellOrders.orderId",  // Populating matchedSellOrders
+        select: "userId amount price status",  // Fields to populate from SellOrder
+      })
+      .sort({ createdAt: -1 });
+
+    // Optionally, you can merge and sort both lists by createdAt descending
+    // If you want a single combined list sorted by date:
+    const combinedOrders = [
+      ...completedSellOrders,
+      ...completedBuyOrders,
+    ].sort((a, b) => b.createdAt - a.createdAt);
+
+    // Send the result as response
+    res.json({
+      sellOrders: completedSellOrders,
+      buyOrders: completedBuyOrders,
+      combinedOrders, // optional
+    });
+  } catch (error) {
+    console.error("Error fetching completed orders:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 export const matchOrders = async (req, res) => {
   try {
