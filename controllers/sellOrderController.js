@@ -283,8 +283,8 @@ export const getAllCompletedMatchedOrders = async (req, res) => {
 
     // Send the result as response
     res.json({
-      sellOrders: completedSellOrders,
-      buyOrders: completedBuyOrders,
+      // sellOrders: completedSellOrders,
+      // buyOrders: completedBuyOrders,
       combinedOrders, // optional
     });
   } catch (error) {
