@@ -1,0 +1,43 @@
+import mongoose from "mongoose";
+const Schema = mongoose.Schema;
+
+const matchSchema = new Schema({
+  orderId: { 
+    type: Schema.Types.ObjectId, 
+    required: true, 
+    // on a SellOrder this points to a BuyOrder, and vice-versa
+    refPath: "matchModel" 
+  },
+  matchModel: { 
+    type: String, 
+    required: true, 
+    enum: ["BuyOrder", "SellOrder"] 
+  },
+  amount: { 
+    type: Number, 
+    required: true 
+  },
+  matchedAt: { 
+    type: Date, 
+    default: Date.now 
+  }
+}, { _id: false });
+
+
+const chatOrderSchema = new Schema({
+  userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  amount: { type: Number, required: true },  
+  amountRemaining: { type: Number, required: true },
+  price: { type: Number }, // optional - if you want to include price
+  fee: { type: Number }, // optional - if you want to include price
+ status: {
+    type: String,
+    enum: ["Pending Approval", "Waiting for Buy", "Partially Matched", "Buy Completed"],
+    default: "Pending Approval",
+  },
+   matchedSellOrders: [ matchSchema ],
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+}, { timestamps: true });
+
+export const ChatOrder = mongoose.model("ChatOrder", chatOrderSchema);
