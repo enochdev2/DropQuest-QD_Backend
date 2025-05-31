@@ -56,6 +56,8 @@ export const closeChat = async (req, res) => {
       { isClosed: true, closedAt: new Date() },
       { upsert: true, new: true }
     );
+
+     await ChatModel.deleteMany({ orderId });
     res.status(200).json({ message: "Chat closed", session });
   } catch (err) {
     res.status(500).json({ error: err.message });
