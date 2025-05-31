@@ -3,14 +3,17 @@ import {
   getMessages,
   closeChat,
   getChatStatus,
-  saveMessage
+  saveMessage,
+  getOpenChats
 } from "../controllers/chatController.js";
+import { authenticate } from "../middleware/autheticate.js";
 
 const router = express.Router();
 
-router.post("/", saveMessage);
+router.post("/",authenticate, saveMessage);
 router.get("/messages/:orderId", getMessages);
-router.patch("/chat/:orderId/close", closeChat);
+router.patch("/close/:orderId", closeChat);
 router.get("/chat/:orderId/status", getChatStatus);
+router.get("/allchat", getOpenChats);
 
 export default router;
