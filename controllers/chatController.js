@@ -11,7 +11,7 @@ export const saveMessage = async (req, res) => {
 
     // If no session, create one
     if (!chat) {
-      chat = new ChatSession({ orderId, participants: [sender] });
+      chat = new ChatSession({ orderId });
       await chat.save();
     }
 
@@ -51,13 +51,15 @@ export const closeChat = async (req, res) => {
   try {
     const orderId = req.params.orderId;
     console.log("🚀 ~ closeChat ~ orderId:", orderId);
-    const session = await ChatSession.findOneAndUpdate(
+    const sessions = await ChatSession.findOneAndUpdate(
       { orderId: orderId },
       { isClosed: true, closedAt: new Date() },
       { upsert: true, new: true }
     );
 
      await ChatModel.deleteMany({ orderId });
+     const session = await ChatSession.findOneAndDelete({ orderId });
+     
     res.status(200).json({ message: "Chat closed", session });
   } catch (err) {
     res.status(500).json({ error: err.message });
