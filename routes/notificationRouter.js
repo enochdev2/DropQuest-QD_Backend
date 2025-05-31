@@ -7,6 +7,7 @@ import {
   fetchUnreadBuyOrderNotifications,
   fetchUnreadUserBuyOrderNotifications,
   fetchUnreadUserSellOrderNotifications,
+  fetchUnreadChatSessionNotifications,
 } from '../controllers/notificationController.js';
 import { authenticate } from '../middleware/autheticate.js';
 
@@ -23,6 +24,7 @@ router.put('/mark-read/:id', markNotificationAsRead);
 // router.patch("/notifications/mark-read/:id", markNotificationAsRead);
 router.get("/unread/sellOrders", fetchUnreadSellOrderNotifications);
 router.get("/unread/buyOrders", fetchUnreadBuyOrderNotifications);
+router.get("/unread/chatSession", fetchUnreadChatSessionNotifications);
 router.get("/unread/user/buyOrders", authenticate, fetchUnreadUserBuyOrderNotifications);
 router.get("/unread/user/sellOrder", authenticate, fetchUnreadUserSellOrderNotifications);
 
