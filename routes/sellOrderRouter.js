@@ -3,6 +3,8 @@ import express from "express";
 // import asyncHandler from '../utils/asyncHandler';
 import {
   approveSellOrder,
+  cancelTrade,
+  completeOrders,
   createSellOrder,
   getAdminDashboardStats,
   getAllCompletedMatchedOrders,
@@ -33,5 +35,7 @@ router.get("/admin/all/inProgress-orders", getAllInProgressApprovalOrders);
 router.get("/admin/get-stats", getSummaryStats);
 router.get("/admin/getallstats", getAdminDashboardStats);
 router.post("/admin/match-orders", matchOrders);
+router.post("/admin/complete-orders", completeOrders);
+router.post("/admin/cancel-orders", cancelTrade);
 
 export default router;
