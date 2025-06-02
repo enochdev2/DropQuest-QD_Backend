@@ -421,6 +421,7 @@ export const getAllCompletedMatchedOrders = async (req, res) => {
 export const completeOrders = async (req, res) => {
   try {
     const { buyerOrderId, sellerOrderId } = req.body;
+   
 
     const buyOrderMatches = buyerOrderId;
 
@@ -521,13 +522,13 @@ export const completeOrders = async (req, res) => {
     await Promise.all([
       createNewUserNotification(
         sellerMsg,
-        sellUserName,
+        sellOrder.userId,
         "sellOrder",
         sellOrder._id
       ),
       createNewUserNotification(
         buyerMsg,
-        buyUserName,
+        buyOrder.userId,
         "buyOrder",
         buyOrder._id
       ),
@@ -621,13 +622,13 @@ export const matchOrders = async (req, res) => {
     await Promise.all([
       createNewUserNotification(
         sellerMsg,
-        sellUserName,
+        sellOrder.userId,
         "sellOrder",
         sellOrder._id
       ),
       createNewUserNotification(
         buyerMsg,
-        buyUserName,
+        buyOrder.userId,
         "buyOrder",
         buyOrder._id
       ),
@@ -646,13 +647,14 @@ export const matchOrders = async (req, res) => {
 
 export const cancelTrade = async (req, res) => {
   try {
-    const { sellOrderId, buyOrderId } = req.body;
+    const {  buyerOrderId, sellerOrderId  } = req.body;
+     
 
-    const sellOrder = await SellOrder.findById(sellOrderId).populate(
+    const sellOrder = await SellOrder.findById(sellerOrderId).populate(
       "userId",
       "nickname"
     );
-    const buyOrder = await BuyOrder.findById(buyOrderId).populate(
+    const buyOrder = await BuyOrder.findById(buyerOrderId).populate(
       "userId",
       "nickname"
     );
@@ -689,25 +691,27 @@ export const cancelTrade = async (req, res) => {
     const sellUserName = sellOrder.userId?.nickname || "Seller";
     const buyUserName = buyOrder.userId?.nickname || "Buyer";
 
-    const sellerMsg = `Your sell order of ${matchAmount} USDT has been cancelled with buyer ${buyUserName}.`;
-    const buyerMsg = `Your buy order of ${matchAmount} USDT has been cancelled with seller ${sellUserName}.`;
+    const sellerMsg = `Your sell order of ${sellOrder.amountRemaining} USDT has been cancelled with buyer ${buyUserName}.`;
+    const buyerMsg = `Your buy order of ${buyOrder.amountRemaining} USDT has been cancelled with seller ${sellUserName}.`;
 
+    console.log("🚀 ~ cancelTrade ~ buyerMsg:", buyerMsg)
     // Send notifications to seller and buyer
     await Promise.all([
       createNewUserNotification(
         sellerMsg,
-        sellUserName,
+        sellOrder.userId,
         "sellOrder",
         sellOrder._id
       ),
       createNewUserNotification(
         buyerMsg,
-        buyUserName,
+        buyOrder.userId,
         "buyOrder",
         buyOrder._id
       ),
     ]);
 
+    console.log("🚀 ~ cancelTrade ~ sellOrder:", sellOrder)
     res.json({
       message: "Trade cancelled and orders restored",
       sellOrder,
