@@ -15,7 +15,7 @@ export const createSellOrder = async (req, res) => {
 
     const user = await userModel
       .findById(userId)
-      .select("nickname username")
+      .select("nickname username phone")
       .lean();
 
     const userName = user?.nickname || user?.username || "a user";
@@ -240,57 +240,156 @@ export const getAllCompletedOrders = async (req, res) => {
   }
 };
 
+// export const getAllCompletedMatchedOrders = async (req, res) => {
+//   try {
+//     // Define completed statuses for sell and buy
+//     const completedSellStatus = "Sale Completed";
+//     const completedBuyStatus = "Buy Completed";
+
+//     // Fetch completed sell orders with user info and matched buy orders populated
+//     const completedSellOrders = await SellOrder.find({
+//       status: completedSellStatus,
+//     })
+//       .populate(
+//         "userId",
+//         "username nickname fullName phone bankName bankAccount"
+//       )
+//       .populate({
+//         path: "matchedBuyOrders.orderId", // Populating matchedBuyOrders
+//         select: "userId amount price status", // Fields to populate from BuyOrder
+//       })
+//       .sort({ createdAt: -1 });
+
+//     // Fetch completed buy orders with user info and matched sell orders populated
+//     const completedBuyOrders = await BuyOrder.find({
+//       status: completedBuyStatus,
+//     })
+//       .populate(
+//         "userId",
+//         "username nickname fullName phone bankName bankAccount"
+//       )
+//       .populate({
+//         path: "matchedSellOrders.orderId", // Populating matchedSellOrders
+//         select: "userId amount price status", // Fields to populate from SellOrder
+//       })
+//       .sort({ createdAt: -1 });
+
+//     // Optionally, you can merge and sort both lists by createdAt descending
+//     // If you want a single combined list sorted by date:
+//     const combinedOrders = [...completedSellOrders, ...completedBuyOrders].sort(
+//       (a, b) => b.createdAt - a.createdAt
+//     );
+//     console.log(JSON.stringify(combinedOrders, null, 2));
+
+//     // Send the result as response
+//     res.json(
+//       combinedOrders // optional
+//     );
+//     // buyOrders: completedBuyOrders,
+//     // sellOrders: completedSellOrders,
+//   } catch (error) {
+//     console.error("Error fetching completed orders:", error);
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 export const getAllCompletedMatchedOrders = async (req, res) => {
   try {
-    // Define completed statuses for sell and buy
     const completedSellStatus = "Sale Completed";
     const completedBuyStatus = "Buy Completed";
 
-    // Fetch completed sell orders with user info and matched buy orders populated
-    const completedSellOrders = await SellOrder.find({
-      status: completedSellStatus,
-    })
-      .populate(
-        "userId",
-        "username nickname fullName phone bankName bankAccount"
-      )
+    // 1. Fetch Sell Orders (now no need to populate userId for nickname)
+    const completedSellOrders = await SellOrder.find({ status: completedSellStatus })
       .populate({
-        path: "matchedBuyOrders.orderId", // Populating matchedBuyOrders
-        select: "userId amount price status", // Fields to populate from BuyOrder
+        path: "matchedBuyOrders.orderId",
+        select: "buyerNickname buyerPhone fee amount", // assuming buyerNickname now exists on BuyOrder
+      })
+      .sort({ createdAt: -1 });
+      console.log("🚀 ~ getAllCompletedMatchedOrders ~ completedSellOrders:", completedSellOrders)
+
+    // 2. Fetch Buy Orders (now no need to populate userId for nickname)
+    const completedBuyOrders = await BuyOrder.find({ status: completedBuyStatus })
+      .populate({
+        path: "matchedSellOrders.orderId",
+        select: "sellerNickname sellerPhone amount", 
       })
       .sort({ createdAt: -1 });
 
-    // Fetch completed buy orders with user info and matched sell orders populated
-    const completedBuyOrders = await BuyOrder.find({
-      status: completedBuyStatus,
-    })
-      .populate(
-        "userId",
-        "username nickname fullName phone bankName bankAccount"
-      )
-      .populate({
-        path: "matchedSellOrders.orderId", // Populating matchedSellOrders
-        select: "userId amount price status", // Fields to populate from SellOrder
-      })
-      .sort({ createdAt: -1 });
+    // 3. Transform Sell Orders
+    const sell = completedSellOrders.map((order) => {
+  const progressRecords = order.matchedBuyOrders.map((match) => ({
+    type: "Buy",
+    amount: `${match.amount} USDT`,
+    nickname: match.orderId?.buyerNickname || "N/A",
+    phone: match.orderId?.buyerPhone || "N/A",
+    fee: match.orderId?.fee ? `${match.orderId.fee} USDT` : null,
+  }));
 
-    // Optionally, you can merge and sort both lists by createdAt descending
-    // If you want a single combined list sorted by date:
-    const combinedOrders = [...completedSellOrders, ...completedBuyOrders].sort(
-      (a, b) => b.createdAt - a.createdAt
-    );
+  const buyerFromMatch = progressRecords[0]?.nickname || "N/A";
+  const buyerPhoneFromMatch = progressRecords[0]?.phone || "N/A";
 
-    // Send the result as response
-    res.json(
-      combinedOrders // optional
-    );
-    // buyOrders: completedBuyOrders,
-    // sellOrders: completedSellOrders,
+  return {
+    postingNumber: `SL-${order._id.toString().slice(-6).toUpperCase()}`,
+    buyer: buyerFromMatch,
+    seller: order?.sellerNickname || "N/A",
+    phone: order?.sellerPhone || "N/A",
+    amount: `${order.amount} USDT`,
+    status: "Completed",
+    details: {
+      buyerNickname: buyerFromMatch,
+      buyerPhone: buyerPhoneFromMatch,
+      buyRequestAmount: `${order.amount} USDT`,
+      progressRecords,
+      registrationDate: new Date(order.createdAt).toLocaleString(),
+      completionDate: new Date(order.updatedAt).toLocaleString(),
+    },
+  };
+});
+
+    console.log("🚀 ~ sell ~ sell:", sell)
+
+    // 4. Transform Buy Orders
+    const buy = completedBuyOrders.map((order) => {
+      const progressRecords = order.matchedSellOrders.map((match) => ({
+        type: "Sell",
+        amount: `${match.amount} USDT`,
+        nickname: match.orderId?.sellerNickname || "N/A",
+        fee: null,
+      }));
+
+      progressRecords.push({
+        type: "Buy",
+        amount: `${order.amount} USDT`,
+        nickname: order.buyerNickname || "N/A",
+        fee: order.fee ? `${order.fee} USDT` : null,
+      });
+
+      const sellerFromMatch = progressRecords.find((r) => r.type === "Sell")?.nickname || "N/A";
+
+      return {
+        postingNumber: `BY-${order._id.toString().slice(-6).toUpperCase()}`,
+        buyer: order.buyerNickname || "N/A",
+        seller: sellerFromMatch,
+        amount: `${order.amount} USDT`,
+        status: "Completed",
+        details: {
+          buyerNickname: order.buyerNickname || "N/A",
+          buyerPhone: order.buyerPhone || "N/A",
+          buyRequestAmount: `${order.amount} USDT`,
+          progressRecords,
+          registrationDate: new Date(order.createdAt).toLocaleString(),
+          completionDate: new Date(order.updatedAt).toLocaleString(),
+        },
+      };
+    });
+
+    return res.status(200).json({ sell, buy });
   } catch (error) {
-    console.error("Error fetching completed orders:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Error fetching matched orders:", error);
+    return res.status(500).json({ error: error.message });
   }
 };
+
 
 export const matchOrders = async (req, res) => {
   try {
@@ -505,7 +604,6 @@ export const getSummaryStats = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 export const getAdminDashboardStats = async (req, res) => {
   try {

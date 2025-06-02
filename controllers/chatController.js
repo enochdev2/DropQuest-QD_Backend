@@ -7,8 +7,10 @@ export const saveMessage = async (req, res) => {
     const { orderId, sender, content } = req.body;
     const nickname = req.user.nickname;
     const userId = req.user.id
+    console.log("🚀 ~ saveMessage ~ userId:", userId)
     let chat = await ChatSession.findOne({ orderId });
 
+    console.log("🚀 ~ saveMessage ~ chat:", chat)
     // If no session, create one
     if (!chat) {
       chat = new ChatSession({ orderId });

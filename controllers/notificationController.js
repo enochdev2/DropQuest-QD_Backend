@@ -188,7 +188,7 @@ export const fetchUnreadChatSessionNotifications = async (req, res) => {
   }
 };
 
-export const fetchUnreadUserBuyOrderNotifications = async (req, res) => {
+export const fetchUnreadUserProfileNotifications = async (req, res) => {
   try {
     // If you want to filter by userId (optional, e.g. from req.user.id)
     const userId = req.user.id;
@@ -198,8 +198,10 @@ export const fetchUnreadUserBuyOrderNotifications = async (req, res) => {
       userId,
       isForAdmin: false,
       isRead: false,
-      type: "buyOrder"
-    }).sort({ createdAt: -1 }).populate("userId", "username nickname");
+      type: "registration",
+    })
+      .sort({ createdAt: -1 })
+      .populate("userId", "username nickname");
 
     // If admin wants all unread sellOrder notifications (no user filter):
     // const notifications = await Notification.find({
@@ -208,7 +210,7 @@ export const fetchUnreadUserBuyOrderNotifications = async (req, res) => {
     //   type: "buyOrder",
     // })
     //   .sort({ createdAt: -1 })
-      // .populate("userId", "username nickname");
+    // .populate("userId", "username nickname");
     // console.log(
     //   "🚀 ~ fetchUnreadSellOrderNotifications ~ notifications:",
     //   notifications
@@ -220,6 +222,77 @@ export const fetchUnreadUserBuyOrderNotifications = async (req, res) => {
     return res.status(500).json({ error: "Error fetching notifications." });
   }
 };
+
+export const fetchUnreadUserInquiryNotifications = async (req, res) => {
+  try {
+    // If you want to filter by userId (optional, e.g. from req.user.id)
+    const userId = req.user.id;
+
+    // If userId is required:
+    const notifications = await Notification.find({
+      userId,
+      isForAdmin: false,
+      isRead: false,
+      type: "inquiry",
+    })
+      .sort({ createdAt: -1 })
+      .populate("userId", "username nickname");
+
+    // If admin wants all unread sellOrder notifications (no user filter):
+    // const notifications = await Notification.find({
+    //   isForAdmin: true,
+    //   isRead: false,
+    //   type: "buyOrder",
+    // })
+    //   .sort({ createdAt: -1 })
+    // .populate("userId", "username nickname");
+    // console.log(
+    //   "🚀 ~ fetchUnreadSellOrderNotifications ~ notifications:",
+    //   notifications
+    // );
+
+    return res.status(200).json(notifications);
+  } catch (error) {
+    console.error("Error fetching unread sellOrder notifications:", error);
+    return res.status(500).json({ error: "Error fetching notifications." });
+  }
+};
+
+export const fetchUnreadUserBuyOrderNotifications = async (req, res) => {
+  try {
+    // If you want to filter by userId (optional, e.g. from req.user.id)
+    const userId = req.user.id;
+
+    // If userId is required:
+    const notifications = await Notification.find({
+      userId,
+      isForAdmin: false,
+      isRead: false,
+      type: "buyOrder",
+    })
+      .sort({ createdAt: -1 })
+      .populate("userId", "username nickname");
+
+    // If admin wants all unread sellOrder notifications (no user filter):
+    // const notifications = await Notification.find({
+    //   isForAdmin: true,
+    //   isRead: false,
+    //   type: "buyOrder",
+    // })
+    //   .sort({ createdAt: -1 })
+    // .populate("userId", "username nickname");
+    // console.log(
+    //   "🚀 ~ fetchUnreadSellOrderNotifications ~ notifications:",
+    //   notifications
+    // );
+
+    return res.status(200).json(notifications);
+  } catch (error) {
+    console.error("Error fetching unread sellOrder notifications:", error);
+    return res.status(500).json({ error: "Error fetching notifications." });
+  }
+};
+
 export const fetchUnreadUserSellOrderNotifications = async (req, res) => {
   try {
     // If you want to filter by userId (optional, e.g. from req.user.id)
@@ -230,8 +303,10 @@ export const fetchUnreadUserSellOrderNotifications = async (req, res) => {
       id,
       isForAdmin: false,
       isRead: false,
-      type: "sellOrder"
-    }).sort({ createdAt: -1 }).populate("userId", "username nickname");
+      type: "sellOrder",
+    })
+      .sort({ createdAt: -1 })
+      .populate("userId", "username nickname");
 
     // If admin wants all unread sellOrder notifications (no user filter):
     // const notifications = await Notification.find({
@@ -240,7 +315,7 @@ export const fetchUnreadUserSellOrderNotifications = async (req, res) => {
     //   type: "buyOrder",
     // })
     //   .sort({ createdAt: -1 })
-      // .populate("userId", "username nickname");
+    // .populate("userId", "username nickname");
     // console.log(
     //   "🚀 ~ fetchUnreadSellOrderNotifications ~ notifications:",
     //   notifications
