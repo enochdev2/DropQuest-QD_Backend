@@ -615,8 +615,8 @@ export const matchOrders = async (req, res) => {
     const sellUserName = sellOrder.userId?.nickname || "Seller";
     const buyUserName = buyOrder.userId?.nickname || "Buyer";
 
-    const sellerMsg = `Your sell order of ${matchAmount} USDT has been matched with buyer ${buyUserName}.`;
-    const buyerMsg = `Your buy order of ${matchAmount} USDT has been matched with seller ${sellUserName}.`;
+    const sellerMsg = `Your sell order of ${sellOrder.amountRemaining} USDT has been matched with buyer ${buyUserName}.`;
+    const buyerMsg = `Your buy order of ${buyOrder.amountRemaining} USDT has been matched with seller ${sellUserName}.`;
 
     // Send notifications to seller and buyer
     await Promise.all([
