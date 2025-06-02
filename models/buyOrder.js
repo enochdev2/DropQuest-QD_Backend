@@ -39,17 +39,27 @@ const buyOrderSchema = new Schema(
     amountRemaining: { type: Number, required: true },
     price: { type: Number }, // optional - if you want to include price
     fee: { type: Number }, // optional - if you want to include price
+    feeDeducted: {
+      type: Boolean,
+      default: false,
+    },
     status: {
       type: String,
       enum: [
         "Pending Approval",
         "Waiting for Buy",
+        "In Progress",
         "Partially Matched",
         "Buy Completed",
       ],
       default: "Pending Approval",
     },
     matchedSellOrders: [matchSchema],
+    currentSellOrderInProgress: {
+      type: Schema.Types.ObjectId,
+      ref: "SellOrder",
+      default: null,
+    },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
@@ -71,6 +81,5 @@ buyOrderSchema.pre("save", async function (next) {
   }
   next();
 });
-
 
 export const BuyOrder = mongoose.model("BuyOrder", buyOrderSchema);

@@ -25,8 +25,8 @@ export const authorizeAdmin = (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized: No user info found" });
   }
 
-  // Check if user has admin role - adjust field name as per your user model / JWT payload
-  if (req.user.role && req.user.role.toLowerCase() === "admin") {
+  // Check if user has admin role - adjust field name as per your user model / JWT payload 
+  if (req.user.admin) {
     return next();
   }
 

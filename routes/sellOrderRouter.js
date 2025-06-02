@@ -7,6 +7,7 @@ import {
   getAdminDashboardStats,
   getAllCompletedMatchedOrders,
   getAllCompletedOrders,
+  getAllInProgressApprovalOrders,
   getAllOnSaleOrders,
   getAllPendingApprovalOrders,
   getPendingSellOrders,
@@ -28,6 +29,7 @@ router.get("/all-orders", getAllCompletedOrders); // /api/sell-orders?status=On 
 router.get("/allmatched-orders", getAllCompletedMatchedOrders);
 router.get("/admin/all/onsale-orders", getAllOnSaleOrders);
 router.get("/admin/all/pending-orders", getAllPendingApprovalOrders);
+router.get("/admin/all/inProgress-orders", getAllInProgressApprovalOrders);
 router.get("/admin/get-stats", getSummaryStats);
 router.get("/admin/getallstats", getAdminDashboardStats);
 router.post("/admin/match-orders", matchOrders);

@@ -27,7 +27,7 @@ export const createSellOrder = async (req, res) => {
     const type = "sellOrder";
     const referenceId = newOrder._id;
 
-    await createNewUserNotification(message, userId, type, referenceId);
+    await createNewAdminNotification(message, userId, type, referenceId);
 
     res.status(201).json(newOrder);
   } catch (error) {
@@ -176,6 +176,26 @@ export const getAllPendingApprovalOrders = async (req, res) => {
   }
 };
 
+export const getAllInProgressApprovalOrders = async (req, res) => {
+  try {
+    const onSaleStatus = "In Progress";
+
+    const onSaleSellOrders = await SellOrder.find({ status: onSaleStatus })
+      .populate(
+        "userId",
+        "username nickname fullName phone bankName bankAccount"
+      )
+      .sort({ createdAt: -1 });
+
+    const sellOrders = onSaleSellOrders;
+
+    res.json(sellOrders);
+  } catch (error) {
+    console.error("Error fetching on-sale sell orders:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const getAllOnSaleOrders = async (req, res) => {
   try {
     const onSaleStatuses = ["On Sale", "Partially Matched"]; // An array of statuses
@@ -299,54 +319,61 @@ export const getAllCompletedMatchedOrders = async (req, res) => {
     const completedBuyStatus = "Buy Completed";
 
     // 1. Fetch Sell Orders (now no need to populate userId for nickname)
-    const completedSellOrders = await SellOrder.find({ status: completedSellStatus })
+    const completedSellOrders = await SellOrder.find({
+      status: completedSellStatus,
+    })
       .populate({
         path: "matchedBuyOrders.orderId",
         select: "buyerNickname buyerPhone fee amount", // assuming buyerNickname now exists on BuyOrder
       })
       .sort({ createdAt: -1 });
-      console.log("🚀 ~ getAllCompletedMatchedOrders ~ completedSellOrders:", completedSellOrders)
+    console.log(
+      "🚀 ~ getAllCompletedMatchedOrders ~ completedSellOrders:",
+      completedSellOrders
+    );
 
     // 2. Fetch Buy Orders (now no need to populate userId for nickname)
-    const completedBuyOrders = await BuyOrder.find({ status: completedBuyStatus })
+    const completedBuyOrders = await BuyOrder.find({
+      status: completedBuyStatus,
+    })
       .populate({
         path: "matchedSellOrders.orderId",
-        select: "sellerNickname sellerPhone amount", 
+        select: "sellerNickname sellerPhone amount",
       })
       .sort({ createdAt: -1 });
 
     // 3. Transform Sell Orders
     const sell = completedSellOrders.map((order) => {
-  const progressRecords = order.matchedBuyOrders.map((match) => ({
-    type: "Buy",
-    amount: `${match.amount} USDT`,
-    nickname: match.orderId?.buyerNickname || "N/A",
-    phone: match.orderId?.buyerPhone || "N/A",
-    fee: match.orderId?.fee ? `${match.orderId.fee} USDT` : null,
-  }));
+      const progressRecords = order.matchedBuyOrders.map((match) => ({
+        type: "Buy",
+        amount: `${match.amount} USDT`,
+        nickname: match.orderId?.buyerNickname || "N/A",
+        phone: match.orderId?.buyerPhone || "N/A",
+        fee: match.orderId?.fee ? `${match.orderId.fee} USDT` : null,
+      }));
 
-  const buyerFromMatch = progressRecords[0]?.nickname || "N/A";
-  const buyerPhoneFromMatch = progressRecords[0]?.phone || "N/A";
+      const buyerFromMatch = progressRecords[0]?.nickname || "N/A";
+      const buyerPhoneFromMatch = progressRecords[0]?.phone || "N/A";
 
-  return {
-    postingNumber: `SL-${order._id.toString().slice(-6).toUpperCase()}`,
-    buyer: buyerFromMatch,
-    seller: order?.sellerNickname || "N/A",
-    phone: order?.sellerPhone || "N/A",
-    amount: `${order.amount} USDT`,
-    status: "Completed",
-    details: {
-      buyerNickname: buyerFromMatch,
-      buyerPhone: buyerPhoneFromMatch,
-      buyRequestAmount: `${order.amount} USDT`,
-      progressRecords,
-      registrationDate: new Date(order.createdAt).toLocaleString(),
-      completionDate: new Date(order.updatedAt).toLocaleString(),
-    },
-  };
-});
+      return {
+        postingNumber: `SL-${order._id.toString().slice(-6).toUpperCase()}`,
+        buyer: buyerFromMatch,
+        seller: order?.sellerNickname || "N/A",
+        phone: order?.sellerPhone || "N/A",
+        amount: `${order.amount} USDT`,
+        status: "Completed",
+        details: {
+          buyerNickname: buyerFromMatch,
+          buyerPhone: buyerPhoneFromMatch,
+          buyRequestAmount: `${order.amount} USDT`,
+          progressRecords,
+          registrationDate: new Date(order.createdAt).toLocaleString(),
+          completionDate: new Date(order.updatedAt).toLocaleString(),
+        },
+      };
+    });
 
-    console.log("🚀 ~ sell ~ sell:", sell)
+    console.log("🚀 ~ sell ~ sell:", sell);
 
     // 4. Transform Buy Orders
     const buy = completedBuyOrders.map((order) => {
@@ -364,7 +391,8 @@ export const getAllCompletedMatchedOrders = async (req, res) => {
         fee: order.fee ? `${order.fee} USDT` : null,
       });
 
-      const sellerFromMatch = progressRecords.find((r) => r.type === "Sell")?.nickname || "N/A";
+      const sellerFromMatch =
+        progressRecords.find((r) => r.type === "Sell")?.nickname || "N/A";
 
       return {
         postingNumber: `BY-${order._id.toString().slice(-6).toUpperCase()}`,
@@ -390,34 +418,42 @@ export const getAllCompletedMatchedOrders = async (req, res) => {
   }
 };
 
-
-export const matchOrders = async (req, res) => {
+export const completeOrders = async (req, res) => {
   try {
     const { buyerOrderId, sellerOrderId } = req.body;
 
     const buyOrderMatches = buyerOrderId;
 
     // 1. Fetch sell order
-    const sellOrder = await SellOrder.findById(sellerOrderId);
+    const sellOrder = await SellOrder.findById(sellerOrderId).populate(
+      "userId",
+      "nickname"
+    );
     if (!sellOrder)
       return res.status(404).json({ error: "Sell order not found" });
-    if (!["On Sale", "Partially Matched"].includes(sellOrder.status)) {
-      return res
-        .status(400)
-        .json({ error: "Sell order not available for matching" });
+
+    // Ensure sell order is in progress
+    if (sellOrder.status !== "In Progress") {
+      return res.status(400).json({
+        error: "Sell order is not in progress and cannot be completed",
+      });
     }
 
     // 2. Fetch the buy order based on the buyerOrderId
-    const buyOrder = await BuyOrder.findById(buyerOrderId);
+    const buyOrder = await BuyOrder.findById(buyerOrderId).populate(
+      "userId",
+      "nickname"
+    );
     if (!buyOrder) {
       return res.status(404).json({ error: "Buy order not found" });
     }
 
-    // if (!["Waiting for Fill", "Partially Matched"].includes(buyOrder.status)) {
-    //   return res.status(400).json({
-    //     error: `Buy order ${buyerOrderId} not available for matching`,
-    //   });
-    // }
+    // Ensure buy order is in progress
+    if (buyOrder.status !== "In Progress") {
+      return res.status(400).json({
+        error: "Buy order is not in progress and cannot be completed",
+      });
+    }
 
     // 3. Ensure the match amount doesn't exceed available amounts
     const matchAmount = Math.min(
@@ -431,28 +467,39 @@ export const matchOrders = async (req, res) => {
       return res.status(400).json({ error: "No available amount to match" });
     }
 
+    // Only deduct fee once per buy order
+    let fee = 0;
+    if (!buyOrder.feeDeducted) {
+      fee = +(matchAmount * 0.01).toFixed(6); // 1% fee
+      buyOrder.fee = (buyOrder.fee || 0) + fee;
+      buyOrder.feeDeducted = true; // Mark fee as deducted
+    }
+
     // 4. Process the match: Update both buy and sell orders
     // Update buy order
-    buyOrder.amountRemaining -= matchAmount;
+    buyOrder.amountRemaining -= matchAmount + fee;
     buyOrder.matchedSellOrders.push({
       orderId: sellOrder._id,
       matchModel: "SellOrder",
       amount: matchAmount,
+      fee,
     });
 
     buyOrder.status =
       buyOrder.amountRemaining === 0 ? "Buy Completed" : "Partially Matched";
+    buyOrder.currentSellOrderInProgress = null;
     await buyOrder.save();
 
     // Update sell order
     sellOrder.amountRemaining -= matchAmount;
-    sellOrder.status =
-      sellOrder.amountRemaining === 0 ? "Sale Completed" : "Partially Matched";
     sellOrder.matchedBuyOrders.push({
       orderId: buyOrder._id,
       matchModel: "BuyOrder",
       amount: matchAmount,
     });
+    sellOrder.status =
+      sellOrder.amountRemaining === 0 ? "Sale Completed" : "Partially Matched";
+    sellOrder.currentBuyOrderInProgress = null;
     await sellOrder.save();
 
     // If there is remaining amount in the buy order, it can be matched with another sell order later.
@@ -463,74 +510,211 @@ export const matchOrders = async (req, res) => {
       );
     }
 
+    // Craft notification messages using nicknames
+    const sellUserName = sellOrder.userId?.nickname || "Seller";
+    const buyUserName = buyOrder.userId?.nickname || "Buyer";
+
+    const sellerMsg = `Your sell order of ${matchAmount} USDT has been matched and completed with buyer ${buyUserName}.`;
+    const buyerMsg = `Your buy order of ${matchAmount} USDT has been matched and completed with seller ${sellUserName}.`;
+
+    // Send notifications to seller and buyer
+    await Promise.all([
+      createNewUserNotification(
+        sellerMsg,
+        sellUserName,
+        "sellOrder",
+        sellOrder._id
+      ),
+      createNewUserNotification(
+        buyerMsg,
+        buyUserName,
+        "buyOrder",
+        buyOrder._id
+      ),
+    ]);
+
     // 5. Notify users or handle other business logic here
-    res.json({ message: "Orders matched successfully", sellOrder });
-
-    // // Calculate total match amount requested
-    // const totalMatchAmount = buyOrder.amount;
-    // let balance;
-
-    // if (totalMatchAmount > sellOrder.amountRemaining) {
-    //   balance = totalMatchAmount - sellOrder.amountRemaining;
-    // } else {
-    //   balance = sellOrder.amountRemaining - totalMatchAmount;
-    //   // 3. Update sell order after all matches
-    //   sellOrder.amountRemaining -= totalMatchAmount;
-    //   sellOrder.status =
-    //     sellOrder.amountRemaining === 0
-    //       ? "Sale Completed"
-    //       : "Partially Matched";
-    //   await sellOrder.save();
-
-    // }
-
-    //  // 2. Process each buy order match
-    // for (const match of buyOrderMatches) {
-    //   const buyOrder = await BuyOrder.findById(match.buyOrderId);
-    //   if (!buyOrder)
-    //     return res
-    //       .status(404)
-    //       .json({ error: `Buy order ${match.buyOrderId} not found` });
-
-    //   if (
-    //     !["Pending", "Waiting for Fill", "Partially Matched"].includes(
-    //       buyOrder.status
-    //     )
-    //   ) {
-    //     return res.status(400).json({
-    //       error: `Buy order ${match.buyOrderId} not available for matching`,
-    //     });
-    //   }
-
-    //   if (match.matchAmount > buyOrder.amountRemaining) {
-    //     return res.status(400).json({
-    //       error: `Match amount exceeds buy order remaining amount for ${match.buyOrderId}`,
-    //     });
-    //   }
-
-    //   // Update buy order
-    //   buyOrder.amountRemaining -= match.matchAmount;
-    //   buyOrder.matchedSellOrders.push({
-    //     orderId: sellOrder._id,
-    //     matchModel: "SellOrder",
-    //     amount: match.matchAmount,
-    //   });
-
-    //   buyOrder.status =
-    //     buyOrder.amountRemaining === 0 ? "Buy Completed" : "Partially Matched";
-    //   await buyOrder.save();
-
-    //   // Update sell order matchedBuyOrders inside loop to keep partial matches
-    //   sellOrder.matchedBuyOrders.push({
-    //     orderId: buyOrder._id,
-    //     matchModel: "BuyOrder",
-    //     amount: match.matchAmount,
-    //   });
-    // }
+    res.json({ message: "Orders completed successfully", buyOrder, sellOrder });
 
     // 4. Notify users or handle other business logic here
   } catch (error) {
     console.log(error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+export const matchOrders = async (req, res) => {
+  try {
+    const { buyerOrderId, sellerOrderId } = req.body;
+
+    // Fetch sell order
+    const sellOrder = await SellOrder.findById(sellerOrderId).populate(
+      "userId",
+      "nickname"
+    );
+    if (!sellOrder)
+      return res.status(404).json({ error: "Sell order not found" });
+
+    if (!["On Sale", "Partially Matched"].includes(sellOrder.status)) {
+      return res
+        .status(400)
+        .json({ error: "Sell order not available for matching" });
+    }
+
+    // Check if sellOrder is already locked with another buy order
+    if (
+      sellOrder.currentBuyOrderInProgress &&
+      sellOrder.currentBuyOrderInProgress.toString() !== buyerOrderId
+    ) {
+      return res.status(400).json({
+        error: "Sell order is already matched with another buy order",
+      });
+    }
+
+    // Fetch buy order
+    const buyOrder = await BuyOrder.findById(buyerOrderId).populate(
+      "userId",
+      "nickname"
+    );
+    if (!buyOrder) {
+      return res.status(404).json({ error: "Buy order not found" });
+    }
+
+    if (
+      !["On Sale", "Partially Matched", "Waiting for Buy"].includes(
+        buyOrder.status
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Buy order not available for matching" });
+    }
+
+    // Check if buyOrder is already locked with another sell order
+    if (
+      buyOrder.currentSellOrderInProgress &&
+      buyOrder.currentSellOrderInProgress.toString() !== sellerOrderId
+    ) {
+      return res.status(400).json({
+        error: "Buy order is already matched with another sell order",
+      });
+    }
+
+    // Lock the orders to each other and set status to In Progress
+    sellOrder.currentBuyOrderInProgress = buyOrder._id;
+    sellOrder.status = "In Progress";
+
+    buyOrder.currentSellOrderInProgress = sellOrder._id;
+    buyOrder.status = "In Progress";
+
+    await buyOrder.save();
+    await sellOrder.save();
+
+    // Craft notification messages using nicknames
+    const sellUserName = sellOrder.userId?.nickname || "Seller";
+    const buyUserName = buyOrder.userId?.nickname || "Buyer";
+
+    const sellerMsg = `Your sell order of ${matchAmount} USDT has been matched with buyer ${buyUserName}.`;
+    const buyerMsg = `Your buy order of ${matchAmount} USDT has been matched with seller ${sellUserName}.`;
+
+    // Send notifications to seller and buyer
+    await Promise.all([
+      createNewUserNotification(
+        sellerMsg,
+        sellUserName,
+        "sellOrder",
+        sellOrder._id
+      ),
+      createNewUserNotification(
+        buyerMsg,
+        buyUserName,
+        "buyOrder",
+        buyOrder._id
+      ),
+    ]);
+
+    res.json({
+      message: "Orders matched successfully, trade is In Progress",
+      sellOrder,
+      buyOrder,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+export const cancelTrade = async (req, res) => {
+  try {
+    const { sellOrderId, buyOrderId } = req.body;
+
+    const sellOrder = await SellOrder.findById(sellOrderId).populate(
+      "userId",
+      "nickname"
+    );
+    const buyOrder = await BuyOrder.findById(buyOrderId).populate(
+      "userId",
+      "nickname"
+    );
+
+    if (!sellOrder || !buyOrder) {
+      return res.status(404).json({ error: "Orders not found" });
+    }
+
+    if (
+      sellOrder.status !== "In Progress" ||
+      buyOrder.status !== "In Progress"
+    ) {
+      return res.status(400).json({ error: "Trade not in progress" });
+    }
+
+    // Reset statuses to allow re-matching or cancelling
+    sellOrder.status =
+      sellOrder.amountRemaining === sellOrder.amount
+        ? "On Sale"
+        : "Partially Matched";
+    buyOrder.status =
+      buyOrder.amountRemaining === buyOrder.amount
+        ? "Waiting for Buy"
+        : "Partially Matched";
+
+    // CLEAR the "in progress" locks
+    sellOrder.currentBuyOrderInProgress = null;
+    buyOrder.currentSellOrderInProgress = null;
+
+    await sellOrder.save();
+    await buyOrder.save();
+
+    // Craft notification messages using nicknames
+    const sellUserName = sellOrder.userId?.nickname || "Seller";
+    const buyUserName = buyOrder.userId?.nickname || "Buyer";
+
+    const sellerMsg = `Your sell order of ${matchAmount} USDT has been cancelled with buyer ${buyUserName}.`;
+    const buyerMsg = `Your buy order of ${matchAmount} USDT has been cancelled with seller ${sellUserName}.`;
+
+    // Send notifications to seller and buyer
+    await Promise.all([
+      createNewUserNotification(
+        sellerMsg,
+        sellUserName,
+        "sellOrder",
+        sellOrder._id
+      ),
+      createNewUserNotification(
+        buyerMsg,
+        buyUserName,
+        "buyOrder",
+        buyOrder._id
+      ),
+    ]);
+
+    res.json({
+      message: "Trade cancelled and orders restored",
+      sellOrder,
+      buyOrder,
+    });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Server error" });
   }
 };

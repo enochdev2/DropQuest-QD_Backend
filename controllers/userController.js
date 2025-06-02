@@ -16,14 +16,13 @@ const generateToken = (user) => {
     {
       id: user._id,
       username: user.username,
-      nickname: user.nickname,  // Add this line
+      nickname: user.nickname, // Add this line
       admin: user.admin,
     },
     "your-secret-key", // Use a more secure secret key
     { expiresIn: "1d" } // Token expires in 1 day
   );
 };
-
 
 export const createUserProfile = async (req, res) => {
   try {
@@ -107,7 +106,7 @@ export const loginUser = async (req, res) => {
       // secure: process.env.NODE_ENV === "production", // Only set cookies over HTTPS in production
       secure: true,
       sameSite: "none", // This helps mitigate CSRF attacks
-      maxAge: 24 * 60 * 60 * 1000, 
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     const { password: _, ...userData } = user.toObject(); // Destructure and remove the password field
@@ -116,7 +115,7 @@ export const loginUser = async (req, res) => {
     res.status(200).json({
       message: "Login successful",
       user: userData, // Send user data without the password field
-      token, 
+      token,
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -173,6 +172,7 @@ export const updateUserProfile = async (req, res) => {
         .json({ error: "You do not have permission to update this profile" });
     }
 
+    console.log("🚀 ~ updateUserProfile ~ user:", req.body);
     // Proceed with updating the user profile
     const user = await updateUserByNickname(nickname, req.body, true);
     console.log("🚀 ~ updateUserProfile ~ user:", user);
@@ -186,7 +186,6 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
-// Delete user by nickname (only allow admin or the user themselves)
 export const deleteUserProfile = async (req, res) => {
   try {
     const { nickname } = req.params; // Get nickname from request params

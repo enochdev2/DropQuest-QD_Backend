@@ -50,12 +50,19 @@ const sellOrderSchema = new Schema(
       enum: [
         "Pending Approval",
         "On Sale",
+        "In Progress",
         "Partially Matched",
         "Sale Completed",
       ],
       default: "Pending Approval",
     },
     matchedBuyOrders: [matchSchema],
+
+    currentBuyOrderInProgress: {
+      type: Schema.Types.ObjectId,
+      ref: "BuyOrder",
+      default: null,
+    },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
