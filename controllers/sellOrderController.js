@@ -10,7 +10,8 @@ import {
 
 export const createSellOrder = async (req, res) => {
   try {
-    const userId = req.user.id; // assume authenticated user middleware
+    const userId = req.user.id;
+
     const { amount, price, krwAmount } = req.body;
 
     const user = await userModel
@@ -25,14 +26,36 @@ export const createSellOrder = async (req, res) => {
 
     const userName = user?.nickname || user?.username || "a user";
 
-    const newOrder = new SellOrder({ userId, amount, price, krwAmount });
+    const newOrder = new SellOrder({
+      userId,
+      sellerNickname: user.nickname,
+      sellerPhone: user.phone,
+      amount,
+      amountRemaining: amount,
+      krwAmount,
+      price,
+    });
     await newOrder.save();
 
-    const message = `New sell order created by ${userName}: ${amount} USDT at price ${price} KRW (Total: ${krwAmount} KRW).`;
+    const message = `New sell order created by ${userName}: ${amount} USDT (Total: ${krwAmount} KRW).`;
     const type = "sellOrder";
     const referenceId = newOrder._id;
 
     await createNewAdminNotification(message, userId, type, referenceId);
+
+    // await createNewAdminNotification(
+    //   message,
+    //   userId,
+    //   "sellOrder",
+    //   newOrder._id
+    // );
+    const messages = `you have successful placed a sell order of $ ${amount}.`;
+    await createNewUserNotification(
+      messages,
+      userId,
+      "sellOrder",
+      newOrder._id
+    );
 
     res.status(201).json(newOrder);
   } catch (error) {
