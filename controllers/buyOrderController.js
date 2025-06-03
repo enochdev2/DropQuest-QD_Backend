@@ -15,8 +15,10 @@ export const createBuyOrder = async (req, res) => {
 
     const user = await userModel
       .findById(userId)
-      .select("nickname username phone")
+      .select("nickname username phone status")
       .lean();
+
+      if(user.status === "inactive")  return res.status(404).json({ error: "User Must be verified before place an  Order" });
 
     const newBuyOrder = new BuyOrder({
       userId,
@@ -75,7 +77,6 @@ export const approveBuyOrder = async (req, res) => {
     const { orderId } = req.params;
 
     const order = await BuyOrder.findById(orderId);
-    console.log("🚀 ~ approveBuyOrder ~ order:", order);
     if (!order) return res.status(404).json({ error: "Buy order not found" });
 
     order.status = "Waiting for Buy";

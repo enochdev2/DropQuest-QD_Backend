@@ -15,8 +15,13 @@ export const createSellOrder = async (req, res) => {
 
     const user = await userModel
       .findById(userId)
-      .select("nickname username phone")
+      .select("nickname username phone status")
       .lean();
+
+    if (user.status === "inactive")
+      return res
+        .status(404)
+        .json({ error: "User Must be verified before place an  Order" });
 
     const userName = user?.nickname || user?.username || "a user";
 
@@ -178,7 +183,6 @@ export const getUserInProgressOrders = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 export const getAllPendingApprovalOrders = async (req, res) => {
   try {
@@ -445,7 +449,6 @@ export const getAllCompletedMatchedOrders = async (req, res) => {
 export const completeOrders = async (req, res) => {
   try {
     const { buyerOrderId, sellerOrderId } = req.body;
-   
 
     const buyOrderMatches = buyerOrderId;
 
@@ -671,8 +674,7 @@ export const matchOrders = async (req, res) => {
 
 export const cancelTrade = async (req, res) => {
   try {
-    const {  buyerOrderId, sellerOrderId  } = req.body;
-     
+    const { buyerOrderId, sellerOrderId } = req.body;
 
     const sellOrder = await SellOrder.findById(sellerOrderId).populate(
       "userId",
@@ -718,7 +720,7 @@ export const cancelTrade = async (req, res) => {
     const sellerMsg = `Your sell order of ${sellOrder.amountRemaining} USDT has been cancelled with buyer ${buyUserName}.`;
     const buyerMsg = `Your buy order of ${buyOrder.amountRemaining} USDT has been cancelled with seller ${sellUserName}.`;
 
-    console.log("🚀 ~ cancelTrade ~ buyerMsg:", buyerMsg)
+    console.log("🚀 ~ cancelTrade ~ buyerMsg:", buyerMsg);
     // Send notifications to seller and buyer
     await Promise.all([
       createNewUserNotification(
@@ -735,7 +737,7 @@ export const cancelTrade = async (req, res) => {
       ),
     ]);
 
-    console.log("🚀 ~ cancelTrade ~ sellOrder:", sellOrder)
+    console.log("🚀 ~ cancelTrade ~ sellOrder:", sellOrder);
     res.json({
       message: "Trade cancelled and orders restored",
       sellOrder,
