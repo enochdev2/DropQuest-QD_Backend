@@ -27,11 +27,10 @@ router.put('/mark-read/:id', markNotificationAsRead);
 router.get("/unread/sellOrders", fetchUnreadSellOrderNotifications);
 router.get("/unread/buyOrders",authenticate, authorizeAdmin, fetchUnreadBuyOrderNotifications);
 router.get("/unread/chatSession", fetchUnreadChatSessionNotifications);
-
 router.get("/unread/user/registration", authenticate, fetchUnreadUserProfileNotifications);
 router.get("/unread/user/inquiry", authenticate, fetchUnreadUserInquiryNotifications);
 router.get("/unread/user/buyOrders", authenticate, fetchUnreadUserBuyOrderNotifications);
-router.get("/unread/user/sellOrder", authenticate, fetchUnreadUserSellOrderNotifications);
+router.get("/unread/user/sellOrders", authenticate, fetchUnreadUserSellOrderNotifications);
 
 
 export default router;

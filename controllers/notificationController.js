@@ -300,13 +300,13 @@ export const fetchUnreadUserSellOrderNotifications = async (req, res) => {
 
     // If userId is required:
     const notifications = await Notification.find({
-      id,
+      userId,
       isForAdmin: false,
       isRead: false,
       type: "sellOrder",
     })
-      .sort({ createdAt: -1 })
-      .populate("userId", "username nickname");
+    .sort({ createdAt: -1 })
+    .populate("userId", "username nickname");
 
     // If admin wants all unread sellOrder notifications (no user filter):
     // const notifications = await Notification.find({
