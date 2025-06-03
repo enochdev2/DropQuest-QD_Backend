@@ -8,7 +8,10 @@ import {
   updateUserByNickname,
   userModel,
 } from "../models/userModel.js";
-import { createNewAdminNotification, createNewUserNotification } from "./notificationController.js";
+import {
+  createNewAdminNotification,
+  createNewUserNotification,
+} from "./notificationController.js";
 
 // Helper function to generate JWT token
 const generateToken = (user) => {
@@ -16,11 +19,11 @@ const generateToken = (user) => {
     {
       id: user._id,
       username: user.username,
-      nickname: user.nickname, 
+      nickname: user.nickname,
       admin: user.admin,
     },
     process.env.JWT_SECRET_KEY,
-    { expiresIn: "1d" } 
+    { expiresIn: "1d" }
   );
 };
 
@@ -59,8 +62,18 @@ export const createUserProfile = async (req, res) => {
     const messages = `you have successfully registered: ${newUser.username}. Please wait for you account to be verified.`;
     // await createNotification(message, newUser._id);
     const message = `A new user has registered: ${newUser.username}. Please verify the account.`;
-    await createNewUserNotification(messages, newUser._id, "registration", null);
-    await createNewAdminNotification(message, newUser._id, "registration", null );
+    await createNewUserNotification(
+      messages,
+      newUser._id,
+      "registration",
+      null
+    );
+    await createNewAdminNotification(
+      message,
+      newUser._id,
+      "registration",
+      null
+    );
 
     console.log("🚀 ~ createUserProfile ~ newUser:", newUser);
 
@@ -87,7 +100,6 @@ export const loginUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
 
     // Check if password is correct
     const isMatch = await user.comparePassword(password);
@@ -145,6 +157,15 @@ export const getAllUsers = async (req, res) => {
 export const getUserProfile = async (req, res) => {
   try {
     const { nickname } = req.params; // Get username from request params
+    const { admin } = req.user; // Access the admin status from the decoded token
+    const nick = req.user.nickname;
+
+    if (nickname !== req.user.nickname && !admin) {
+      return res
+        .status(403)
+        .json({ error: "You do not have permission to update this profile" });
+    }
+
     const user = await getUserByNickname(nickname); // Use `nickname` as search criteria
     if (!user) {
       res.status(404).json({ message: "User not found" });
@@ -161,7 +182,6 @@ export const updateUserProfile = async (req, res) => {
     const { nickname } = req.params; // Get nickname from request params
     const { admin } = req.user; // Access the admin status from the decoded token
     const nick = req.user.nickname;
-    console.log("🚀 ~ updateUserProfile ~ nick:", nick);
 
     // Check if the logged-in user is either the user themselves or an admin
     if (nickname !== req.user.nickname && !admin) {
@@ -170,7 +190,6 @@ export const updateUserProfile = async (req, res) => {
         .json({ error: "You do not have permission to update this profile" });
     }
 
-    console.log("🚀 ~ updateUserProfile ~ user:", req.body);
     // Proceed with updating the user profile
     const user = await updateUserByNickname(nickname, req.body, true);
     console.log("🚀 ~ updateUserProfile ~ user:", user);
