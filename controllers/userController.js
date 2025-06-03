@@ -84,13 +84,10 @@ export const loginUser = async (req, res) => {
 
     // Find the user by username
     const user = await getUserByNickname(username);
-    console.log("🚀 ~ loginUser ~ user:", user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    console.log("Entered Password:", password);
-    console.log("Stored Hashed Password:", user.password);
 
     // Check if password is correct
     const isMatch = await user.comparePassword(password);
