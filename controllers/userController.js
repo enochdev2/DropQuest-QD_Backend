@@ -8,7 +8,7 @@ import {
   updateUserByNickname,
   userModel,
 } from "../models/userModel.js";
-import { createNewUserNotification } from "./notificationController.js";
+import { createNewAdminNotification, createNewUserNotification } from "./notificationController.js";
 
 // Helper function to generate JWT token
 const generateToken = (user) => {
@@ -16,11 +16,11 @@ const generateToken = (user) => {
     {
       id: user._id,
       username: user.username,
-      nickname: user.nickname, // Add this line
+      nickname: user.nickname, 
       admin: user.admin,
     },
-    "your-secret-key", // Use a more secure secret key
-    { expiresIn: "1d" } // Token expires in 1 day
+    process.env.JWT_SECRET_KEY,
+    { expiresIn: "1d" } 
   );
 };
 
@@ -56,10 +56,11 @@ export const createUserProfile = async (req, res) => {
     await newUser.save();
 
     // Create a notification for the new user registration
-    // const message = `A new user has registered: ${newUser.username}. Please verify the account.`;
+    const messages = `you have successfully registered: ${newUser.username}. Please wait for you account to be verified.`;
     // await createNotification(message, newUser._id);
     const message = `A new user has registered: ${newUser.username}. Please verify the account.`;
-    await createNewUserNotification(newUser._id, message);
+    await createNewUserNotification(messages, newUser._id, "registration", null);
+    await createNewAdminNotification(message, newUser._id, "registration", null );
 
     console.log("🚀 ~ createUserProfile ~ newUser:", newUser);
 
