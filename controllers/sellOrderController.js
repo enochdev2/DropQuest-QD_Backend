@@ -156,6 +156,30 @@ export const getUserSellOrders = async (req, res) => {
   }
 };
 
+export const getUserInProgressOrders = async (req, res) => {
+  try {
+    const userId = req.user.id; // Authenticated user's ID
+    const inProgressStatus = "In Progress";
+
+    // Find all sell orders by this user that are currently "In Progress"
+    const inProgressOrders = await SellOrder.find({
+      userId,
+      status: inProgressStatus,
+    })
+      .populate(
+        "userId",
+        "username nickname fullName phone bankName bankAccount"
+      )
+      .sort({ createdAt: -1 });
+
+    res.json(inProgressOrders);
+  } catch (error) {
+    console.error("Error fetching user's in-progress orders:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
 export const getAllPendingApprovalOrders = async (req, res) => {
   try {
     const onSaleStatus = "Pending Approval";

@@ -14,6 +14,7 @@ import {
   getAllPendingApprovalOrders,
   getPendingSellOrders,
   getSummaryStats,
+  getUserInProgressOrders,
   getUserSellOrders,
   matchOrders,
   rejectSellOrder,
@@ -27,7 +28,10 @@ router.get("/admin/sell-orders/pending", getPendingSellOrders); // Get all users
 router.post("/admin/sell-orders/:orderId/approve", approveSellOrder); // Get user by nickname
 router.post("/admin/sell-orders/:orderId/reject", rejectSellOrder); // Update user profile
 router.get("/sell-orders", authenticate, getUserSellOrders); // /api/sell-orders?status=On Sale
+router.get("/user/inProgress-orders", authenticate, getUserInProgressOrders); // /api/sell-orders?status=On Sale
 router.get("/all-orders", getAllCompletedOrders); // /api/sell-orders?status=On Sale
+
+//? ADMIN ROUTE
 router.get("/allmatched-orders", getAllCompletedMatchedOrders);
 router.get("/admin/all/onsale-orders", getAllOnSaleOrders);
 router.get("/admin/all/pending-orders", getAllPendingApprovalOrders);
