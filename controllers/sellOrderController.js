@@ -21,7 +21,7 @@ export const createSellOrder = async (req, res) => {
     if (user.status === "inactive")
       return res
         .status(404)
-        .json({ error: "User Must be verified before place an  Order" });
+        .json({ error: "User Must be verified before placing an  Order" });
 
     const userName = user?.nickname || user?.username || "a user";
 

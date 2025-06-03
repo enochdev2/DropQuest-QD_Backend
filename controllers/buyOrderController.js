@@ -18,7 +18,7 @@ export const createBuyOrder = async (req, res) => {
       .select("nickname username phone status")
       .lean();
 
-      if(user.status === "inactive")  return res.status(404).json({ error: "User Must be verified before place an  Order" });
+      if(user.status === "inactive")  return res.status(404).json({ error: "User Must be verified before placing an  Order" });
 
     const newBuyOrder = new BuyOrder({
       userId,
