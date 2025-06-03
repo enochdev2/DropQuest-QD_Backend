@@ -170,7 +170,9 @@ export const getUserProfile = async (req, res) => {
     if (!user) {
       res.status(404).json({ message: "User not found" });
     }
-    res.status(200).json(user);
+
+    const { password: _, ...userData } = user.toObject();
+    res.status(200).json(userData);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -192,12 +194,11 @@ export const updateUserProfile = async (req, res) => {
 
     // Proceed with updating the user profile
     const user = await updateUserByNickname(nickname, req.body, true);
-    console.log("🚀 ~ updateUserProfile ~ user:", user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    return res.status(200).json(user);
+    const { password: _, ...userData } = user.toObject();
+    res.status(200).json(userData);
   } catch (error) {
     return res.status(400).json({ error: error.message });
   }
