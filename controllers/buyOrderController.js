@@ -168,6 +168,27 @@ export const getAllPendingBuyApprovalOrders = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const getAllInProgressApprovalOrders = async (req, res) => {
+  try {
+    const onBuyStatus = "In Progress";
+
+    const onBuyOrders = await BuyOrder.find({ status: onBuyStatus })
+      .populate(
+        "userId",
+        "username nickname fullName phone bankName bankAccount"
+      )
+      .sort({ createdAt: -1 });
+
+    const buyOrders = onBuyOrders;
+
+    res.json(buyOrders);
+  } catch (error) {
+    console.error("Error fetching on-sale sell orders:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const getAllOnBuyOrders = async (req, res) => {
   try {
     const onBuyStatus = ["Waiting for Buy", "Partially Matched"]; // An array of statuses
