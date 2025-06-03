@@ -4,20 +4,33 @@ import {
   createNewAdminNotification,
   createNewUserNotification,
 } from "./notificationController.js";
+import { userModel } from "../models/userModel.js";
 
 // Create new Buy Order
 export const createBuyOrder = async (req, res) => {
   try {
     const userId = req.user.id; //
-    console.log("🚀 ~ createBuyOrder ~ userId:", userId);
+    // const nickname = req.user.nickname; //
     const { amount, krwAmount, price } = req.body;
-    // const userId = new mongoose.Types.ObjectId(nickname);
 
-    const newBuyOrder = new BuyOrder({ userId, amount, krwAmount, price });
+    const user = await userModel
+      .findById(userId)
+      .select("nickname username phone")
+      .lean();
+
+    const newBuyOrder = new BuyOrder({
+      userId,
+      buyerNickname: user.nickname,
+      buyerPhone: user.phone,
+      amount,
+      amountRemaining: amount,
+      price,
+      // krwAmount,
+    });
     await newBuyOrder.save();
 
     const message = `New buy order created by ${
-      userId || "a user"
+      user.nickname || "a user"
     }: ${amount} units.`;
     await createNewAdminNotification(
       message,
@@ -25,7 +38,14 @@ export const createBuyOrder = async (req, res) => {
       "buyOrder",
       newBuyOrder._id
     );
-
+    const messages = `you have successful placed a buy order of $ ${amount}.`;
+    await createNewUserNotification(
+      messages,
+      userId,
+      "buyOrder",
+      newBuyOrder._id
+    );
+    
     res.status(201).json(newBuyOrder);
   } catch (error) {
     console.error("Error creating buy order:", error);
