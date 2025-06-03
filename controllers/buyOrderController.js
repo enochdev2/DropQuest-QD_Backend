@@ -84,7 +84,7 @@ export const approveBuyOrder = async (req, res) => {
     console.log("🚀 ~ approveBuyOrder ~ order:", order);
 
     await createNewUserNotification(
-      `Your buy order #${orderId} has been approved and marked as Buy Completed.`,
+      `Your buy order #${orderId} has been approved.`,
       order.userId,
       "buyOrder",
       order._id
