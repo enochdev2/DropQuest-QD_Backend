@@ -45,6 +45,7 @@ export const addInquiryComment = async (req, res) => {
     if (!inquiry) return res.status(404).json({ error: "Inquiry not found" });
 
     inquiry.comment = comment;
+    inquiry.status = "In Progress";
     await inquiry.save();
 
     // Notify user about comment
