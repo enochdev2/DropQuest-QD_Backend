@@ -222,6 +222,25 @@ export const fetchUnreadUserProfileNotifications = async (req, res) => {
     return res.status(500).json({ error: "Error fetching notifications." });
   }
 };
+export const fetchUnreadAllProfileNotifications = async (req, res) => {
+  try {
+
+    // If admin wants all unread sellOrder notifications (no user filter):
+    const notifications = await Notification.find({
+      isForAdmin: true,
+      isRead: false,
+      type: "registration",
+    })
+      .sort({ createdAt: -1 })
+    .populate("userId", "username nickname");
+   
+
+    return res.status(200).json(notifications);
+  } catch (error) {
+    console.error("Error fetching unread sellOrder notifications:", error);
+    return res.status(500).json({ error: "Error fetching notifications." });
+  }
+};
 
 export const fetchUnreadUserInquiryNotifications = async (req, res) => {
   try {
