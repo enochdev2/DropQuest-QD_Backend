@@ -19,8 +19,7 @@ router.get("/user", authenticate, getUserInquiries); // Get inquiries of authent
 router.get("/:inquiryId", authenticate, getInquiryById); // Get particular inquiry by ID
 
 // Routes for admin only
-router.use(authenticate, authorizeAdmin); // Protect all routes below as admin only
-
+router.use(authenticate, authorizeAdmin);
 router.post("/:inquiryId/comment", addInquiryComment); // Admin adds comment only
 router.put("/:inquiryId/status", updateInquiryStatusAndComment); // Admin updates comment & status
 

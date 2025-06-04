@@ -8,8 +8,8 @@ import {
 export const createInquiry = async (req, res) => {
   try {
     const userId = req.user.id; // authenticated user
+    const nickname = req.user.nickname; // authenticated user
     const { title, description } = req.body;
-    console.log("🚀 ~ createInquiry ~ title:", title)
 
     const newInquiry = new Inquiry({
       userId,
@@ -21,7 +21,7 @@ export const createInquiry = async (req, res) => {
 
     // Notify admin about new inquiry
     await createNewAdminNotification(
-      `New inquiry titled "${title}" from user ${userId}`,
+      `New inquiry titled "${title}" from user ${nickname}`,
       userId,
       "inquiry",
       newInquiry._id
@@ -49,7 +49,7 @@ export const addInquiryComment = async (req, res) => {
 
     // Notify user about comment
     await createNewUserNotification(
-      `Admin commented on your inquiry "${inquiry.title}": ${comment}`,
+      `Admin commented on your inquiry "${inquiry.title}"`,
       inquiry.userId,
       "inquiry",
       inquiry._id
@@ -167,7 +167,7 @@ export const updateInquiryStatusAndComment = async (req, res) => {
     if (comment) notificationMessage += ` Admin comment: ${comment}`;
     if (status) notificationMessage += ` Status: ${status}.`;
 
-    await createUserNotification(
+    await createNewUserNotification(
       notificationMessage,
       inquiry.userId,
       "inquiry",

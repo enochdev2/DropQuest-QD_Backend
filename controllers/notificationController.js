@@ -258,6 +258,24 @@ export const fetchUnreadUserInquiryNotifications = async (req, res) => {
   }
 };
 
+export const fetchUnreadAdminInquiryNotifications = async (req, res) => {
+  try {
+    // If admin wants all unread sellOrder notifications (no user filter):
+    const notifications = await Notification.find({
+      isForAdmin: true,
+      isRead: false,
+      type: "inquiry",
+    })
+      .sort({ createdAt: -1 })
+      .populate("userId", "username nickname");
+
+    return res.status(200).json(notifications);
+  } catch (error) {
+    console.error("Error fetching unread sellOrder notifications:", error);
+    return res.status(500).json({ error: "Error fetching notifications." });
+  }
+};
+
 export const fetchUnreadUserBuyOrderNotifications = async (req, res) => {
   try {
     // If you want to filter by userId (optional, e.g. from req.user.id)
@@ -305,8 +323,8 @@ export const fetchUnreadUserSellOrderNotifications = async (req, res) => {
       isRead: false,
       type: "sellOrder",
     })
-    .sort({ createdAt: -1 })
-    .populate("userId", "username nickname");
+      .sort({ createdAt: -1 })
+      .populate("userId", "username nickname");
 
     // If admin wants all unread sellOrder notifications (no user filter):
     // const notifications = await Notification.find({
