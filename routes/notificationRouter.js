@@ -24,7 +24,7 @@ router.get('/notifications', authenticate, authorizeAdmin,  fetchAllNotification
 
 // Route to mark a notification as read
 router.put('/mark-read/:id', authenticate, markNotificationAsRead);
-router.get("/unread/inquiry", authenticate, fetchUnreadAdminInquiryNotifications);
+router.get("/unread/inquiry", authenticate, authorizeAdmin, fetchUnreadAdminInquiryNotifications);
 router.get("/unread/sellOrders", authenticate, authorizeAdmin, fetchUnreadSellOrderNotifications);
 router.get("/unread/buyOrders",authenticate, authorizeAdmin, fetchUnreadBuyOrderNotifications);
 router.get("/unread/chatSession", fetchUnreadChatSessionNotifications);
