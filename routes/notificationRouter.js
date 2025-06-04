@@ -19,12 +19,11 @@ const router = express.Router();
 router.get('/notifications/unread', fetchUnreadNotifications);
 
 // Route to fetch all notifications (admin use case)
-router.get('/notifications', fetchAllNotifications);
+router.get('/notifications', authenticate, authorizeAdmin,  fetchAllNotifications);
 
 // Route to mark a notification as read
-router.put('/mark-read/:id', markNotificationAsRead);
-// router.patch("/notifications/mark-read/:id", markNotificationAsRead);
-router.get("/unread/sellOrders", fetchUnreadSellOrderNotifications);
+router.put('/mark-read/:id', authenticate, markNotificationAsRead);
+router.get("/unread/sellOrders", authenticate, authorizeAdmin, fetchUnreadSellOrderNotifications);
 router.get("/unread/buyOrders",authenticate, authorizeAdmin, fetchUnreadBuyOrderNotifications);
 router.get("/unread/chatSession", fetchUnreadChatSessionNotifications);
 router.get("/unread/user/registration", authenticate, fetchUnreadUserProfileNotifications);
