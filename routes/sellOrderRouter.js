@@ -22,10 +22,10 @@ import {
 import { authenticate, authorizeAdmin } from "../middleware/autheticate.js";
 const router = express.Router();
 
-router.post("/", authenticate, createSellOrder); 
+router.post("/", authenticate, createSellOrder);
 router.get("/sell-orders", authenticate, getUserSellOrders); // /api/sell-orders?status=On Sale
 router.get("/user/inProgress-orders", authenticate, getUserInProgressOrders);
-router.get("/all-orders", getAllCompletedOrders); 
+router.get("/all-orders", getAllCompletedOrders);
 
 //? ADMIN ROUTE
 router.get(
@@ -47,7 +47,12 @@ router.post(
   authorizeAdmin,
   rejectSellOrder
 );
-router.get("/allmatched-orders", getAllCompletedMatchedOrders);
+router.get(
+  "/allmatched-orders",
+  authenticate,
+  authorizeAdmin,
+  getAllCompletedMatchedOrders
+);
 router.get(
   "/admin/all/onsale-orders",
   authenticate,

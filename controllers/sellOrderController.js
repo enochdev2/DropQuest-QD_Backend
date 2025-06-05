@@ -375,13 +375,12 @@ export const getAllCompletedMatchedOrders = async (req, res) => {
     })
       .populate({
         path: "matchedBuyOrders.orderId",
-        select: "buyerNickname buyerPhone fee amount", // assuming buyerNickname now exists on BuyOrder
+        model: "BuyOrder", // 👈 This forces population using the correct schema
+        select: "buyerNickname buyerPhone fee amount",
       })
       .sort({ createdAt: -1 });
-    console.log(
-      "🚀 ~ getAllCompletedMatchedOrders ~ completedSellOrders:",
-      completedSellOrders
-    );
+
+    // console.log(JSON.stringify(completedSellOrders, null, 2));
 
     // 2. Fetch Buy Orders (now no need to populate userId for nickname)
     const completedBuyOrders = await BuyOrder.find({
@@ -389,25 +388,44 @@ export const getAllCompletedMatchedOrders = async (req, res) => {
     })
       .populate({
         path: "matchedSellOrders.orderId",
+        model: "SellOrder",
         select: "sellerNickname sellerPhone amount",
       })
       .sort({ createdAt: -1 });
 
     // 3. Transform Sell Orders
     const sell = completedSellOrders.map((order) => {
-      const progressRecords = order.matchedBuyOrders.map((match) => ({
-        type: "Buy",
-        amount: `${match.amount} USDT`,
-        nickname: match.orderId?.buyerNickname || "N/A",
-        phone: match.orderId?.buyerPhone || "N/A",
-        fee: match.orderId?.fee ? `${match.orderId.fee} USDT` : null,
-      }));
+      const progressRecords = order.matchedBuyOrders.flatMap((match) => {
+        const buyerNickname = match.orderId?.buyerNickname || "N/A";
+        const buyerPhone = match.orderId?.buyerPhone || "N/A";
+        const sellerNickname = order.sellerNickname || "N/A";
+        const sellerPhone = order.sellerPhone || "N/A";
+        const amount = match.amount;
+        const fee = match.orderId?.fee ? `${match.orderId.fee} USDT` : null;
+
+        return [
+          {
+            type: "Sell",
+            amount: `${amount} USDT`,
+            nickname: sellerNickname,
+            phone: sellerPhone,
+            fee: null,
+          },
+          {
+            type: "Buy",
+            amount: `${amount} USDT`,
+            nickname: buyerNickname,
+            phone: buyerPhone,
+            fee,
+          },
+        ];
+      });
 
       const buyerFromMatch = progressRecords[0]?.nickname || "N/A";
       const buyerPhoneFromMatch = progressRecords[0]?.phone || "N/A";
 
       return {
-        postingNumber: `SL-${order._id.toString().slice(-6).toUpperCase()}`,
+        postingNumber: `SL-${order._id.toString()}`,
         buyer: buyerFromMatch,
         seller: order?.sellerNickname || "N/A",
         phone: order?.sellerPhone || "N/A",
@@ -424,29 +442,41 @@ export const getAllCompletedMatchedOrders = async (req, res) => {
       };
     });
 
-    console.log("🚀 ~ sell ~ sell:", sell);
+    console.log(JSON.stringify(sell, null, 2));
 
     // 4. Transform Buy Orders
     const buy = completedBuyOrders.map((order) => {
-      const progressRecords = order.matchedSellOrders.map((match) => ({
-        type: "Sell",
-        amount: `${match.amount} USDT`,
-        nickname: match.orderId?.sellerNickname || "N/A",
-        fee: null,
-      }));
+      const progressRecords = order.matchedSellOrders.flatMap((match) => {
+        const amount = match.amount;
+        const sellerNickname = match.orderId?.sellerNickname || "N/A";
+        const sellerPhone = match.orderId?.sellerPhone || "N/A";
+        const buyerNickname = order.buyerNickname || "N/A";
+        const buyerPhone = order.buyerPhone || "N/A";
+        const fee = (amount * 0.01).toFixed(6) + " USDT"; // Or use match.orderId.fee if provided
 
-      progressRecords.push({
-        type: "Buy",
-        amount: `${order.amount} USDT`,
-        nickname: order.buyerNickname || "N/A",
-        fee: order.fee ? `${order.fee} USDT` : null,
+        return [
+          {
+            type: "Sell",
+            amount: `${amount} USDT`,
+            nickname: sellerNickname,
+            phone: sellerPhone,
+            fee: null,
+          },
+          {
+            type: "Buy",
+            amount: `${amount} USDT`,
+            nickname: buyerNickname,
+            phone: buyerPhone,
+            fee,
+          },
+        ];
       });
 
       const sellerFromMatch =
         progressRecords.find((r) => r.type === "Sell")?.nickname || "N/A";
 
       return {
-        postingNumber: `BY-${order._id.toString().slice(-6).toUpperCase()}`,
+        postingNumber: `BY-${order._id.toString()}`,
         buyer: order.buyerNickname || "N/A",
         seller: sellerFromMatch,
         amount: `${order.amount} USDT`,
