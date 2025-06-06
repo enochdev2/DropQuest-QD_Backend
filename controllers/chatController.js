@@ -4,10 +4,11 @@ import { createNewAdminNotification } from "./notificationController.js";
 
 export const saveMessage = async (req, res) => {
   try {
-    const { orderId, sender, content } = req.body;
+    const { orderId,orderType, sender, content } = req.body;
+    console.log("🚀 ~ saveMessage ~ orderType:", orderType)
+    console.log("🚀 ~ saveMessage ~ orderType:", orderType)
     const nickname = req.user.nickname;
     const userId = req.user.id
-    console.log("🚀 ~ saveMessage ~ userId:", userId)
     let chat = await ChatSession.findOne({ orderId });
 
     console.log("🚀 ~ saveMessage ~ chat:", chat)
