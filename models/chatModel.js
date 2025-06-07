@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
-
 const chatSchema = new Schema({
   orderId: {
     type: String,
@@ -11,6 +10,9 @@ const chatSchema = new Schema({
     type: String, // e.g., "admin" or "user"
     required: true,
   },
+  imgage: {
+    type: String, 
+  },
   content: {
     type: String,
     required: true,
@@ -18,7 +20,7 @@ const chatSchema = new Schema({
   timestamp: {
     type: Date,
     default: Date.now,
-  }
+  },
 });
 
 export const ChatModel = mongoose.model("ChatModel", chatSchema);

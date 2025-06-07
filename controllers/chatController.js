@@ -4,9 +4,7 @@ import { createNewAdminNotification } from "./notificationController.js";
 
 export const saveMessage = async (req, res) => {
   try {
-    const { orderId,orderType, sender, content } = req.body;
-    console.log("🚀 ~ saveMessage ~ orderType:", orderType)
-    console.log("🚀 ~ saveMessage ~ orderType:", orderType)
+    const { orderId,orderType, image, sender, content } = req.body;
     const nickname = req.user.nickname;
     const userId = req.user.id
     let chat = await ChatSession.findOne({ orderId });
@@ -28,7 +26,7 @@ export const saveMessage = async (req, res) => {
       return res.status(403).json({ message: "Chat is closed." });
     }
 
-    const message = new ChatModel({ orderId, sender, content });
+    const message = new ChatModel({ orderId, image, sender, content });
     await message.save();
     console.log("🚀 ~ saveMessage ~ message:", message);
     const messages = `New Chat Session created by ${nickname || "a user"}`;
