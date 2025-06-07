@@ -5,6 +5,7 @@ import { createNewAdminNotification } from "./notificationController.js";
 export const saveMessage = async (req, res) => {
   try {
     const { orderId,orderType, image, sender, content } = req.body;
+    console.log("🚀 ~ saveMessage ~ image:", image)
     const nickname = req.user.nickname;
     const userId = req.user.id
     let chat = await ChatSession.findOne({ orderId });
@@ -38,6 +39,7 @@ export const saveMessage = async (req, res) => {
     );
     res.status(201).json(message);
   } catch (err) {
+    console.error("🔥 Error in saveMessage:", err);
     res.status(500).json({ error: err.message });
   }
 };

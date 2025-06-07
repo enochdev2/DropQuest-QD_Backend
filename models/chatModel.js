@@ -10,9 +10,7 @@ const chatSchema = new Schema({
     type: String, // e.g., "admin" or "user"
     required: true,
   },
-  imgage: {
-    type: String, 
-  },
+  image: String,
   content: {
     type: String,
     required: true,
