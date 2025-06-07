@@ -229,9 +229,10 @@ export const getAllPendingApprovalOrders = async (req, res) => {
 
 export const getAllInProgressApprovalOrders = async (req, res) => {
   try {
-    const onSaleStatus = "In Progress";
+    // const onSaleStatus = "In Progress";
+    const statuses = ["In Progress", "Partially Matched"];
 
-    const onSaleSellOrders = await SellOrder.find({ status: onSaleStatus })
+    const onSaleSellOrders = await SellOrder.find({ status: { $in: statuses } })
       .populate(
         "userId",
         "username nickname fullName phone bankName bankAccount"

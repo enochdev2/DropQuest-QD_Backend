@@ -18,7 +18,10 @@ export const createBuyOrder = async (req, res) => {
       .select("nickname username phone status")
       .lean();
 
-      if(user.status === "inactive")  return res.status(404).json({ error: "User Must be verified before placing an  Order" });
+    if (user.status === "inactive")
+      return res
+        .status(404)
+        .json({ error: "User Must be verified before placing an  Order" });
 
     const newBuyOrder = new BuyOrder({
       userId,
@@ -47,7 +50,7 @@ export const createBuyOrder = async (req, res) => {
       "buyOrder",
       newBuyOrder._id
     );
-    
+
     res.status(201).json(newBuyOrder);
   } catch (error) {
     console.error("Error creating buy order:", error);
@@ -215,9 +218,9 @@ export const getAllPendingBuyApprovalOrders = async (req, res) => {
 
 export const getAllInProgressApprovalOrders = async (req, res) => {
   try {
-    const onBuyStatus = "In Progress";
+    const onBuyStatus = ["In Progress", "Partially Matched"];
 
-    const onBuyOrders = await BuyOrder.find({ status: onBuyStatus })
+    const onBuyOrders = await BuyOrder.find({ status: { $in: onBuyStatus } })
       .populate(
         "userId",
         "username nickname fullName phone bankName bankAccount"
