@@ -245,6 +245,7 @@ export const getAllInProgressApprovalOrders = async (req, res) => {
       .sort({ createdAt: -1 });
 
     const sellOrders = onSaleSellOrders;
+    console.log(JSON.stringify(sellOrders, null, 2));
 
     res.json(sellOrders);
   } catch (error) {
