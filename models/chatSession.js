@@ -11,6 +11,10 @@ const chatSessionSchema = new mongoose.Schema({
     enum: ['buy', 'sell'],  
     required: true,
   },
+   nickname: { 
+    type: String,
+    required: false,
+  },
   isClosed: {
     type: Boolean,
     default: false,
