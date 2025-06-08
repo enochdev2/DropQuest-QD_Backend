@@ -224,13 +224,10 @@ export const getAllInProgressApprovalOrders = async (req, res) => {
       .populate(
         "userId",
         "username nickname fullName phone bankName bankAccount"
-      )
-      .populate({
-        path: "matchedSellOrders",
-        populate: {
-          path: "userId", // assumes matchedBuyOrders contains BuyOrder refs with userId
-          select: "nickname", // you can add more fields like fullName, phone, etc.
-        },
+      ) .populate({
+        path: "matchedSellOrders.orderId", // << this populates BuyOrder via dynamic refPath
+        model: "SellOrder",
+        select: "sellerNickname", // pull nickname from BuyOrder
       })
       .sort({ createdAt: -1 });
 
