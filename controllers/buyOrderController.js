@@ -238,7 +238,7 @@ export const getAllInProgressApprovalOrders = async (req, res) => {
 
 export const getAllOnBuyOrders = async (req, res) => {
   try {
-    const onBuyStatus = ["Waiting for Buy", "Partially Matched"]; // An array of statuses
+    const onBuyStatus = ["Waiting for Buy"]; // An array of statuses
 
     // Use the $in operator to check if the status is one of the desired statuses
     const onBuyOrders = await BuyOrder.find({
