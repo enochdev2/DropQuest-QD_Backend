@@ -225,6 +225,13 @@ export const getAllInProgressApprovalOrders = async (req, res) => {
         "userId",
         "username nickname fullName phone bankName bankAccount"
       )
+      .populate({
+        path: "matchedSellOrders",
+        populate: {
+          path: "userId", // assumes matchedBuyOrders contains BuyOrder refs with userId
+          select: "nickname", // you can add more fields like fullName, phone, etc.
+        },
+      })
       .sort({ createdAt: -1 });
 
     const buyOrders = onBuyOrders;
