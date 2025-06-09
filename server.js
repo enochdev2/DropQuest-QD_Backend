@@ -18,7 +18,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["https://tether-p2p.vercel.app", "http://localhost:5173"], // Allow only localhost:5173
+    origin: ["https://tether-p2p.vercel.app", "http://localhost:5173", "https://www.tetherzone-p2p.com", "https://tetherzone-p2p.com"], // Allow only localhost:5173
     methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
     credentials: true,
   },
