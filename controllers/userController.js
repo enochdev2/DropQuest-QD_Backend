@@ -89,6 +89,7 @@ export const loginUser = async (req, res) => {
   try {
     const { nickname, password } = req.body;
     const username = nickname;
+    console.log("🚀 ~ loginUser ~ username:", username)
 
     if (!username || !password) {
       res.status(400).json({ error: "Username and password are required" });
