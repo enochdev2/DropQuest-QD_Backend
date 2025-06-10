@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
+import twilio from "twilio";
 import {
   deleteUserByNickname,
   getUserByNickname,
@@ -12,6 +13,12 @@ import {
   createNewAdminNotification,
   createNewUserNotification,
 } from "./notificationController.js";
+
+const twilioClient = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+console.log("🚀 ~ twilioClient:", twilioClient);
 
 // Helper function to generate JWT token
 const generateToken = (user) => {
@@ -29,12 +36,13 @@ const generateToken = (user) => {
 
 export const createUserProfile = async (req, res) => {
   try {
-    const { nickname, password } = req.body;
+    const { nickname, password, phone } = req.body;
+    console.log("🚀 ~ createUserProfile ~ phone:", phone);
     const username = nickname;
 
     // Validate that both username and password are provided
-    if (!username || !password) {
-      res.status(400).json({ error: "Username and password are required" });
+    if (!username || !password || !phone) {
+      res.status(400).json({ error: "Username, password, phone are required" });
       return;
     }
 
@@ -53,10 +61,34 @@ export const createUserProfile = async (req, res) => {
     // If the user does not exist, create a new user profile
     const newUser = new userModel({
       ...req.body,
+      isVerified: false,
     });
     console.log("🚀 ~ createUserProfile ~ newUser:", newUser);
 
+    // Send SMS verification code using Twilio
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+
+    // You can optionally store this code in DB for later verification
+    newUser.verificationCode = verificationCode;
+
+    // await newUser.save();
+
+    let formattedPhone;
+    try {
+      formattedPhone = formatKoreanPhoneNumber(phone);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+
     await newUser.save();
+
+    await twilioClient.messages.create({
+      body: `Your verification code is: ${verificationCode}`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: formattedPhone,
+    });
 
     // Create a notification for the new user registration
     const messages = `you have successfully registered: ${newUser.username}. Please wait for you account to be verified.`;
@@ -76,11 +108,86 @@ export const createUserProfile = async (req, res) => {
     );
 
     console.log("🚀 ~ createUserProfile ~ newUser:", newUser);
+    const { password: _, ...userData } = newUser.toObject();
 
     // Respond with the newly created user profile
-    res.status(201).json(newUser);
+    res.status(201).json(userData);
   } catch (error) {
     res.status(400).json({ error: error.message });
+    console.log("🚀 ~ createUserProfile ~ error.message:", error.message);
+  }
+};
+
+export const verifyPhoneNumber = async (req, res) => {
+  const { nickname, code } = req.body;
+
+  try {
+    const user = await getUserByNickname(nickname);
+    console.log("🚀 ~ verifyPhoneNumber ~ user:", user)
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (user.verificationCode === code) {
+      user.isVerified = true;
+      user.verificationCode = null; // Clear the code
+      await user.save();
+      return res
+        .status(200)
+        .json({ message: "Phone number verified successfully." });
+    } else {
+      return res.status(400).json({ error: "Invalid verification code." });
+    }
+  } catch (error) {
+    console.log("🚀 ~ verifyPhoneNumber ~ error.message:", error.message)
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+export const resendVerificationCode = async (req, res) => {
+  const { nickname, phone } = req.body;
+  console.log("🚀 ~ resendVerificationCode ~ nickname:", nickname)
+  console.log("🚀 ~ resendVerificationCode ~ phone:", phone)
+
+  try {
+    // Find the user by their ID
+    const user = await getUserByNickname(nickname);
+    console.log("🚀 ~ resendVerificationCode ~ user:", user)
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Generate a new verification code
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+
+    // Update the verification code in the user's profile
+    user.verificationCode = verificationCode;
+    await user.save();
+
+    // Format phone number (assuming phone number is passed in raw form)
+    let formattedPhone;
+    try {
+      formattedPhone = formatKoreanPhoneNumber(phone); // Adjust this based on your phone formatting (use Korean or other format as needed)
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+
+    // Send the verification code via Twilio
+    await twilioClient.messages.create({
+      body: `Your new verification code is: ${verificationCode}`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: formattedPhone,
+    });
+
+    // Respond with a success message
+    return res
+      .status(200)
+      .json({ message: "Verification code resent successfully." });
+  } catch (error) {
+    console.log("🚀 ~ resendVerificationCode ~ error.message:", error.message)
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -89,7 +196,7 @@ export const loginUser = async (req, res) => {
   try {
     const { nickname, password } = req.body;
     const username = nickname;
-    console.log("🚀 ~ loginUser ~ username:", username)
+    console.log("🚀 ~ loginUser ~ username:", username);
 
     if (!username || !password) {
       res.status(400).json({ error: "Username and password are required" });
@@ -100,6 +207,9 @@ export const loginUser = async (req, res) => {
     const user = await getUserByNickname(username);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+    if (!user.isVerified) {
+      return res.status(404).json({ message: "User not Verified" });
     }
 
     // Check if password is correct
@@ -226,4 +336,45 @@ export const deleteUserProfile = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
+};
+
+const formatPhoneNumber = (number) => {
+  let cleaned = number.replace(/\D/g, "");
+
+  if (cleaned.startsWith("0")) {
+    return `+234${cleaned.slice(1)}`; // e.g., 08012345678 -> +2348012345678
+  }
+
+  if (cleaned.startsWith("234")) {
+    return `+${cleaned}`; // e.g., 2348012345678 -> +2348012345678
+  }
+
+  if (cleaned.startsWith("+234")) {
+    return cleaned; // Already valid
+  }
+
+  throw new Error("Invalid Nigerian phone number format");
+};
+
+const formatKoreanPhoneNumber = (number) => {
+  // Remove all non-digit characters
+  let cleaned = number.replace(/\D/g, "");
+
+  // South Korean numbers typically start with '010' (mobile), '011', etc.
+  // Normalize if starts with 0 (e.g., 01012345678)
+  if (cleaned.startsWith("0")) {
+    return `+82${cleaned.slice(1)}`; // Strip leading 0, add +82
+  }
+
+  // If it already starts with 82 (e.g., 821012345678)
+  if (cleaned.startsWith("82")) {
+    return `+${cleaned}`; // Prefix +
+  }
+
+  // If it already includes the +82 prefix
+  if (number.startsWith("+82")) {
+    return number;
+  }
+
+  throw new Error("Invalid Korean phone number format");
 };

@@ -1,40 +1,35 @@
-import express from 'express';
+import express from "express";
 
 // import asyncHandler from '../utils/asyncHandler';
-import { createUserProfile, deleteUserProfile, getAllUsers, getUserProfile, loginUser, logoutUser, updateUserProfile } from "../controllers/userController.js";
-import { authenticate, authorizeAdmin } from '../middleware/autheticate.js';
+import {
+  createUserProfile,
+  deleteUserProfile,
+  getAllUsers,
+  getUserProfile,
+  loginUser,
+  logoutUser,
+  resendVerificationCode,
+  updateUserProfile,
+  verifyPhoneNumber,
+} from "../controllers/userController.js";
+import { authenticate, authorizeAdmin } from "../middleware/autheticate.js";
 const router = express.Router();
 
-
-
-
 router.post("/users", createUserProfile); // Register new user
-router.get("/users",authenticate, authorizeAdmin, getAllUsers); // Get all users
+router.get("/users", authenticate, authorizeAdmin, getAllUsers); // Get all users
+router.post("/users/verify", verifyPhoneNumber);
+router.post("/users/resendverify", resendVerificationCode);
 router.get("/users/:nickname", authenticate, getUserProfile); // Get user by nickname
-router.put("/users/:nickname",authenticate, updateUserProfile); // Update user profile
+router.put("/users/:nickname", authenticate, updateUserProfile); // Update user profile
 router.delete("/users/:nickname", authenticate, deleteUserProfile); // Delete user profile
 router.post("/login", loginUser); // Login user
 router.post("/logout", logoutUser); // Logout user
-
-
-
-
-
-
-
-
-
-
 
 // import { getUser, getAllUsers, uploadPhoto } from '../controllers/userController';
 // import { authenticate, Admin } from '../middleware/authentication';
 // import { upload } from '../middleware/multer';
 //endpoint to verify a registered user
 // router.get('/verify-user/:id/:token', asyncHandler(verify_User));
-
-
-
-
 
 //endpoint to upload a profile photo
 // router.put('/upload-pic', upload.single('userPicture'), asyncHandler(authenticate),  asyncHandler(uploadPhoto));
@@ -48,8 +43,7 @@ router.post("/logout", logoutUser); // Logout user
 //endpoint to update the user's profile
 // router.put("/update-profile", asyncHandler(authenticate), asyncHandler(updateUserProfile));
 
-//endpoint to delete user profile 
+//endpoint to delete user profile
 // router.delete("/delete-profile/:id", asyncHandler(authenticate), asyncHandler(deleteUserProfile));
-
 
 export default router;

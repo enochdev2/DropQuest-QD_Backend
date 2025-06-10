@@ -34,6 +34,8 @@ const io = new Server(server, {
 
 // connect db
 connectDB();
+//Twilio Auth Token -- 516c74e562566c0ff9e76348ef81b409
+//Twilio Account SID --  
 
 const corsOptions = {
   origin: [

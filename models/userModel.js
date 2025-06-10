@@ -18,7 +18,7 @@ const userSchema = new Schema(
       required: true,
       unique: true,
     },
-    
+
     password: {
       type: String,
       required: true,
@@ -66,26 +66,27 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
+    verificationCode: { type: String },
+    isVerified: { type: Boolean, default: false },
 
     // Added status field, default value is 'inactive'
     status: {
       type: String,
-      default: 'inactive',
+      default: "inactive",
     },
 
     // Admin field to mark if a user is an admin
     admin: {
       type: Boolean,
-      default: false,  // Assume users are not admins by default
+      default: false, // Assume users are not admins by default
     },
-
   },
   { timestamps: true }
 );
 
 // Hash password before saving the user document
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next(); // Skip if password hasn't been modified
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next(); // Skip if password hasn't been modified
 
   try {
     const salt = await bcrypt.genSalt(10); // Generate salt
@@ -108,12 +109,12 @@ export const userModel = mongoose.model("User", userSchema);
 export const getUsers = () => userModel.find();
 export const getUserByNickname = (nickname) => userModel.findOne({ nickname });
 export const createUser = async (values) => {
-    const user = new userModel(values);
-    await user.save();
-    return user.toObject();
+  const user = new userModel(values);
+  await user.save();
+  return user.toObject();
 };
-export const deleteUserByNickname = (nickname) => 
-    userModel.findOneAndDelete({ nickname });
+export const deleteUserByNickname = (nickname) =>
+  userModel.findOneAndDelete({ nickname });
 
 export const updateUserByNickname = (nickname, values, newOption = true) =>
-    userModel.findOneAndUpdate({ nickname }, values, { new: newOption });
+  userModel.findOneAndUpdate({ nickname }, values, { new: newOption });
