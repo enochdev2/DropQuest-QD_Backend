@@ -5,6 +5,7 @@ import {
   createUserNotification,
   createAdminNotification,
   Notification,
+  markNotificationsAsRead,
 } from "../models/notification.js";
 
 // Create a notification when a new user registers
@@ -87,6 +88,37 @@ export const markNotificationAsRead = async (req, res) => {
     return res
       .status(500)
       .json({ error: "Error updating notification status." });
+  }
+};
+
+export const markNotificationsAsReadByType = async (req, res) => {
+  try {
+    const { userId, type, isForAdmin } = req.body; // Get parameters from the request body
+    console.log("🚀 ~ markNotificationsAsReadByType ~ type:", type)
+
+    if (!type) {
+      return res.status(400).json({ error: "Notification type is required" });
+    }
+
+    // Mark notifications as read based on the provided criteria
+    const updatedNotifications = await markNotificationsAsRead(
+      userId,
+      type,
+      isForAdmin
+    );
+
+    if (!updatedNotifications) {
+      return res.status(404).json({ error: "Notifications not found" });
+    }
+
+    return res
+      .status(200)
+      .json({ message: `Notifications of type '${type}' marked as read.` });
+  } catch (err) {
+    console.log("🚀 ~ markNotificationsAsReadByType ~ er:", err.message)
+    return res
+      .status(500)
+      .json({ error: "Error updating notifications status" });
   }
 };
 
@@ -224,7 +256,6 @@ export const fetchUnreadUserProfileNotifications = async (req, res) => {
 };
 export const fetchUnreadAllProfileNotifications = async (req, res) => {
   try {
-
     // If admin wants all unread sellOrder notifications (no user filter):
     const notifications = await Notification.find({
       isForAdmin: true,
@@ -232,8 +263,7 @@ export const fetchUnreadAllProfileNotifications = async (req, res) => {
       type: "registration",
     })
       .sort({ createdAt: -1 })
-    .populate("userId", "username nickname");
-   
+      .populate("userId", "username nickname");
 
     return res.status(200).json(notifications);
   } catch (error) {

@@ -12,6 +12,7 @@ import {
   fetchUnreadUserInquiryNotifications,
   fetchUnreadAdminInquiryNotifications,
   fetchUnreadAllProfileNotifications,
+  markNotificationsAsReadByType,
 } from '../controllers/notificationController.js';
 import { authenticate, authorizeAdmin } from '../middleware/autheticate.js';
 
@@ -25,6 +26,7 @@ router.get('/notifications', authenticate, authorizeAdmin,  fetchAllNotification
 
 // Route to mark a notification as read
 router.put('/mark-read/:id', authenticate, markNotificationAsRead);
+router.put('/mark-read', authenticate, markNotificationsAsReadByType);
 router.get("/unread/inquiry", authenticate, authorizeAdmin, fetchUnreadAdminInquiryNotifications);
 router.get("/unread/registration", authenticate, fetchUnreadAllProfileNotifications);
 router.get("/unread/sellOrders", authenticate,authorizeAdmin, authorizeAdmin, fetchUnreadSellOrderNotifications);

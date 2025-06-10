@@ -81,3 +81,26 @@ export const markAsRead = (notificationId) =>
     { isRead: true },
     { new: true }
   );
+
+
+ // Mark all notifications of a specific type as read
+// Helper function to mark notifications as read
+export const markNotificationsAsRead = (userId, type, isForAdmin) => {
+  // If it's for admin notifications, don't filter by userId
+  if (isForAdmin) {
+    return Notification.updateMany(
+      { type: type, isForAdmin: true, isRead: false },
+      { isRead: true },
+      { new: true }
+    );
+  }
+
+  // Otherwise, mark notifications as read for a specific user and type
+  return Notification.updateMany(
+    { userId: userId, type: type, isForAdmin: false, isRead: false },
+    { isRead: true },
+    { new: true }
+  );
+};
+
+
