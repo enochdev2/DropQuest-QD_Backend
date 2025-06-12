@@ -9,6 +9,7 @@ import {
   getAllPendingBuyApprovalOrders,
   getAllInProgressApprovalOrders,
   getUserInProgressOrders,
+  cancelBuyOrder,
 } from "../controllers/buyOrderController.js";
 
 import { authenticate, authorizeAdmin } from "../middleware/autheticate.js";
@@ -18,7 +19,7 @@ const router = express.Router();
 router.post("/", authenticate, createBuyOrder); // Create new buy order (user)
 router.get("/buy-orders", authenticate, getUserBuyOrders); // Get user buy orders with optional status filter
 router.get("/user/inProgress-orders", authenticate, getUserInProgressOrders); // Get user buy orders with optional status filter
-
+router.delete('/buy-orders/:orderId/cancel', authenticate, cancelBuyOrder);
 //? USER ROUTES
 router.get(
   "/admin/buy-orders/pending",

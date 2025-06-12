@@ -3,6 +3,7 @@ import express from "express";
 // import asyncHandler from '../utils/asyncHandler';
 import {
   approveSellOrder,
+  cancelSellOrder,
   cancelTrade,
   completeOrders,
   createSellOrder,
@@ -26,6 +27,7 @@ router.post("/", authenticate, createSellOrder);
 router.get("/sell-orders", authenticate, getUserSellOrders); // /api/sell-orders?status=On Sale
 router.get("/user/inProgress-orders", authenticate, getUserInProgressOrders);
 router.get("/all-orders", getAllCompletedOrders);
+router.delete('/sell-orders/:orderId/cancel', authenticate, cancelSellOrder);
 
 //? ADMIN ROUTE
 router.get(

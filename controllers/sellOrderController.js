@@ -67,32 +67,27 @@ export const createSellOrder = async (req, res) => {
 export const cancelSellOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { orderId } = req.params;
+    const { orderId, nickname } = req.params;
 
-        const { nickname } = req.params; // Get nickname from request params
-    const { admin } = req.user; // Access the admin status from the decoded token
-    const nick = req.user.nickname;
+    const { admin } = req.user; 
+    
+    console.log("🚀 ~ cancelBuyOrder ~ User ID:", userId);
+    console.log("🚀 ~ cancelBuyOrder ~ Order ID:", orderId);
 
-    // Check if the logged-in user is either the user themselves or an admin
-    if (nickname !== req.user.nickname && !admin) {
-      return res
-        .status(403)
-        .json({ error: "You do not have permission to update this profile" });
-    }
-
-    // Find the order and ensure it belongs to the user and is cancellable
-    const order = await SellOrder.findOne({
+    const query = {
       _id: orderId,
-      userId,
-      status: { $in: ["Pending Approval", "On Sale"] },
-    });
+      ...(admin ? {} : { userId }),
+      status: { $in: admin ? ["Waiting for Buy", "Pending Approval"] : ["Pending Approval"] },
+    };
+
+    const order = await SellOrder.findOne(query);
 
     if (!order) {
       return res.status(404).json({ error: "Order not found or cannot be cancelled" });
     }
 
     // Remove the order
-    await order.deleteOne();
+    await SellOrder.findByIdAndDelete(orderId);
 
     // Notify user
     await createNewUserNotification(

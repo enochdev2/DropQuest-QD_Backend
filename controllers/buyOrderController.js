@@ -61,33 +61,21 @@ export const createBuyOrder = async (req, res) => {
 export const cancelBuyOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { orderId, nickname } = req.params;
-
-    const { admin } = req.user; 
-
-    // Check if the logged-in user is either the user themselves or an admin
-    if (nickname !== req.user.nickname && !admin) {
-      return res
-        .status(403)
-        .json({ error: "You do not have permission to update this profile" });
-    }
-
-     let order;
+    const { orderId } = req.params;
+    const { nickname } = req.body; // nickname from request body
     
-        // Find the order and ensure it belongs to the user and is cancellable
-        if(admin) {
-          order = await BuyOrder.findOne({
-              _id: orderId,
-              userId,
-              status: { $in: ["Waiting for Buy", "Pending Approval"] },
-            });
-        }else {
-          order = await BuyOrder.findOne({
-            _id: orderId,
-            userId,
-            status: { $in: ["Pending Approval"] },
-          });
-        }
+    const { admin } = req.user; 
+    
+    console.log("🚀 ~ cancelBuyOrder ~ User ID:", userId);
+    console.log("🚀 ~ cancelBuyOrder ~ Order ID:", orderId);
+
+    const query = {
+      _id: orderId,
+      ...(admin ? {} : { userId }),
+      status: { $in: admin ? ["Waiting for Buy", "Pending Approval"] : ["Pending Approval"] },
+    };
+
+    const order = await BuyOrder.findOne(query);
 
 
       if(!order) {
@@ -107,6 +95,7 @@ export const cancelBuyOrder = async (req, res) => {
 
     res.json({ message: "Buy order cancelled successfully" });
   } catch (error) {
+    console.log("🚀 ~ cancelBuyOrder ~ error: error.message:", error.message)
     res.status(500).json({ error: error.message });
   }
 };
