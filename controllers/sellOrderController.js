@@ -64,6 +64,50 @@ export const createSellOrder = async (req, res) => {
   }
 };
 
+export const cancelSellOrder = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { orderId } = req.params;
+
+        const { nickname } = req.params; // Get nickname from request params
+    const { admin } = req.user; // Access the admin status from the decoded token
+    const nick = req.user.nickname;
+
+    // Check if the logged-in user is either the user themselves or an admin
+    if (nickname !== req.user.nickname && !admin) {
+      return res
+        .status(403)
+        .json({ error: "You do not have permission to update this profile" });
+    }
+
+    // Find the order and ensure it belongs to the user and is cancellable
+    const order = await SellOrder.findOne({
+      _id: orderId,
+      userId,
+      status: { $in: ["Pending Approval", "On Sale"] },
+    });
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found or cannot be cancelled" });
+    }
+
+    // Remove the order
+    await order.deleteOne();
+
+    // Notify user
+    await createNewUserNotification(
+      `Your sell order #${orderId} has been cancelled.`,
+      userId,
+      "sellOrder",
+      orderId
+    );
+
+    res.json({ message: "Sell order cancelled successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const getPendingSellOrders = async (req, res) => {
   try {
     // Find all SellOrders with status "Pending Approval"

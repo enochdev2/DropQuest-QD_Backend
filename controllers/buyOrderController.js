@@ -58,6 +58,59 @@ export const createBuyOrder = async (req, res) => {
   }
 };
 
+export const cancelBuyOrder = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { orderId, nickname } = req.params;
+
+    const { admin } = req.user; 
+
+    // Check if the logged-in user is either the user themselves or an admin
+    if (nickname !== req.user.nickname && !admin) {
+      return res
+        .status(403)
+        .json({ error: "You do not have permission to update this profile" });
+    }
+
+     let order;
+    
+        // Find the order and ensure it belongs to the user and is cancellable
+        if(admin) {
+          order = await BuyOrder.findOne({
+              _id: orderId,
+              userId,
+              status: { $in: ["Waiting for Buy", "Pending Approval"] },
+            });
+        }else {
+          order = await BuyOrder.findOne({
+            _id: orderId,
+            userId,
+            status: { $in: ["Pending Approval"] },
+          });
+        }
+
+
+      if(!order) {
+        return res.status(404).json({ error: "Order not found or cannot be cancelled" });
+      }
+
+    // Remove the order
+    await BuyOrder.findByIdAndDelete(orderId);
+
+    // Notify user
+    await createNewUserNotification(
+      `Your buy order #${orderId} has been cancelled.`,
+      userId,
+      "buyOrder",
+      orderId
+    );
+
+    res.json({ message: "Buy order cancelled successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Get all buy orders with status "Waiting for Buy" (for Admin)
 export const getPendingBuyOrders = async (req, res) => {
   try {
