@@ -111,7 +111,7 @@ export const admindeleteBuyOrder = async (req, res) => {
     console.log("🚀 ~ cancelBuyOrder ~ Order ID:", orderId);
 
 
-    const order = await BuyOrder.findOne(orderId);
+    const order = await BuyOrder.findById(orderId);
 
 
       if(!order) {
