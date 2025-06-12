@@ -2,6 +2,7 @@ import express from "express";
 
 // import asyncHandler from '../utils/asyncHandler';
 import {
+  admindeletSellOrder,
   approveSellOrder,
   cancelSellOrder,
   cancelTrade,
@@ -29,7 +30,9 @@ router.get("/user/inProgress-orders", authenticate, getUserInProgressOrders);
 router.get("/all-orders", getAllCompletedOrders);
 router.delete('/sell-orders/:orderId/cancel', authenticate, cancelSellOrder);
 
+
 //? ADMIN ROUTE
+router.delete('/admin/sell-orders/:orderId/cancel', authenticate, authorizeAdmin, admindeletSellOrder);
 router.get(
   "/admin/sell-orders/pending",
   authenticate,

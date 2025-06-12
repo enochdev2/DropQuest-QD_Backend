@@ -81,6 +81,7 @@ export const cancelSellOrder = async (req, res) => {
     };
 
     const order = await SellOrder.findOne(query);
+    console.log("🚀 ~ cancelSellOrder ~ order:", order)
 
     if (!order) {
       return res.status(404).json({ error: "Order not found or cannot be cancelled" });
@@ -99,6 +100,42 @@ export const cancelSellOrder = async (req, res) => {
 
     res.json({ message: "Sell order cancelled successfully" });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const admindeletSellOrder = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { orderId, nickname } = req.params;
+
+    const { admin } = req.user; 
+    
+    console.log("🚀 ~ cancelBuyOrder ~ User ID:", userId);
+    console.log("🚀 ~ cancelBuyOrder ~ Order ID:", orderId);
+
+
+    const order = await SellOrder.findById(orderId);
+    console.log("🚀 ~ cancelSellOrder ~ order:", order)
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found or cannot be cancelled" });
+    }
+
+    // Remove the order
+    await SellOrder.findByIdAndDelete(orderId);
+
+    // Notify user
+    await createNewUserNotification(
+      `Your sell order #${orderId} has been cancelled.`,
+      userId,
+      "sellOrder",
+      orderId
+    );
+
+    res.json({ message: "Sell order cancelled successfully" });
+  } catch (error) {
+    console.log("🚀 ~ admindeletSellOrder ~ error.message:", error.message)
     res.status(500).json({ error: error.message });
   }
 };

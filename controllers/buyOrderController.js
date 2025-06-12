@@ -100,6 +100,42 @@ export const cancelBuyOrder = async (req, res) => {
   }
 };
 
+export const admindeleteBuyOrder = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { orderId } = req.params;
+    
+    const { admin } = req.user; 
+    
+    console.log("🚀 ~ cancelBuyOrder ~ User ID:", userId);
+    console.log("🚀 ~ cancelBuyOrder ~ Order ID:", orderId);
+
+
+    const order = await BuyOrder.findOne(orderId);
+
+
+      if(!order) {
+        return res.status(404).json({ error: "Order not found or cannot be cancelled" });
+      }
+
+    // Remove the order
+    await BuyOrder.findByIdAndDelete(orderId);
+
+    // Notify user
+    await createNewUserNotification(
+      `Your buy order #${orderId} has been cancelled.`,
+      userId,
+      "buyOrder",
+      orderId
+    );
+
+    res.json({ message: "Buy order cancelled successfully" });
+  } catch (error) {
+    console.log("🚀 ~ cancelBuyOrder ~ error: error.message:", error.message)
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Get all buy orders with status "Waiting for Buy" (for Admin)
 export const getPendingBuyOrders = async (req, res) => {
   try {
