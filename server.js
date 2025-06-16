@@ -11,6 +11,7 @@ import notificationRouter from "./routes/notificationRouter.js";
 import sellOrderRouter from "./routes/sellOrderRouter.js";
 import buyOrderRouter from "./routes/buyOrderRoutes.js";
 import inquiryRouter from "./routes/inquiryRouter.js";
+import tetherPriceRouter from "./routes/tetherPriceRouter.js";
 import chatRouter from "./routes/chatRouter.js";
 import cookieParser from "cookie-parser";
 
@@ -35,12 +36,12 @@ const io = new Server(server, {
 // connect db
 connectDB();
 //Twilio Auth Token -- 516c74e562566c0ff9e76348ef81b409
-//Twilio Account SID --  
+//Twilio Account SID --
 
 const corsOptions = {
   origin: [
-    "https://tether-p2p.vercel.app",
     "http://localhost:5173",
+    "https://tether-p2p.vercel.app",
     "https://www.tetherzone-p2p.com",
     "https://tetherzone-p2p.com",
   ],
@@ -65,6 +66,7 @@ app.use("/api/v1/user", userRouter);
 // app.use("/api/v1/fee", feeRouter);
 app.use("/api/v1/notification", notificationRouter);
 app.use("/api/v1/sell", sellOrderRouter);
+app.use("/api/v1/tetherprice", tetherPriceRouter);
 app.use("/api/v1/buy", buyOrderRouter);
 app.use("/api/v1/inquiry", inquiryRouter);
 app.use("/api/v1/chat", chatRouter);
