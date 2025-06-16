@@ -641,7 +641,9 @@ export const completeOrders = async (req, res) => {
 
     // 4. Process the match: Update both buy and sell orders
     // Update buy order
-    buyOrder.amountRemaining -= matchAmount + fee;
+    // let feeSubtracted = matchAmount - fee
+    // buyOrder.amountRemaining -= feeSubtracted;
+    buyOrder.amountRemaining -= matchAmount;
     buyOrder.matchedSellOrders.push({
       orderId: sellOrder._id,
       matchModel: "SellOrder",
