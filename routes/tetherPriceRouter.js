@@ -14,6 +14,6 @@ router.post(
   authorizeAdmin,
   updateTetherPrice
 );
-router.get("/get-tether-price", authenticate, authorizeAdmin, getTetherPrice);
+router.get("/get-tether-price", getTetherPrice);
 
 export default router;
