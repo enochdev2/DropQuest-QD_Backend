@@ -6,12 +6,13 @@ const chatSessionSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
-   orderType: {  // New field added to differentiate between buy and sell
+  orderType: {
+    // New field added to differentiate between buy and sell
     type: String,
-    enum: ['buy', 'sell'],  
+    enum: ["buy", "sell"],
     required: true,
   },
-   nickname: { 
+  nickname: {
     type: String,
     required: false,
   },

@@ -69,22 +69,28 @@ export const cancelSellOrder = async (req, res) => {
     const userId = req.user.id;
     const { orderId, nickname } = req.params;
 
-    const { admin } = req.user; 
-    
+    const { admin } = req.user;
+
     console.log("🚀 ~ cancelBuyOrder ~ User ID:", userId);
     console.log("🚀 ~ cancelBuyOrder ~ Order ID:", orderId);
 
     const query = {
       _id: orderId,
       ...(admin ? {} : { userId }),
-      status: { $in: admin ? ["Waiting for Buy", "Pending Approval"] : ["Pending Approval"] },
+      status: {
+        $in: admin
+          ? ["Waiting for Buy", "Pending Approval"]
+          : ["Pending Approval"],
+      },
     };
 
     const order = await SellOrder.findOne(query);
-    console.log("🚀 ~ cancelSellOrder ~ order:", order)
+    console.log("🚀 ~ cancelSellOrder ~ order:", order);
 
     if (!order) {
-      return res.status(404).json({ error: "Order not found or cannot be cancelled" });
+      return res
+        .status(404)
+        .json({ error: "Order not found or cannot be cancelled" });
     }
 
     // Remove the order
@@ -109,17 +115,18 @@ export const admindeletSellOrder = async (req, res) => {
     const userId = req.user.id;
     const { orderId, nickname } = req.params;
 
-    const { admin } = req.user; 
-    
+    const { admin } = req.user;
+
     console.log("🚀 ~ cancelBuyOrder ~ User ID:", userId);
     console.log("🚀 ~ cancelBuyOrder ~ Order ID:", orderId);
 
-
     const order = await SellOrder.findById(orderId);
-    console.log("🚀 ~ cancelSellOrder ~ order:", order)
+    console.log("🚀 ~ cancelSellOrder ~ order:", order);
 
     if (!order) {
-      return res.status(404).json({ error: "Order not found or cannot be cancelled" });
+      return res
+        .status(404)
+        .json({ error: "Order not found or cannot be cancelled" });
     }
 
     // Remove the order
@@ -135,7 +142,7 @@ export const admindeletSellOrder = async (req, res) => {
 
     res.json({ message: "Sell order cancelled successfully" });
   } catch (error) {
-    console.log("🚀 ~ admindeletSellOrder ~ error.message:", error.message)
+    console.log("🚀 ~ admindeletSellOrder ~ error.message:", error.message);
     res.status(500).json({ error: error.message });
   }
 };
@@ -709,11 +716,112 @@ export const completeOrders = async (req, res) => {
   }
 };
 
+// export const matchOrders = async (req, res) => {
+//   try {
+//     const { buyerOrderId, sellerOrderId } = req.body;
+
+//     // Fetch sell order
+//     const sellOrder = await SellOrder.findById(sellerOrderId).populate(
+//       "userId",
+//       "nickname"
+//     );
+//     if (!sellOrder)
+//       return res.status(404).json({ error: "Sell order not found" });
+
+//     if (!["On Sale", "Partially Matched"].includes(sellOrder.status)) {
+//       return res
+//         .status(400)
+//         .json({ error: "Sell order not available for matching" });
+//     }
+
+//     // Check if sellOrder is already locked with another buy order
+//     if (
+//       sellOrder.currentBuyOrderInProgress &&
+//       sellOrder.currentBuyOrderInProgress.toString() !== buyerOrderId
+//     ) {
+//       return res.status(400).json({
+//         error: "Sell order is already matched with another buy order",
+//       });
+//     }
+
+//     // Fetch buy order
+//     const buyOrder = await BuyOrder.findById(buyerOrderId).populate(
+//       "userId",
+//       "nickname"
+//     );
+//     if (!buyOrder) {
+//       return res.status(404).json({ error: "Buy order not found" });
+//     }
+
+//     if (
+//       !["On Sale", "Partially Matched", "Waiting for Buy"].includes(
+//         buyOrder.status
+//       )
+//     ) {
+//       return res
+//         .status(400)
+//         .json({ error: "Buy order not available for matching" });
+//     }
+
+//     // Check if buyOrder is already locked with another sell order
+//     if (
+//       buyOrder.currentSellOrderInProgress &&
+//       buyOrder.currentSellOrderInProgress.toString() !== sellerOrderId
+//     ) {
+//       return res.status(400).json({
+//         error: "Buy order is already matched with another sell order",
+//       });
+//     }
+
+//     // Lock the orders to each other and set status to In Progress
+//     sellOrder.currentBuyOrderInProgress = buyOrder._id;
+//     sellOrder.status = "In Progress";
+
+//     buyOrder.currentSellOrderInProgress = sellOrder._id;
+//     buyOrder.status = "In Progress";
+
+//     await buyOrder.save();
+//     await sellOrder.save();
+
+//     // Craft notification messages using nicknames
+//     const sellUserName = sellOrder.userId?.nickname || "Seller";
+//     const buyUserName = buyOrder.userId?.nickname || "Buyer";
+
+//     const sellerMsg = `Your sell order of ${sellOrder.amountRemaining} USDT has been matched with buyer ${buyUserName}.`;
+//     const buyerMsg = `Your buy order of ${buyOrder.amountRemaining} USDT has been matched with seller ${sellUserName}.`;
+
+//     // Send notifications to seller and buyer
+//     await Promise.all([
+//       createNewUserNotification(
+//         sellerMsg,
+//         sellOrder.userId,
+//         "sellOrder",
+//         sellOrder._id
+//       ),
+//       createNewUserNotification(
+//         buyerMsg,
+//         buyOrder.userId,
+//         "buyOrder",
+//         buyOrder._id
+//       ),
+//     ]);
+
+//     res.json({
+//       message: "Orders matched successfully, trade is In Progress",
+//       sellOrder,
+//       buyOrder,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// };
+
 export const matchOrders = async (req, res) => {
   try {
     const { buyerOrderId, sellerOrderId } = req.body;
 
-    // Fetch sell order
+    // Fetch sell order and populate the nickname of the seller
     const sellOrder = await SellOrder.findById(sellerOrderId).populate(
       "userId",
       "nickname"
@@ -737,7 +845,7 @@ export const matchOrders = async (req, res) => {
       });
     }
 
-    // Fetch buy order
+    // Fetch buy order and populate the nickname of the buyer
     const buyOrder = await BuyOrder.findById(buyerOrderId).populate(
       "userId",
       "nickname"
@@ -766,6 +874,16 @@ export const matchOrders = async (req, res) => {
       });
     }
 
+    // Ensure the buyer's and seller's nicknames are different
+    const buyerNickname = buyOrder.userId?.nickname;
+    const sellerNickname = sellOrder.userId?.nickname;
+
+    if (buyerNickname === sellerNickname) {
+      return res.status(400).json({
+        error: "Buyer and seller cannot have the same nickname",
+      });
+    }
+
     // Lock the orders to each other and set status to In Progress
     sellOrder.currentBuyOrderInProgress = buyOrder._id;
     sellOrder.status = "In Progress";
@@ -777,11 +895,8 @@ export const matchOrders = async (req, res) => {
     await sellOrder.save();
 
     // Craft notification messages using nicknames
-    const sellUserName = sellOrder.userId?.nickname || "Seller";
-    const buyUserName = buyOrder.userId?.nickname || "Buyer";
-
-    const sellerMsg = `Your sell order of ${sellOrder.amountRemaining} USDT has been matched with buyer ${buyUserName}.`;
-    const buyerMsg = `Your buy order of ${buyOrder.amountRemaining} USDT has been matched with seller ${sellUserName}.`;
+    const sellerMsg = `Your sell order of ${sellOrder.amountRemaining} USDT has been matched with buyer ${buyerNickname}.`;
+    const buyerMsg = `Your buy order of ${buyOrder.amountRemaining} USDT has been matched with seller ${sellerNickname}.`;
 
     // Send notifications to seller and buyer
     await Promise.all([
