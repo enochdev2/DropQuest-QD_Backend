@@ -880,7 +880,7 @@ export const matchOrders = async (req, res) => {
 
     if (buyerNickname === sellerNickname) {
       return res.status(400).json({
-        error: "Buyer and seller cannot have the same nickname",
+        error: "These orders were created from the same account.",
       });
     }
 
