@@ -61,6 +61,11 @@ const userSchema = new Schema(
       unique: true,
     },
 
+    tetherIdImage: {
+      type: String,
+      required: true,
+    },
+
     // Added referral code field
     referralCode: {
       type: String,

@@ -35,8 +35,8 @@ const generateToken = (user) => {
 
 export const createUserProfile = async (req, res) => {
   try {
-    const { nickname, password, phone } = req.body;
-    console.log("🚀 ~ createUserProfile ~ phone:", phone);
+    const { nickname, password, phone,tetherIdImage } = req.body;
+    console.log("🚀 ~ createUserProfile ~ tetherIdImage:", tetherIdImage)
     const username = nickname;
 
     // Validate that both username and password are provided
@@ -60,6 +60,7 @@ export const createUserProfile = async (req, res) => {
     // If the user does not exist, create a new user profile
     const newUser = new userModel({
       ...req.body,
+      tetherIdImage:tetherIdImage,
       isVerified: false,
     });
     console.log("🚀 ~ createUserProfile ~ newUser:", newUser);

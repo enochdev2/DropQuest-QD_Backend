@@ -13,6 +13,7 @@ import buyOrderRouter from "./routes/buyOrderRoutes.js";
 import inquiryRouter from "./routes/inquiryRouter.js";
 import tetherPriceRouter from "./routes/tetherPriceRouter.js";
 import chatRouter from "./routes/chatRouter.js";
+import uploadRoute from './routes/upload.js';
 import cookieParser from "cookie-parser";
 
 const app = express();
@@ -70,6 +71,8 @@ app.use("/api/v1/tetherprice", tetherPriceRouter);
 app.use("/api/v1/buy", buyOrderRouter);
 app.use("/api/v1/inquiry", inquiryRouter);
 app.use("/api/v1/chat", chatRouter);
+app.use('/api/v1/upload', uploadRoute);
+
 
 let rooms = {}; // Store rooms and their participants
 
