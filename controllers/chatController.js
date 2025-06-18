@@ -1,5 +1,7 @@
+import { BuyOrder } from "../models/buyOrder.js";
 import { ChatModel } from "../models/chatModel.js";
 import { ChatSession } from "../models/chatSession.js";
+import { SellOrder } from "../models/sellOrder.js";
 import { createNewAdminNotification } from "./notificationController.js";
 
 export const saveMessage = async (req, res) => {
@@ -95,4 +97,48 @@ export const getOpenChats = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getMatchedOrders = async (req, res) => {
+  try {
+    const { orderId, type } = req.params;
+
+    if (!["buy", "sell"].includes(type)) {
+      return res.status(400).json({ error: "Invalid type parameter" });
+    }
+
+    let buyOrder, sellOrder;
+
+    if (type === "buy") {
+      buyOrder = await BuyOrder.findById(orderId).populate("userId", "nickname phone bank bankAccount tetherAddress referralCode");
+      if (!buyOrder) return res.status(404).json({ error: "Buy order not found" });
+
+      const sellOrderId = BuyOrder.currentSellOrderInProgress;
+      if (!sellOrderId) return res.status(404).json({ error: "No linked sell order" });
+
+      sellOrder = await SellOrder.findById(sellOrderId).populate("userId", "nickname phone bank bankAccount tetherAddress referralCode");
+      if (!sellOrder) return res.status(404).json({ error: "Linked sell order not found" });
+    }
+
+    if (type === "sell") {
+      sellOrder = await SellOrder.findById(orderId).populate("userId", "nickname phone bank bankAccount tetherAddress referralCode");
+      if (!sellOrder) return res.status(404).json({ error: "Sell order not found" });
+
+      const buyOrderId = sellOrder.currentBuyOrderInProgress;
+      if (!buyOrderId) return res.status(404).json({ error: "No linked buy order" });
+
+      buyOrder = await BuyOrder.findById(buyOrderId).populate("userId", "nickname phone bank bankAccount tetherAddress referralCode");
+      if (!buyOrder) return res.status(404).json({ error: "Linked buy order not found" });
+    }
+
+    return res.json({
+      message: "Matched orders retrieved successfully",
+      buyOrder,
+      sellOrder,
+    });
+  } catch (error) {
+    console.error("❌ Error in getMatchedOrders:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 
