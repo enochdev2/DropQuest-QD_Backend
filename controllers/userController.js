@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
+import { v2 as cloudinary } from 'cloudinary';
+import { Readable } from 'stream';
 import twilio from "twilio";
 import {
   deleteUserByNickname,
@@ -337,6 +339,86 @@ export const deleteUserProfile = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
+
+
+
+
+
+
+
+
+cloudinary.config({
+  cloud_name: 'dg9ikhw52',
+  api_key: '741795432579663',
+  api_secret: 'hajeGPi0lFqi-Vg635bJJ6fTp8c'
+});
+
+const bufferToStream = (buffer) => {
+  const stream = new Readable();
+  stream.push(buffer);
+  stream.push(null);
+  return stream;
+};
+
+export const editUserImage = async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    const user = await userModel.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // 1. Delete old image from Cloudinary (if exists)
+    if (user.imagePublicId) {
+      await cloudinary.uploader.destroy(user.imagePublicId);
+    }
+
+    // 2. Upload new image
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'tether-ids' },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        }
+      );
+      bufferToStream(req.file.buffer).pipe(stream);
+    });
+
+    // 3. Update user with new image info
+    user.tetherIdImage = uploadResult.secure_url;
+    user.imagePublicId = uploadResult.public_id;
+    await user.save();
+
+    res.status(200).json({
+      message: 'Image updated successfully',
+      imageUrl: uploadResult.secure_url,
+    });
+  } catch (error) {
+    console.error('Edit image error:', error);
+    res.status(500).json({ message: 'Failed to update image' });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const formatPhoneNumber = (number) => {
   let cleaned = number.replace(/\D/g, "");

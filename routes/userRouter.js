@@ -11,7 +11,12 @@ import {
   resendVerificationCode,
   updateUserProfile,
   verifyPhoneNumber,
+  editUserImage
 } from "../controllers/userController.js";
+import multer from 'multer';
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 import { authenticate, authorizeAdmin } from "../middleware/autheticate.js";
 const router = express.Router();
 
@@ -22,6 +27,8 @@ router.post("/users/resendverify", resendVerificationCode);
 router.get("/users/:nickname", authenticate, getUserProfile); // Get user by nickname
 router.put("/users/:nickname", authenticate, updateUserProfile); // Update user profile
 router.delete("/users/:nickname", authenticate, deleteUserProfile); // Delete user profile
+// PUT /api/users/:userId/image
+router.put('/:userId/image', upload.single('file'), editUserImage);
 router.post("/login", loginUser); // Login user
 router.post("/logout", logoutUser); // Logout user
 
