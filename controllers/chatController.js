@@ -148,7 +148,7 @@ export const adminGetMessages = async (req, res) => {
 
     // Fetch chat session details
     const chat = await ChatSession.findOne({ orderId }).select(
-      "nickname username phone bankName bankAccount tetherAddress referralCode currentOrderInProgress"
+      "nickname username phone bankName bankAccount tetherAddress referralCode fullName"
     );
 
     if (!chat) {
