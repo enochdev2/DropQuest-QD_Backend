@@ -6,6 +6,11 @@ const chatSessionSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
+  currentOrderInProgress: {
+    type: String,
+    unique: true,
+    required: false,
+  },
   orderType: {
     // New field added to differentiate between buy and sell
     type: String,
@@ -13,6 +18,30 @@ const chatSessionSchema = new mongoose.Schema({
     required: true,
   },
   nickname: {
+    type: String,
+    required: false,
+  },
+  username: {
+    type: String,
+    required: false,
+  },
+  phone: {
+    type: String,
+    required: false,
+  },
+  bankName: {
+    type: String,
+    required: false,
+  },
+  bankAccount: {
+    type: Number,
+    required: false,
+  },
+  tetherAddress: {
+    type: String,
+    required: false,
+  },
+  referralCode: {
     type: String,
     required: false,
   },

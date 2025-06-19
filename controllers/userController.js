@@ -1,9 +1,6 @@
-import bcrypt from "bcryptjs";
+import { v2 as cloudinary } from "cloudinary";
 import jwt from "jsonwebtoken";
-import cookieParser from "cookie-parser";
-import { v2 as cloudinary } from 'cloudinary';
-import { Readable } from 'stream';
-import twilio from "twilio";
+import { Readable } from "stream";
 import {
   deleteUserByNickname,
   getUserByNickname,
@@ -15,11 +12,6 @@ import {
   createNewAdminNotification,
   createNewUserNotification,
 } from "./notificationController.js";
-
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
 
 // Helper function to generate JWT token
 const generateToken = (user) => {
@@ -37,8 +29,7 @@ const generateToken = (user) => {
 
 export const createUserProfile = async (req, res) => {
   try {
-    const { nickname, password, phone,tetherIdImage } = req.body;
-    console.log("🚀 ~ createUserProfile ~ tetherIdImage:", tetherIdImage)
+    const { nickname, password, phone, tetherIdImage } = req.body;
     const username = nickname;
 
     // Validate that both username and password are provided
@@ -49,7 +40,6 @@ export const createUserProfile = async (req, res) => {
 
     // Check if the user already exists by nickname
     const existingUser = await getUserByNickname(username);
-    console.log("🚀 ~ createUserProfile ~ existingUser:", existingUser);
 
     if (existingUser) {
       // If the user already exists, return an error message
@@ -62,20 +52,16 @@ export const createUserProfile = async (req, res) => {
     // If the user does not exist, create a new user profile
     const newUser = new userModel({
       ...req.body,
-      tetherIdImage:tetherIdImage,
+      tetherIdImage: tetherIdImage,
       isVerified: false,
+      verificationCode: Math.floor(100000 + Math.random() * 900000).toString(),
     });
-    console.log("🚀 ~ createUserProfile ~ newUser:", newUser);
 
-    // Send SMS verification code using Twilio
-    const verificationCode = Math.floor(
-      100000 + Math.random() * 900000
-    ).toString();
+    // const verificationCode = Math.floor(
+    //   100000 + Math.random() * 900000
+    // ).toString();
 
-    // You can optionally store this code in DB for later verification
-    newUser.verificationCode = verificationCode;
-
-    // await newUser.save();
+    // newUser.verificationCode = verificationCode;
 
     let formattedPhone;
     try {
@@ -84,13 +70,13 @@ export const createUserProfile = async (req, res) => {
       return res.status(400).json({ error: err.message });
     }
 
-    await newUser.save();
+    const smsResp = await sendSmsWithBoss(
+      formattedPhone,
+      `Your verification code is: ${newUser.verificationCode}`
+    );
+    console.log("SMS-Boss API response:", smsResp);
 
-    await twilioClient.messages.create({
-      body: `Your verification code is: ${verificationCode}`,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: formattedPhone,
-    });
+    await newUser.save();
 
     // Create a notification for the new user registration
     const messages = `you have successfully registered: ${newUser.username}. Please wait for you account to be verified.`;
@@ -125,7 +111,7 @@ export const verifyPhoneNumber = async (req, res) => {
 
   try {
     const user = await getUserByNickname(nickname);
-    console.log("🚀 ~ verifyPhoneNumber ~ user:", user)
+    console.log("🚀 ~ verifyPhoneNumber ~ user:", user);
 
     if (!user) return res.status(404).json({ error: "User not found" });
 
@@ -140,20 +126,20 @@ export const verifyPhoneNumber = async (req, res) => {
       return res.status(400).json({ error: "Invalid verification code." });
     }
   } catch (error) {
-    console.log("🚀 ~ verifyPhoneNumber ~ error.message:", error.message)
+    console.log("🚀 ~ verifyPhoneNumber ~ error.message:", error.message);
     return res.status(500).json({ error: error.message });
   }
 };
 
 export const resendVerificationCode = async (req, res) => {
   const { nickname, phone } = req.body;
-  console.log("🚀 ~ resendVerificationCode ~ nickname:", nickname)
-  console.log("🚀 ~ resendVerificationCode ~ phone:", phone)
+  console.log("🚀 ~ resendVerificationCode ~ nickname:", nickname);
+  console.log("🚀 ~ resendVerificationCode ~ phone:", phone);
 
   try {
     // Find the user by their ID
     const user = await getUserByNickname(nickname);
-    console.log("🚀 ~ resendVerificationCode ~ user:", user)
+    console.log("🚀 ~ resendVerificationCode ~ user:", user);
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -176,19 +162,19 @@ export const resendVerificationCode = async (req, res) => {
       return res.status(400).json({ error: err.message });
     }
 
-    // Send the verification code via Twilio
-    await twilioClient.messages.create({
-      body: `Your new verification code is: ${verificationCode}`,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: formattedPhone,
-    });
+    const smsResp = await sendSmsWithBoss(
+      formattedPhone,
+      `Your verification code is: ${newUser.verificationCode}`
+    );
+
+    console.log("SMS-Boss API response:", smsResp);
 
     // Respond with a success message
     return res
       .status(200)
       .json({ message: "Verification code resent successfully." });
   } catch (error) {
-    console.log("🚀 ~ resendVerificationCode ~ error.message:", error.message)
+    console.log("🚀 ~ resendVerificationCode ~ error.message:", error.message);
     return res.status(500).json({ error: error.message });
   }
 };
@@ -340,17 +326,10 @@ export const deleteUserProfile = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-
 cloudinary.config({
-  cloud_name: 'dg9ikhw52',
-  api_key: '741795432579663',
-  api_secret: 'hajeGPi0lFqi-Vg635bJJ6fTp8c'
+  cloud_name: "dg9ikhw52",
+  api_key: "741795432579663",
+  api_secret: "hajeGPi0lFqi-Vg635bJJ6fTp8c",
 });
 
 const bufferToStream = (buffer) => {
@@ -365,7 +344,7 @@ export const editUserImage = async (req, res) => {
 
   try {
     const user = await userModel.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     // 1. Delete old image from Cloudinary (if exists)
     if (user.imagePublicId) {
@@ -375,7 +354,7 @@ export const editUserImage = async (req, res) => {
     // 2. Upload new image
     const uploadResult = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { folder: 'tether-ids' },
+        { folder: "tether-ids" },
         (error, result) => {
           if (error) return reject(error);
           resolve(result);
@@ -390,35 +369,45 @@ export const editUserImage = async (req, res) => {
     await user.save();
 
     res.status(200).json({
-      message: 'Image updated successfully',
+      message: "Image updated successfully",
       imageUrl: uploadResult.secure_url,
     });
   } catch (error) {
-    console.error('Edit image error:', error);
-    res.status(500).json({ message: 'Failed to update image' });
+    console.error("Edit image error:", error);
+    res.status(500).json({ message: "Failed to update image" });
   }
 };
 
+// no import needed if Node 18+
+export async function sendSmsWithBoss(recipient, message) {
+  const url = "https://api.sms-boss.com/v2/messages"; // replace with exact endpoint
+  const apiKey = process.env.SMS_BOSS_API_KEY;
+  console.log("🚀 ~ sendSmsWithBoss ~ apiKey:", apiKey);
 
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: process.env.SMS_BOSS_API_KEY,
+    },
+    body: JSON.stringify({
+      originator: "SMSBOSS", // or replace with your sender ID
+      recipients: [recipient], // MUST be an array
+      body: message,
+    }),
+  });
+  console.log("🚀 ~ sendSmsWithBoss ~ response:", response);
+  const data = await response.json();
 
+  if (!response.ok) {
+    console.error("SMS Boss API Error:", data);
+    throw new Error(
+      `Failed to send SMS: ${data.message || response.statusText}`
+    );
+  }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  return data;
+}
 
 const formatPhoneNumber = (number) => {
   let cleaned = number.replace(/\D/g, "");
@@ -460,3 +449,9 @@ const formatKoreanPhoneNumber = (number) => {
 
   throw new Error("Invalid Korean phone number format");
 };
+
+// await twilioClient.messages.create({
+//   body: `Your verification code is: ${verificationCode}`,
+//   from: process.env.TWILIO_PHONE_NUMBER,
+//   to: formattedPhone,
+// });
