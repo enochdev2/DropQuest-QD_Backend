@@ -126,6 +126,17 @@ export const saveMessage = async (req, res) => {
 
 export const getMessages = async (req, res) => {
   try {
+    const messages = await ChatModel.find({ orderId: req.params.orderId }).sort(
+      { timestamp: 1 }
+    );
+    res.status(200).json(messages);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const adminGetMessages = async (req, res) => {
+  try {
     const { orderId } = req.params;
 
     const messages = await ChatModel.find({ orderId: req.params.orderId }).sort(
