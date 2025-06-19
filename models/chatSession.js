@@ -21,6 +21,10 @@ const chatSessionSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  fullName: {
+    type: String,
+    required: false,
+  },
   username: {
     type: String,
     required: false,

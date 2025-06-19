@@ -62,10 +62,12 @@ export const saveMessage = async (req, res) => {
           orderType,
           nickname,
           username: user.username,
+          fullName: user.fullName,
           phone: user.phone,
           bankName: user.bankName,
           bankAccount: user.bankAccount,
           tetherAddress: user.tetherAddress,
+
           referralCode: user.referralCode,
           currentOrderInProgress: sellOrderId,
         }); // Save orderType (buy/sell)
@@ -97,13 +99,14 @@ export const saveMessage = async (req, res) => {
           orderType,
           nickname,
           username: user.username,
+          fullName: user.fullName,
           phone: user.phone,
           bankName: user.bankName,
           bankAccount: user.bankAccount,
           tetherAddress: user.tetherAddress,
           referralCode: user.referralCode,
           currentOrderInProgress: buyOrderId,
-        }); // Save orderType (buy/sell)
+        });
         await chat.save();
       }
     }
