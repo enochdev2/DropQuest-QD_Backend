@@ -116,7 +116,13 @@ export const saveMessage = async (req, res) => {
       return res.status(403).json({ message: "Chat is closed." });
     }
 
-    const message = new ChatModel({ orderId, image, sender, content });
+    const message = new ChatModel({
+      orderId,
+      image,
+      sender,
+      content,
+      timestamp: new Date().toISOString(),
+    });
     await message.save();
     const messages = `New Chat Session created by ${nickname || "a user"}`;
     await createNewAdminNotification(messages, userId, "chat", orderId);
