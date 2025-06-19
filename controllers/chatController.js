@@ -200,7 +200,9 @@ export const getOpenChats = async (req, res) => {
     // Fetch all open chats (not closed) and include the orderType field
     const openChats = await ChatSession.find({ isClosed: { $ne: true } })
       .sort({ createdAt: -1 }) // Sort by creation date (newest first)
-      .select("orderId orderType nickname isClosed createdAt"); // Select relevant fields to return, including orderType
+      .select(
+        "orderId orderType nickname username phone bankName bankAccount tetherAddress referralCode currentOrderInProgress isClosed createdAt"
+      ); // Select relevant fields to return, including orderType
 
     res.status(200).json(openChats); // Return open chats with their orderType
   } catch (err) {
