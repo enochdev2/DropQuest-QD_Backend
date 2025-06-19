@@ -126,11 +126,29 @@ export const saveMessage = async (req, res) => {
 
 export const getMessages = async (req, res) => {
   try {
+    const { orderId } = req.params;
+
     const messages = await ChatModel.find({ orderId: req.params.orderId }).sort(
       { timestamp: 1 }
     );
-    res.status(200).json(messages);
+
+    // Fetch chat session details
+    const chat = await ChatSession.findOne({ orderId }).select(
+      "nickname username phone bankName bankAccount tetherAddress referralCode currentOrderInProgress"
+    );
+
+    if (!chat) {
+      return res
+        .status(404)
+        .json({ error: "Chat session not found for this orderId." });
+    }
+
+    res.status(200).json({
+      chatDetails: chat,
+      messages: messages,
+    });
   } catch (err) {
+    console.error("🔥 Error in getMessages:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -172,6 +190,31 @@ export const getOpenChats = async (req, res) => {
 
     res.status(200).json(openChats); // Return open chats with their orderType
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getChatDetailsByOrderId = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    if (!orderId) {
+      return res.status(400).json({ error: "Order ID is required." });
+    }
+
+    const chat = await ChatSession.findOne({ orderId }).select(
+      "nickname username phone bankName bankAccount tetherAddress referralCode currentOrderInProgress"
+    );
+
+    if (!chat) {
+      return res
+        .status(404)
+        .json({ error: "Chat session not found for this orderId." });
+    }
+
+    res.status(200).json(chat);
+  } catch (err) {
+    console.error("🔥 Error in getChatDetailsByOrderId:", err);
     res.status(500).json({ error: err.message });
   }
 };
