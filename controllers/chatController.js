@@ -21,7 +21,7 @@ export const saveMessage = async (req, res) => {
     console.log("🚀 ~ saveMessage ~ chat:", chat);
 
     // If no session exists, create one with the orderId and orderType
-    if(!chat) {
+    if (!chat) {
       if (!orderType) {
         return res
           .status(400)
@@ -30,12 +30,7 @@ export const saveMessage = async (req, res) => {
 
       let buyOrder, sellOrder, user;
 
-      user = await userModel
-        .findOne({ nickname })
-        .populate(
-          "userId",
-          "nickname phone bank bankAccount tetherAddress referralCode"
-        );
+      user = await userModel.findOne({ nickname });
 
       if (orderType === "buy") {
         buyOrder = await BuyOrder.findById(orderId).populate(
@@ -57,6 +52,7 @@ export const saveMessage = async (req, res) => {
           return res.status(404).json({ error: "Linked sell order not found" });
 
         if (userId === buyOrder.userId) {
+          console.log("🚀 ~ saveMessage ~ userId === buyOrder.userId:", userId,  buyOrder.userId)
           chat = new ChatSession({
             orderId,
             orderType,
@@ -68,30 +64,30 @@ export const saveMessage = async (req, res) => {
             tetherAddress: user.tetherAddress,
             referralCode: user.referralCode,
           }); // Save orderType (buy/sell)
-          await chat.save();
+          // await chat.save();
         }
       }
 
       if (orderType === "sell") {
-        sellOrder = await SellOrder.findById(orderId).populate(
-          "userId",
-          "nickname phone bank bankAccount tetherAddress referralCode"
-        );
+        sellOrder = await SellOrder.findById(orderId);
         if (!sellOrder)
           return res.status(404).json({ error: "Sell order not found" });
-
+        
         const buyOrderId = sellOrder.currentBuyOrderInProgress;
         if (!buyOrderId)
           return res.status(404).json({ error: "No linked buy order" });
+        
+        buyOrder = await BuyOrder.findById(buyOrderId);
+        console.log("🚀 ~ saveMessage ~ sellOrder:", buyOrder)
 
-        buyOrder = await BuyOrder.findById(buyOrderId).populate(
-          "userId",
-          "nickname phone bank bankAccount tetherAddress referralCode"
-        );
+        console.log("🚀 ~ saveMessage ~ userId === sellOrder.userId:", userId, sellOrder.userId)
         if (!buyOrder)
           return res.status(404).json({ error: "Linked buy order not found" });
 
-        if (userId === sellOrder.userId) {
+         if (sellOrder.userId.toString() !== userId) {
+          return res.status(403).json({ error: ": Seller must start the chat " });
+        }
+
           chat = new ChatSession({
             orderId,
             orderType,
@@ -102,20 +98,20 @@ export const saveMessage = async (req, res) => {
             bankAccount: user.bankAccount,
             tetherAddress: user.tetherAddress,
             referralCode: user.referralCode,
+            currentOrderInProgress: buyOrderId,
           }); // Save orderType (buy/sell)
-          await chat.save();
-        }
+          console.log("🚀 ~ saveMessage ~ chat:", chat)
+          // await chat.save();
       }
     }
 
     // If session is closed, block the message
-    if (chat.isClosed) {
+    if (chat?.isClosed) {
       return res.status(403).json({ message: "Chat is closed." });
     }
 
     const message = new ChatModel({ orderId, image, sender, content });
     await message.save();
-    console.log("🚀 ~ saveMessage ~ message:", message);
     const messages = `New Chat Session created by ${nickname || "a user"}`;
     await createNewAdminNotification(messages, userId, "chat", orderId);
     res.status(201).json(message);
