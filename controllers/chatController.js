@@ -33,75 +33,78 @@ export const saveMessage = async (req, res) => {
       user = await userModel.findOne({ nickname });
 
       if (orderType === "buy") {
-        buyOrder = await BuyOrder.findById(orderId).populate(
-          "userId",
-          "nickname phone bank bankAccount tetherAddress referralCode"
-        );
+        buyOrder = await BuyOrder.findById(orderId);
+
+        console.log("🚀 ~ saveMessage ~ buyOrder:", buyOrder);
+
         if (!buyOrder)
           return res.status(404).json({ error: "Buy order not found" });
 
-        const sellOrderId = BuyOrder.currentSellOrderInProgress;
+        const sellOrderId = buyOrder.currentSellOrderInProgress;
+        console.log("🚀 ~ saveMessage ~ sellOrderId:", sellOrderId);
+
         if (!sellOrderId)
           return res.status(404).json({ error: "No linked sell order" });
 
-        sellOrder = await SellOrder.findById(sellOrderId).populate(
-          "userId",
-          "nickname phone bank bankAccount tetherAddress referralCode"
-        );
+        sellOrder = await SellOrder.findById(sellOrderId);
+
         if (!sellOrder)
           return res.status(404).json({ error: "Linked sell order not found" });
 
-        if (userId === buyOrder.userId) {
-          console.log("🚀 ~ saveMessage ~ userId === buyOrder.userId:", userId,  buyOrder.userId)
-          chat = new ChatSession({
-            orderId,
-            orderType,
-            nickname,
-            username: user.username,
-            phone: user.phone,
-            bankName: user.bankName,
-            bankAccount: user.bankAccount,
-            tetherAddress: user.tetherAddress,
-            referralCode: user.referralCode,
-          }); // Save orderType (buy/sell)
-          // await chat.save();
+        if (buyOrder.userId.toString() !== userId) {
+          return res
+            .status(403)
+            .json({ error: ": Seller must start the chat " });
         }
+
+        chat = new ChatSession({
+          orderId,
+          orderType,
+          nickname,
+          username: user.username,
+          phone: user.phone,
+          bankName: user.bankName,
+          bankAccount: user.bankAccount,
+          tetherAddress: user.tetherAddress,
+          referralCode: user.referralCode,
+          currentOrderInProgress: sellOrderId,
+        }); // Save orderType (buy/sell)
+        await chat.save();
       }
 
       if (orderType === "sell") {
         sellOrder = await SellOrder.findById(orderId);
         if (!sellOrder)
           return res.status(404).json({ error: "Sell order not found" });
-        
+
         const buyOrderId = sellOrder.currentBuyOrderInProgress;
         if (!buyOrderId)
           return res.status(404).json({ error: "No linked buy order" });
-        
-        buyOrder = await BuyOrder.findById(buyOrderId);
-        console.log("🚀 ~ saveMessage ~ sellOrder:", buyOrder)
 
-        console.log("🚀 ~ saveMessage ~ userId === sellOrder.userId:", userId, sellOrder.userId)
+        buyOrder = await BuyOrder.findById(buyOrderId);
+
         if (!buyOrder)
           return res.status(404).json({ error: "Linked buy order not found" });
 
-         if (sellOrder.userId.toString() !== userId) {
-          return res.status(403).json({ error: ": Seller must start the chat " });
+        if (sellOrder.userId.toString() !== userId) {
+          return res
+            .status(403)
+            .json({ error: ": Seller must start the chat " });
         }
 
-          chat = new ChatSession({
-            orderId,
-            orderType,
-            nickname,
-            username: user.username,
-            phone: user.phone,
-            bankName: user.bankName,
-            bankAccount: user.bankAccount,
-            tetherAddress: user.tetherAddress,
-            referralCode: user.referralCode,
-            currentOrderInProgress: buyOrderId,
-          }); // Save orderType (buy/sell)
-          console.log("🚀 ~ saveMessage ~ chat:", chat)
-          // await chat.save();
+        chat = new ChatSession({
+          orderId,
+          orderType,
+          nickname,
+          username: user.username,
+          phone: user.phone,
+          bankName: user.bankName,
+          bankAccount: user.bankAccount,
+          tetherAddress: user.tetherAddress,
+          referralCode: user.referralCode,
+          currentOrderInProgress: buyOrderId,
+        }); // Save orderType (buy/sell)
+        await chat.save();
       }
     }
 
