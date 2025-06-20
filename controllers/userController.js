@@ -184,7 +184,10 @@ export const verifyPhoneNumber = async (req, res) => {
 
       return res
         .status(200)
-        .json({ message: "Phone number verified successfully." });
+        .json({
+          message: "Phone number verified successfully.",
+          data: userRecord,
+        });
     } else {
       return res.status(400).json({ error: "Invalid verification code." });
     }
