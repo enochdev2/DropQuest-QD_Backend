@@ -11,7 +11,8 @@ import {
   resendVerificationCode,
   updateUserProfile,
   verifyPhoneNumber,
-  editUserImage
+  editUserImage,
+  sendVerificationCode
 } from "../controllers/userController.js";
 import multer from 'multer';
 
@@ -23,6 +24,7 @@ const router = express.Router();
 router.post("/users", createUserProfile); // Register new user
 router.get("/users", authenticate, authorizeAdmin, getAllUsers); // Get all users
 router.post("/users/verify", verifyPhoneNumber);
+router.post("/users/sendCode", sendVerificationCode);
 router.post("/users/resendverify", resendVerificationCode);
 router.get("/users/:nickname", authenticate, getUserProfile); // Get user by nickname
 router.put("/users/:nickname", authenticate, updateUserProfile); // Update user profile

@@ -8,6 +8,7 @@ import {
   updateUserByNickname,
   userModel,
 } from "../models/userModel.js";
+import { verificationCodeModel } from "../models/verificationCodeModel.js"; // Import the model
 import {
   createNewAdminNotification,
   createNewUserNotification,
@@ -106,30 +107,110 @@ export const createUserProfile = async (req, res) => {
   }
 };
 
-export const verifyPhoneNumber = async (req, res) => {
-  const { nickname, code } = req.body;
+
+
+// 1. Controller to send a verification code
+export const sendVerificationCode = async (req, res) => {
+  const { phone } = req.body;
+
+  if (!phone) {
+    return res.status(400).json({ error: "Phone number is required" });
+  }
 
   try {
-    const user = await getUserByNickname(nickname);
-    console.log("🚀 ~ verifyPhoneNumber ~ user:", user);
+    // Format phone number to match Korean format (if needed)
+    let formattedPhone;
+    try {
+      formattedPhone = formatKoreanPhoneNumber(phone); // Make sure this function is implemented
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
 
-    if (!user) return res.status(404).json({ error: "User not found" });
+    // Generate a new verification code
+    const verificationCode = generateVerificationCode();
 
-    if (user.verificationCode === code) {
-      user.isVerified = true;
-      user.verificationCode = null; // Clear the code
-      await user.save();
-      return res
-        .status(200)
-        .json({ message: "Phone number verified successfully." });
+    // Create or update the verification code record
+    let existingRecord = await verificationCodeModel.findOne({ phone });
+    if (existingRecord) {
+      existingRecord.verificationCode = verificationCode;
+      existingRecord.isVerified = false; // Reset verification status
+      await existingRecord.save();
+    } else {
+      existingRecord = new verificationCodeModel({
+        phone,
+        verificationCode,
+        isVerified: false,
+      });
+      await existingRecord.save();
+    }
+
+    // Send the verification code via SMS
+    const message = `Your verification code is: ${verificationCode}`;
+    await sendSmsWithBoss(formattedPhone, message);
+
+    // Respond with success
+    return res.status(200).json({ message: "Verification code sent successfully." });
+  } catch (err) {
+    console.error("Error sending verification code:", err);
+    return res.status(500).json({ error: "Failed to send verification code." });
+  }
+};
+
+// 2. Controller to verify the code entered by the user
+export const verifyPhoneNumber = async (req, res) => {
+  const { phone, verificationCode } = req.body;
+
+  if (!phone || !verificationCode) {
+    return res.status(400).json({ error: "Phone number and verification code are required" });
+  }
+
+  try {
+    // Find the user by phone number
+    const userRecord = await verificationCodeModel.findOne({ phone });
+
+    if (!userRecord) {
+      return res.status(404).json({ error: "Phone number not found." });
+    }
+
+    // Check if the code matches
+    if (userRecord.verificationCode === verificationCode) {
+      // Mark the phone number as verified
+      userRecord.isVerified = true;
+      await userRecord.save();
+
+      return res.status(200).json({ message: "Phone number verified successfully." });
     } else {
       return res.status(400).json({ error: "Invalid verification code." });
     }
-  } catch (error) {
-    console.log("🚀 ~ verifyPhoneNumber ~ error.message:", error.message);
-    return res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error("Error verifying code:", err);
+    return res.status(500).json({ error: "Failed to verify the code." });
   }
 };
+
+// 3. Controller to check if the phone number is verified
+export const checkVerificationStatus = async (req, res) => {
+  const { phone } = req.params;
+
+  if (!phone) {
+    return res.status(400).json({ error: "Phone number is required" });
+  }
+
+  try {
+    const userRecord = await verificationCodeModel.findOne({ phone });
+
+    if (!userRecord) {
+      return res.status(404).json({ error: "Phone number not found." });
+    }
+
+    return res.status(200).json({ isVerified: userRecord.isVerified });
+  } catch (err) {
+    console.error("Error checking verification status:", err);
+    return res.status(500).json({ error: "Failed to check verification status." });
+  }
+};
+
+
 
 export const resendVerificationCode = async (req, res) => {
   const { nickname, phone } = req.body;
@@ -425,6 +506,11 @@ const formatPhoneNumber = (number) => {
   }
 
   throw new Error("Invalid Nigerian phone number format");
+};
+
+// Helper function to generate a random 6-digit verification code
+const generateVerificationCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 const formatKoreanPhoneNumber = (number) => {
