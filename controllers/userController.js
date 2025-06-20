@@ -107,8 +107,6 @@ export const createUserProfile = async (req, res) => {
   }
 };
 
-
-
 // 1. Controller to send a verification code
 export const sendVerificationCode = async (req, res) => {
   const { phone } = req.body;
@@ -149,7 +147,9 @@ export const sendVerificationCode = async (req, res) => {
     await sendSmsWithBoss(formattedPhone, message);
 
     // Respond with success
-    return res.status(200).json({ message: "Verification code sent successfully." });
+    return res
+      .status(200)
+      .json({ message: "Verification code sent successfully." });
   } catch (err) {
     console.error("Error sending verification code:", err);
     return res.status(500).json({ error: "Failed to send verification code." });
@@ -159,9 +159,13 @@ export const sendVerificationCode = async (req, res) => {
 // 2. Controller to verify the code entered by the user
 export const verifyPhoneNumber = async (req, res) => {
   const { phone, verificationCode } = req.body;
+  console.log("🚀 ~ verifyPhoneNumber ~ phone:", phone);
+  console.log("🚀 ~ verifyPhoneNumber ~ verificationCode:", verificationCode);
 
   if (!phone || !verificationCode) {
-    return res.status(400).json({ error: "Phone number and verification code are required" });
+    return res
+      .status(400)
+      .json({ error: "Phone number and verification code are required" });
   }
 
   try {
@@ -178,7 +182,9 @@ export const verifyPhoneNumber = async (req, res) => {
       userRecord.isVerified = true;
       await userRecord.save();
 
-      return res.status(200).json({ message: "Phone number verified successfully." });
+      return res
+        .status(200)
+        .json({ message: "Phone number verified successfully." });
     } else {
       return res.status(400).json({ error: "Invalid verification code." });
     }
@@ -206,20 +212,19 @@ export const checkVerificationStatus = async (req, res) => {
     return res.status(200).json({ isVerified: userRecord.isVerified });
   } catch (err) {
     console.error("Error checking verification status:", err);
-    return res.status(500).json({ error: "Failed to check verification status." });
+    return res
+      .status(500)
+      .json({ error: "Failed to check verification status." });
   }
 };
 
-
-
 export const resendVerificationCode = async (req, res) => {
-  const { nickname, phone } = req.body;
-  console.log("🚀 ~ resendVerificationCode ~ nickname:", nickname);
+  const { phone } = req.body;
   console.log("🚀 ~ resendVerificationCode ~ phone:", phone);
 
   try {
-    // Find the user by their ID
-    const user = await getUserByNickname(nickname);
+    // Fetch user by their nickname
+    const user = await verificationCodeModel.findOne({ phone }); // Use phone to find the user (or nickname if needed)
     console.log("🚀 ~ resendVerificationCode ~ user:", user);
 
     if (!user) {
@@ -231,22 +236,22 @@ export const resendVerificationCode = async (req, res) => {
       100000 + Math.random() * 900000
     ).toString();
 
-    // Update the verification code in the user's profile
+    // Update the verification code in the user's record
     user.verificationCode = verificationCode;
+    user.isVerified = false; // Reset verification status
     await user.save();
 
-    // Format phone number (assuming phone number is passed in raw form)
+    // Format phone number (ensure you have a correct formatting function)
     let formattedPhone;
     try {
-      formattedPhone = formatKoreanPhoneNumber(phone); // Adjust this based on your phone formatting (use Korean or other format as needed)
+      formattedPhone = formatKoreanPhoneNumber(phone); // Adjust this if you need other formats
     } catch (err) {
-      return res.status(400).json({ error: err.message });
+      return res.status(400).json({ error: "Invalid phone number format" });
     }
 
-    const smsResp = await sendSmsWithBoss(
-      formattedPhone,
-      `Your verification code is: ${newUser.verificationCode}`
-    );
+    // Send the verification code via SMS
+    const message = `Your verification code is: ${verificationCode}`;
+    const smsResp = await sendSmsWithBoss(formattedPhone, message);
 
     console.log("SMS-Boss API response:", smsResp);
 
@@ -255,7 +260,7 @@ export const resendVerificationCode = async (req, res) => {
       .status(200)
       .json({ message: "Verification code resent successfully." });
   } catch (error) {
-    console.log("🚀 ~ resendVerificationCode ~ error.message:", error.message);
+    console.error("🚀 ~ resendVerificationCode ~ error:", error.message);
     return res.status(500).json({ error: error.message });
   }
 };
