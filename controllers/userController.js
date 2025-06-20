@@ -42,7 +42,9 @@ export const createUserProfile = async (req, res) => {
     const userRecord = await verificationCodeModel.findOne({ phone });
 
     if (!userRecord || !userRecord.isVerified) {
-      return res.status(404).json({ error: "Phone number has not yet been verified." });
+      return res
+        .status(404)
+        .json({ error: "Phone number has not yet been verified." });
     }
 
     // Check if the user already exists by nickname
@@ -61,7 +63,6 @@ export const createUserProfile = async (req, res) => {
       ...req.body,
       tetherIdImage: tetherIdImage,
       isVerified: userRecord.isVerified,
-      verificationCode: Math.floor(100000 + Math.random() * 900000).toString(),
     });
 
     await newUser.save();

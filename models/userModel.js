@@ -60,6 +60,11 @@ const userSchema = new Schema(
       required: true,
       unique: true,
     },
+    telegram: {
+      type: String,
+      required: true,
+      // unique: true,
+    },
 
     tetherIdImage: {
       type: String,
