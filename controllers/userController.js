@@ -8,11 +8,11 @@ import {
   updateUserByNickname,
   userModel,
 } from "../models/userModel.js";
-import { verificationCodeModel } from "../models/verificationCodeModel.js"; // Import the model
 import {
   createNewAdminNotification,
   createNewUserNotification,
 } from "./notificationController.js";
+import { verificationCodeModel } from "../models/VerificationModel.js";
 
 // Helper function to generate JWT token
 const generateToken = (user) => {
