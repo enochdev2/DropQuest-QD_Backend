@@ -467,8 +467,7 @@ export const editUserImage = async (req, res) => {
 // no import needed if Node 18+
 export async function sendSmsWithBoss(recipient, message) {
   const url = "https://api.sms-boss.com/v2/messages"; // replace with exact endpoint
-  const apiKey = process.env.SMS_BOSS_API_KEY;
-  console.log("🚀 ~ sendSmsWithBoss ~ apiKey:", apiKey);
+  // const apiKey = process.env.SMS_BOSS_API_KEY;
 
   const response = await fetch(url, {
     method: "POST",
@@ -482,7 +481,6 @@ export async function sendSmsWithBoss(recipient, message) {
       body: message,
     }),
   });
-  console.log("🚀 ~ sendSmsWithBoss ~ response:", response);
   const data = await response.json();
 
   if (!response.ok) {

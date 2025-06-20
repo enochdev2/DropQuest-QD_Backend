@@ -3,7 +3,6 @@ const Schema = mongoose.Schema;
 
 const verificationCodeSchema = new Schema(
   {
-    
     phone: {
       type: String,
       required: true,
@@ -12,11 +11,12 @@ const verificationCodeSchema = new Schema(
     verificationCode: { type: String },
 
     isVerified: { type: Boolean, default: false },
-
   },
   { timestamps: true }
 );
 
-
 // Model export
-export const verificationCodeModel = mongoose.model("VerifcationCode", verificationCodeSchema);
+export const verificationCodeModel = mongoose.model(
+  "VerifcationCode",
+  verificationCodeSchema
+);
