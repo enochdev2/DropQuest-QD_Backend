@@ -71,7 +71,6 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
-    verificationCode: { type: String },
     isVerified: { type: Boolean, default: false },
 
     // Added status field, default value is 'inactive'

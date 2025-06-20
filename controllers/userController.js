@@ -39,6 +39,12 @@ export const createUserProfile = async (req, res) => {
       return;
     }
 
+    const userRecord = await verificationCodeModel.findOne({ phone });
+
+    if (!userRecord || !userRecord.isVerified) {
+      return res.status(404).json({ error: "Phone number has not yet been verified." });
+    }
+
     // Check if the user already exists by nickname
     const existingUser = await getUserByNickname(username);
 
@@ -54,28 +60,9 @@ export const createUserProfile = async (req, res) => {
     const newUser = new userModel({
       ...req.body,
       tetherIdImage: tetherIdImage,
-      isVerified: false,
+      isVerified: userRecord.isVerified,
       verificationCode: Math.floor(100000 + Math.random() * 900000).toString(),
     });
-
-    // const verificationCode = Math.floor(
-    //   100000 + Math.random() * 900000
-    // ).toString();
-
-    // newUser.verificationCode = verificationCode;
-
-    let formattedPhone;
-    try {
-      formattedPhone = formatKoreanPhoneNumber(phone);
-    } catch (err) {
-      return res.status(400).json({ error: err.message });
-    }
-
-    const smsResp = await sendSmsWithBoss(
-      formattedPhone,
-      `Your verification code is: ${newUser.verificationCode}`
-    );
-    console.log("SMS-Boss API response:", smsResp);
 
     await newUser.save();
 
@@ -182,12 +169,10 @@ export const verifyPhoneNumber = async (req, res) => {
       userRecord.isVerified = true;
       await userRecord.save();
 
-      return res
-        .status(200)
-        .json({
-          message: "Phone number verified successfully.",
-          data: userRecord,
-        });
+      return res.status(200).json({
+        message: "Phone number verified successfully.",
+        data: userRecord,
+      });
     } else {
       return res.status(400).json({ error: "Invalid verification code." });
     }
