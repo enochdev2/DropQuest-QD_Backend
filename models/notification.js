@@ -8,7 +8,14 @@ const notificationsSchema = new Schema(
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true }, // user who triggered event
     type: {
       type: String,
-      enum: ["registration", "sellOrder", "buyOrder", "inquiry", "chat", "general"],
+      enum: [
+        "registration",
+        "sellOrder",
+        "buyOrder",
+        "inquiry",
+        "chat",
+        "general",
+      ],
       default: "general",
     },
     isForAdmin: { type: Boolean, default: false }, // visible in admin dashboard if true
@@ -16,7 +23,7 @@ const notificationsSchema = new Schema(
     isRead: { type: Boolean, default: false },
   },
   { timestamps: true }
-); 
+);
 
 // Model export
 export const Notification = mongoose.model("Notification", notificationsSchema);
@@ -44,7 +51,7 @@ export const createUserNotification = async (
   type,
   referenceId = null
 ) => {
-  console.log("🚀 ~ message",message, userId, type, referenceId)
+  console.log("🚀 ~ message", message, userId, type, referenceId);
 
   const notification = new Notification({
     message,
@@ -82,8 +89,7 @@ export const markAsRead = (notificationId) =>
     { new: true }
   );
 
-
- // Mark all notifications of a specific type as read
+// Mark all notifications of a specific type as read
 // Helper function to mark notifications as read
 export const markNotificationsAsRead = (userId, type, isForAdmin) => {
   // If it's for admin notifications, don't filter by userId
@@ -103,4 +109,28 @@ export const markNotificationsAsRead = (userId, type, isForAdmin) => {
   );
 };
 
+export const markNotificationssAsRead = async (userId, isForAdmin) => {
+  try {
+    let filter = {};
 
+    // If it's for a user, filter by userId to mark all their notifications
+    if (!isForAdmin) {
+      filter = { userId, isRead: false }; // For user notifications, filter by userId and unread status
+    } else {
+      // If it's for admin, filter by isForAdmin to mark all admin notifications
+      filter = { isForAdmin: true, isRead: false };
+    }
+
+    // Update all notifications that match the filter
+    const updatedNotifications = await Notification.updateMany(
+      filter,
+      { isRead: true }, // Mark them as read
+      { new: true }
+    );
+
+    return updatedNotifications;
+  } catch (error) {
+    console.error("Error marking notifications as read:", error);
+    throw new Error("Error updating notifications status");
+  }
+};

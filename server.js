@@ -13,7 +13,7 @@ import buyOrderRouter from "./routes/buyOrderRoutes.js";
 import inquiryRouter from "./routes/inquiryRouter.js";
 import tetherPriceRouter from "./routes/tetherPriceRouter.js";
 import chatRouter from "./routes/chatRouter.js";
-import uploadRoute from './routes/upload.js';
+import uploadRoute from "./routes/upload.js";
 import cookieParser from "cookie-parser";
 
 const app = express();
@@ -71,10 +71,11 @@ app.use("/api/v1/tetherprice", tetherPriceRouter);
 app.use("/api/v1/buy", buyOrderRouter);
 app.use("/api/v1/inquiry", inquiryRouter);
 app.use("/api/v1/chat", chatRouter);
-app.use('/api/v1/upload', uploadRoute);
-
+app.use("/api/v1/upload", uploadRoute);
 
 let rooms = {}; // Store rooms and their participants
+const userSocketMap = {}; // Map userId => socket.id
+const roleRoomMap = { admin: "admin" };
 
 io.on("connection", (socket) => {
   console.log("New client connected");
@@ -83,6 +84,14 @@ io.on("connection", (socket) => {
   socket.on("joinRoom", (orderId) => {
     socket.join(orderId); // Join room based on orderId
     console.log(`Client joined room: ${orderId}`);
+  });
+
+  socket.on("registerUser", ({ userId, role }) => {
+    userSocketMap[userId] = socket.id;
+    if (role) {
+      socket.join(role); // Join 'admin' room, etc.
+    }
+    console.log(`User ${userId} with role ${role} registered`);
   });
 
   // Handle leaving a room
@@ -99,6 +108,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
+     for (const [uid, sid] of Object.entries(userSocketMap)) {
+      if (sid === socket.id) delete userSocketMap[uid];
+    }
     console.log("Client disconnected");
   });
 });

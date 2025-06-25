@@ -67,6 +67,12 @@ export const createUserProfile = async (req, res) => {
 
     await newUser.save();
 
+     // Emit registerUser event to Socket.IO after successful registration
+    global.io.emit("registerUser", {
+      userId: newUser._id,
+      role: "user", // Or "admin", depending on your logic
+    });
+
     // Create a notification for the new user registration
     const messages = `you have successfully registered: ${newUser.username}. Please wait for you account to be verified.`;
     // await createNotification(message, newUser._id);

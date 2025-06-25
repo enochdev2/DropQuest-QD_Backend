@@ -7,6 +7,7 @@ import {
   createNewAdminNotification,
   createNewUserNotification,
 } from "./notificationController.js";
+import { emitNotification } from "../utils/emitNotification.js";
 
 export const createSellOrder = async (req, res) => {
   try {
@@ -37,18 +38,19 @@ export const createSellOrder = async (req, res) => {
     });
     await newOrder.save();
 
+    
     const message = `New sell order created by ${userName}: ${amount} USDT (Total: ${krwAmount} KRW).`;
     const type = "sellOrder";
     const referenceId = newOrder._id;
 
     await createNewAdminNotification(message, userId, type, referenceId);
 
-    // await createNewAdminNotification(
-    //   message,
-    //   userId,
-    //   "sellOrder",
-    //   newOrder._id
-    // );
+    await createNewAdminNotification(
+      message,
+      userId,
+      "sellOrder",
+      newOrder._id
+    );
     const messages = `you have successful placed a sell order of $ ${amount}.`;
     await createNewUserNotification(
       messages,

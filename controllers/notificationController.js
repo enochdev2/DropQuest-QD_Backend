@@ -6,6 +6,7 @@ import {
   createAdminNotification,
   Notification,
   markNotificationsAsRead,
+  markNotificationssAsRead,
 } from "../models/notification.js";
 
 // Create a notification when a new user registers
@@ -91,31 +92,63 @@ export const markNotificationAsRead = async (req, res) => {
   }
 };
 
+// export const markNotificationsAsReadByType = async (req, res) => {
+//   try {
+//     const { userId, type, isForAdmin } = req.body; // Get parameters from the request body
+//     console.log("🚀 ~ markNotificationsAsReadByType ~ type:", type);
+
+//     if (!type) {
+//       return res.status(400).json({ error: "Notification type is required" });
+//     }
+
+//     // Mark notifications as read based on the provided criteria
+//     const updatedNotifications = await markNotificationsAsRead(
+//       userId,
+//       type,
+//       isForAdmin
+//     );
+
+//     if (!updatedNotifications) {
+//       return res.status(404).json({ error: "Notifications not found" });
+//     }
+
+//     return res
+//       .status(200)
+//       .json({ message: `Notifications of type '${type}' marked as read.` });
+//   } catch (err) {
+//     console.log("🚀 ~ markNotificationsAsReadByType ~ er:", err.message);
+//     return res
+//       .status(500)
+//       .json({ error: "Error updating notifications status" });
+//   }
+// };
+
 export const markNotificationsAsReadByType = async (req, res) => {
   try {
     const { userId, type, isForAdmin } = req.body; // Get parameters from the request body
-    console.log("🚀 ~ markNotificationsAsReadByType ~ type:", type)
+    console.log("🚀 ~ markNotificationsAsReadByType ~ userId:", userId);
 
-    if (!type) {
-      return res.status(400).json({ error: "Notification type is required" });
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
     }
 
     // Mark notifications as read based on the provided criteria
-    const updatedNotifications = await markNotificationsAsRead(
+    const updatedNotifications = await markNotificationssAsRead(
       userId,
-      type,
       isForAdmin
     );
 
     if (!updatedNotifications) {
-      return res.status(404).json({ error: "Notifications not found" });
+      return res
+        .status(404)
+        .json({ error: "No notifications found to update" });
     }
 
     return res
       .status(200)
-      .json({ message: `Notifications of type '${type}' marked as read.` });
+      .json({ message: "All notifications marked as read." });
   } catch (err) {
-    console.log("🚀 ~ markNotificationsAsReadByType ~ er:", err.message)
+    console.log("🚀 ~ markNotificationsAsReadByType ~ error:", err.message);
     return res
       .status(500)
       .json({ error: "Error updating notifications status" });
