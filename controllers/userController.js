@@ -104,20 +104,20 @@ export const createUserProfile = async (req, res) => {
 // Check if a nickname exists
 export const checkNicknameExists = async (req, res) => {
   try {
-      const nickname = req.params.nickname;
+    const nickname = req.params.nickname;
 
     if (!nickname) {
       return res.status(400).json({ error: "Nickname is required" });
     }
 
-    const existingUser = await getUserByNickname(nickname);
+    // Convert nickname to lowercase before querying
+    const existingUser = await userModel.findOne({
+      nickname: { $regex: new RegExp(`^${nickname}$`, "i") }, // case-insensitive exact match
+    });
 
-    if (existingUser) {
-      return res.status(200).json({ exists: true });
-    } else {
-      return res.status(200).json({ exists: false });
-    }
+    res.status(200).json({ exists: !!existingUser });
   } catch (error) {
+    console.log("🚀 ~ checkNicknameExists ~ error:", error);
     return res.status(500).json({ error: error.message });
   }
 };
