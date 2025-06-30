@@ -67,7 +67,7 @@ export const createUserProfile = async (req, res) => {
 
     await newUser.save();
 
-     // Emit registerUser event to Socket.IO after successful registration
+    // Emit registerUser event to Socket.IO after successful registration
     global.io.emit("registerUser", {
       userId: newUser._id,
       role: "user", // Or "admin", depending on your logic
@@ -98,6 +98,27 @@ export const createUserProfile = async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: error.message });
     console.log("🚀 ~ createUserProfile ~ error.message:", error.message);
+  }
+};
+
+// Check if a nickname exists
+export const checkNicknameExists = async (req, res) => {
+  try {
+      const nickname = req.params.nickname;
+
+    if (!nickname) {
+      return res.status(400).json({ error: "Nickname is required" });
+    }
+
+    const existingUser = await getUserByNickname(nickname);
+
+    if (existingUser) {
+      return res.status(200).json({ exists: true });
+    } else {
+      return res.status(200).json({ exists: false });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
 };
 

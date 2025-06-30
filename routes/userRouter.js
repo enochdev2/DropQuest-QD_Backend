@@ -12,7 +12,8 @@ import {
   updateUserProfile,
   verifyPhoneNumber,
   editUserImage,
-  sendVerificationCode
+  sendVerificationCode,
+  checkNicknameExists
 } from "../controllers/userController.js";
 import multer from 'multer';
 
@@ -22,6 +23,7 @@ import { authenticate, authorizeAdmin } from "../middleware/autheticate.js";
 const router = express.Router();
 
 router.post("/users", createUserProfile); // Register new user
+router.get("/check-nickname/:nickname", checkNicknameExists);
 router.get("/users", authenticate, authorizeAdmin, getAllUsers); // Get all users
 router.post("/users/verify", verifyPhoneNumber);
 router.post("/users/sendCode", sendVerificationCode);
