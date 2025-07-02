@@ -498,6 +498,7 @@ export async function sendSmsWithBoss(recipient, message) {
     }),
   });
   const data = await response.json();
+  console.log("🚀 ~ sendSmsWithBoss ~ data:", data)
 
   if (!response.ok) {
     console.error("SMS Boss API Error:", data);
