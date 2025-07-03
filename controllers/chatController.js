@@ -1,3 +1,5 @@
+import { ArchivedChatModel } from "../models/archivedChatModel.js";
+import { ArchivedChatSession } from "../models/archivedChatSession.js";
 import { BuyOrder } from "../models/buyOrder.js";
 import { ChatModel } from "../models/chatModel.js";
 import { ChatSession } from "../models/chatSession.js";
@@ -173,15 +175,64 @@ export const adminGetMessages = async (req, res) => {
   }
 };
 
+
+export const adminGetConcludedMessages = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const messages = await ArchivedChatModel.find({
+      orderId: req.params.orderId,
+    }).sort({ timestamp: 1 });
+
+    // Fetch chat session details
+    const chat = await ArchivedChatSession.findOne({ orderId }).select(
+      "nickname username phone bankName bankAccount tetherAddress referralCode fullName"
+    );
+
+    if (!chat) {
+      return res
+        .status(404)
+        .json({ error: "Chat session not found for this orderId." });
+    }
+
+    res.status(200).json({
+      chatDetails: chat,
+      messages: messages,
+    });
+  } catch (err) {
+    console.error("🔥 Error in getMessages:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 export const closeChat = async (req, res) => {
   try {
     const orderId = req.params.orderId;
     console.log("🚀 ~ closeChat ~ orderId:", orderId);
-    const sessions = await ChatSession.findOneAndUpdate(
+
+    // const chatsSession = await ChatSession.find({ orderId });
+    // if (chatsSession.length > 0) {
+    //   await ArchivedChatSession.insertMany(chatsSession);
+    // }
+
+    const updatedSession = await ChatSession.findOneAndUpdate(
       { orderId: orderId },
       { isClosed: true, closedAt: new Date() },
       { upsert: true, new: true }
     );
+
+    // Step 2: Archive the updated session
+    if (updatedSession) {
+      await ArchivedChatSession.create(updatedSession.toObject());
+    }
+
+    // Step 2: Retrieve all chat messages before deletion
+    const chats = await ChatModel.find({ orderId });
+
+    // Step 3: Store them in an archive collection
+    if (chats.length > 0) {
+      await ArchivedChatModel.insertMany(chats);
+    }
 
     await ChatModel.deleteMany({ orderId });
     const session = await ChatSession.findOneAndDelete({ orderId });
@@ -205,6 +256,20 @@ export const getOpenChats = async (req, res) => {
   try {
     // Fetch all open chats (not closed) and include the orderType field
     const openChats = await ChatSession.find({ isClosed: { $ne: true } })
+      .sort({ createdAt: -1 }) // Sort by creation date (newest first)
+      .select(
+        "orderId orderType nickname username phone bankName bankAccount tetherAddress referralCode currentOrderInProgress isClosed createdAt"
+      ); // Select relevant fields to return, including orderType
+
+    res.status(200).json(openChats); // Return open chats with their orderType
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+export const getCloseChats = async (req, res) => {
+  try {
+    // Fetch all open chats (not closed) and include the orderType field
+    const openChats = await ArchivedChatSession.find({ isClosed: { $ne: false } })
       .sort({ createdAt: -1 }) // Sort by creation date (newest first)
       .select(
         "orderId orderType nickname username phone bankName bankAccount tetherAddress referralCode currentOrderInProgress isClosed createdAt"
