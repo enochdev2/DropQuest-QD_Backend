@@ -62,7 +62,19 @@ app.use(cookieParser());
 app.get("/", (req, res) => {
   res.send("Welcome to the backend API!");
 });
-// Example with Express.js
+
+
+
+app.use("/api/v1/user", userRouter);
+// app.use("/api/v1/fee", feeRouter);
+app.use("/api/v1/notification", notificationRouter);
+app.use("/api/v1/sell", sellOrderRouter);
+app.use("/api/v1/tetherprice", tetherPriceRouter);
+app.use("/api/v1/buy", buyOrderRouter);
+app.use("/api/v1/inquiry", inquiryRouter);
+app.use("/api/v1/chat", chatRouter);
+app.use("/api/v1/upload", uploadRoute);
+
 app.get('/sms/status-report', (req, res) => {
   const {
     id,
@@ -84,18 +96,6 @@ app.get('/sms/status-report', (req, res) => {
 
   res.sendStatus(200); // Must return 200 OK
 });
-
-
-app.use("/api/v1/user", userRouter);
-// app.use("/api/v1/fee", feeRouter);
-app.use("/api/v1/notification", notificationRouter);
-app.use("/api/v1/sell", sellOrderRouter);
-app.use("/api/v1/tetherprice", tetherPriceRouter);
-app.use("/api/v1/buy", buyOrderRouter);
-app.use("/api/v1/inquiry", inquiryRouter);
-app.use("/api/v1/chat", chatRouter);
-app.use("/api/v1/upload", uploadRoute);
-
 
 let rooms = {}; // Store rooms and their participants
 const userSocketMap = {}; // Map userId => socket.id
