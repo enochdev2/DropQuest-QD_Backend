@@ -3,13 +3,13 @@ import mongoose from "mongoose";
 const archivedChatSessionSchema = new mongoose.Schema({
   orderId: {
     type: String,
-    unique: true,
-    required: true,
+    // unique: true,
+    // required: true,
   },
   currentOrderInProgress: {
     type: String,
-    unique: true,
-    required: false,
+    // unique: true,
+    // required: false,
   },
   orderType: {
     // New field added to differentiate between buy and sell
@@ -58,4 +58,7 @@ const archivedChatSessionSchema = new mongoose.Schema({
   },
 });
 
-export const ArchivedChatSession = mongoose.model("ArchivedChatSession", archivedChatSessionSchema);
+export const ArchivedChatSession = mongoose.model(
+  "ArchivedChatSession",
+  archivedChatSessionSchema
+);

@@ -175,14 +175,15 @@ export const adminGetMessages = async (req, res) => {
   }
 };
 
-
 export const adminGetConcludedMessages = async (req, res) => {
   try {
     const { orderId } = req.params;
+    console.log("🚀 ~ adminGetConcludedMessages ~ orderId:", orderId);
 
     const messages = await ArchivedChatModel.find({
       orderId: req.params.orderId,
     }).sort({ timestamp: 1 });
+    console.log("🚀 ~ adminGetConcludedMessages ~ messages:", messages);
 
     // Fetch chat session details
     const chat = await ArchivedChatSession.findOne({ orderId }).select(
@@ -223,12 +224,17 @@ export const closeChat = async (req, res) => {
 
     // Step 2: Archive the updated session
     if (updatedSession) {
-      await ArchivedChatSession.create(updatedSession.toObject());
+      const archiveData = updatedSession.toObject();
+      delete archiveData._id; // Prevent duplicate key error
+      const check = await ArchivedChatSession.create(archiveData);
+      // const check = await ArchivedChatSession.create(updatedSession.toObject());
+      // console.log("🚀 ~ closeChat ~ check:", check);
     }
 
     // Step 2: Retrieve all chat messages before deletion
     const chats = await ChatModel.find({ orderId });
 
+    console.log("🚀 ~ closeChat ~ chats:", chats);
     // Step 3: Store them in an archive collection
     if (chats.length > 0) {
       await ArchivedChatModel.insertMany(chats);
@@ -239,6 +245,7 @@ export const closeChat = async (req, res) => {
 
     res.status(200).json({ message: "Chat closed", session });
   } catch (err) {
+    console.log("🚀 ~ closeChat ~ err:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -269,7 +276,9 @@ export const getOpenChats = async (req, res) => {
 export const getCloseChats = async (req, res) => {
   try {
     // Fetch all open chats (not closed) and include the orderType field
-    const openChats = await ArchivedChatSession.find({ isClosed: { $ne: false } })
+    const openChats = await ArchivedChatSession.find({
+      isClosed: { $ne: false },
+    })
       .sort({ createdAt: -1 }) // Sort by creation date (newest first)
       .select(
         "orderId orderType nickname username phone bankName bankAccount tetherAddress referralCode currentOrderInProgress isClosed createdAt"
