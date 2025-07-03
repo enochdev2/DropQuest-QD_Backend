@@ -62,6 +62,29 @@ app.use(cookieParser());
 app.get("/", (req, res) => {
   res.send("Welcome to the backend API!");
 });
+// Example with Express.js
+app.get('/sms/status-report', (req, res) => {
+  const {
+    id,
+    reference,
+    recipient,
+    status,
+    statusDescription,
+    statusDatetime
+  } = req.query;
+
+  console.log("SMS Delivery Report:", {
+    id,
+    reference,
+    recipient,
+    status,
+    statusDescription,
+    statusDatetime
+  });
+
+  res.sendStatus(200); // Must return 200 OK
+});
+
 
 app.use("/api/v1/user", userRouter);
 // app.use("/api/v1/fee", feeRouter);
@@ -72,6 +95,7 @@ app.use("/api/v1/buy", buyOrderRouter);
 app.use("/api/v1/inquiry", inquiryRouter);
 app.use("/api/v1/chat", chatRouter);
 app.use("/api/v1/upload", uploadRoute);
+
 
 let rooms = {}; // Store rooms and their participants
 const userSocketMap = {}; // Map userId => socket.id

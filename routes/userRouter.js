@@ -36,6 +36,7 @@ router.put('/:userId/image', upload.single('file'), editUserImage);
 router.post("/login", loginUser); // Login user
 router.post("/logout", logoutUser); // Logout user
 
+
 // import { getUser, getAllUsers, uploadPhoto } from '../controllers/userController';
 // import { authenticate, Admin } from '../middleware/authentication';
 // import { upload } from '../middleware/multer';

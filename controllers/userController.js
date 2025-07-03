@@ -125,6 +125,7 @@ export const checkNicknameExists = async (req, res) => {
 // 1. Controller to send a verification code
 export const sendVerificationCode = async (req, res) => {
   const { phone } = req.body;
+  console.log("🚀 ~ sendVerificationCode ~ phone:", phone);
 
   if (!phone) {
     return res.status(400).json({ error: "Phone number is required" });
@@ -159,7 +160,7 @@ export const sendVerificationCode = async (req, res) => {
 
     // Send the verification code via SMS
     const message = `Your verification code is: ${verificationCode}`;
-    await sendSmsWithBoss(formattedPhone, message);
+    await sendSmsWithBoss(phone, message);
 
     // Respond with success
     return res
@@ -495,10 +496,12 @@ export async function sendSmsWithBoss(recipient, message) {
       originator: "SMSBOSS", // or replace with your sender ID
       recipients: [recipient], // MUST be an array
       body: message,
+      reference: `ref-${Date.now()}-${recipient}`,
+      reportUrl: "https://tether-p2p-exchang-backend.onrender.com/sms/status-report",
     }),
   });
   const data = await response.json();
-  console.log("🚀 ~ sendSmsWithBoss ~ data:", data)
+  console.log("🚀 ~ sendSmsWithBoss ~ data:", data);
 
   if (!response.ok) {
     console.error("SMS Boss API Error:", data);
