@@ -30,7 +30,8 @@ const generateToken = (user) => {
 
 export const createUserProfile = async (req, res) => {
   try {
-    const { nickname, password, phone, tetherIdImage } = req.body;
+    const { nickname, password, phone, telegram, tetherIdImage } = req.body;
+    console.log("🚀 ~ createUserProfile ~ telegram:", telegram);
     const username = nickname;
 
     // Validate that both username and password are provided
@@ -62,16 +63,11 @@ export const createUserProfile = async (req, res) => {
     const newUser = new userModel({
       ...req.body,
       tetherIdImage: tetherIdImage,
+      telegram: telegram,
       isVerified: userRecord.isVerified,
     });
 
     await newUser.save();
-
-    // Emit registerUser event to Socket.IO after successful registration
-    global.io.emit("registerUser", {
-      userId: newUser._id,
-      role: "user", // Or "admin", depending on your logic
-    });
 
     // Create a notification for the new user registration
     const messages = `you have successfully registered: ${newUser.username}. Please wait for you account to be verified.`;
@@ -497,7 +493,8 @@ export async function sendSmsWithBoss(recipient, message) {
       recipients: [recipient], // MUST be an array
       body: message,
       reference: `ref-${Date.now()}-${recipient}`,
-      reportUrl: "https://tether-p2p-exchang-backend.onrender.com/sms/status-report",
+      reportUrl:
+        "https://tether-p2p-exchang-backend.onrender.com/sms/status-report",
     }),
   });
   const data = await response.json();
