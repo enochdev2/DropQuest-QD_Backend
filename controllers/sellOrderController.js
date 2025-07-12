@@ -38,7 +38,6 @@ export const createSellOrder = async (req, res) => {
     });
     await newOrder.save();
 
-    
     const message = `New sell order created by ${userName}: ${amount} USDT (Total: ${krwAmount} KRW).`;
     const type = "sellOrder";
     const referenceId = newOrder._id;
@@ -326,6 +325,16 @@ export const getAllInProgressApprovalOrders = async (req, res) => {
         path: "matchedBuyOrders.orderId", // << this populates BuyOrder via dynamic refPath
         model: "BuyOrder",
         select: "buyerNickname", // pull nickname from BuyOrder
+      })
+      .populate({
+        path: "currentBuyOrderInProgress",
+        model: "BuyOrder",
+        select: "buyerNickname userId", // also fetch userId to go deeper
+        populate: {
+          path: "userId",
+          model: "User",
+          select: "username nickname phone", // buyer's full info
+        },
       })
       .sort({ createdAt: -1 });
 

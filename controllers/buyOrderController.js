@@ -63,24 +63,29 @@ export const cancelBuyOrder = async (req, res) => {
     const userId = req.user.id;
     const { orderId } = req.params;
     const { nickname } = req.body; // nickname from request body
-    
-    const { admin } = req.user; 
-    
+
+    const { admin } = req.user;
+
     console.log("🚀 ~ cancelBuyOrder ~ User ID:", userId);
     console.log("🚀 ~ cancelBuyOrder ~ Order ID:", orderId);
 
     const query = {
       _id: orderId,
       ...(admin ? {} : { userId }),
-      status: { $in: admin ? ["Waiting for Buy", "Pending Approval"] : ["Pending Approval"] },
+      status: {
+        $in: admin
+          ? ["Waiting for Buy", "Pending Approval"]
+          : ["Pending Approval"],
+      },
     };
 
     const order = await BuyOrder.findOne(query);
 
-
-      if(!order) {
-        return res.status(404).json({ error: "Order not found or cannot be cancelled" });
-      }
+    if (!order) {
+      return res
+        .status(404)
+        .json({ error: "Order not found or cannot be cancelled" });
+    }
 
     // Remove the order
     await BuyOrder.findByIdAndDelete(orderId);
@@ -95,7 +100,7 @@ export const cancelBuyOrder = async (req, res) => {
 
     res.json({ message: "Buy order cancelled successfully" });
   } catch (error) {
-    console.log("🚀 ~ cancelBuyOrder ~ error: error.message:", error.message)
+    console.log("🚀 ~ cancelBuyOrder ~ error: error.message:", error.message);
     res.status(500).json({ error: error.message });
   }
 };
@@ -104,19 +109,19 @@ export const admindeleteBuyOrder = async (req, res) => {
   try {
     const userId = req.user.id;
     const { orderId } = req.params;
-    
-    const { admin } = req.user; 
-    
+
+    const { admin } = req.user;
+
     console.log("🚀 ~ cancelBuyOrder ~ User ID:", userId);
     console.log("🚀 ~ cancelBuyOrder ~ Order ID:", orderId);
 
-
     const order = await BuyOrder.findById(orderId);
 
-
-      if(!order) {
-        return res.status(404).json({ error: "Order not found or cannot be cancelled" });
-      }
+    if (!order) {
+      return res
+        .status(404)
+        .json({ error: "Order not found or cannot be cancelled" });
+    }
 
     // Remove the order
     await BuyOrder.findByIdAndDelete(orderId);
@@ -131,7 +136,7 @@ export const admindeleteBuyOrder = async (req, res) => {
 
     res.json({ message: "Buy order cancelled successfully" });
   } catch (error) {
-    console.log("🚀 ~ cancelBuyOrder ~ error: error.message:", error.message)
+    console.log("🚀 ~ cancelBuyOrder ~ error: error.message:", error.message);
     res.status(500).json({ error: error.message });
   }
 };
@@ -302,10 +307,21 @@ export const getAllInProgressApprovalOrders = async (req, res) => {
       .populate(
         "userId",
         "username nickname fullName phone bankName bankAccount"
-      ) .populate({
+      )
+      .populate({
         path: "matchedSellOrders.orderId", // << this populates BuyOrder via dynamic refPath
         model: "SellOrder",
         select: "sellerNickname", // pull nickname from BuyOrder
+      })
+      .populate({
+        path: "currentSellOrderInProgress",
+        model: "SellOrder",
+        select: "sellerNickname userId", // also fetch userId to go deeper
+        populate: {
+          path: "userId",
+          model: "User",
+          select: "username nickname phone", // buyer's full info
+        },
       })
       .sort({ createdAt: -1 });
 
