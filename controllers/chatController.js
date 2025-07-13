@@ -29,25 +29,11 @@ export const saveMessage = async (req, res) => {
           .status(400)
           .json({ message: "Order type is required to create a new session." });
       }
-
-      let buyOrder, sellOrder, user;
-
-      user = await userModel.findOne({ nickname });
-
-       chat = new ChatSession({
-          orderId,
-          orderType,
-          // nickname,
-          // username: user.username,
-          // fullName: user.fullName,
-          // phone: user.phone,
-          // bankName: user.bankName,
-          // bankAccount: user.bankAccount,
-          // tetherAddress: user.tetherAddress,
-          // referralCode: user.referralCode,
-          // currentOrderInProgress: buyOrderId,
-        });
-        await chat.save();
+      chat = new ChatSession({
+        orderId,
+        orderType,
+      });
+      await chat.save();
     }
 
     // If session is closed, block the message
@@ -96,12 +82,12 @@ export const adminGetChatUserInfo = async (req, res) => {
       "nickname username phone bankName bankAccount tetherAddress referralCode fullName"
     );
     // "username nickname fullName phone bankName bankAccount"
-    
+
     userInfo2 = await BuyOrder.findOne({ _id: orderId }).populate(
       "userId",
       "nickname username phone bankName bankAccount tetherAddress referralCode fullName"
     );
-    
+
     let chatDetails = userInfo ? userInfo.userId : userInfo2.userId;
     console.log("🚀 ~ res.status ~ userInfo:", chatDetails);
     res.status(200).json(chatDetails);
@@ -339,7 +325,6 @@ export const getMatchedOrders = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 export const saveMessages = async (req, res) => {
   try {
