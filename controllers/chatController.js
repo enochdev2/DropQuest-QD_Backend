@@ -34,83 +34,20 @@ export const saveMessage = async (req, res) => {
 
       user = await userModel.findOne({ nickname });
 
-      if (orderType === "buy") {
-        buyOrder = await BuyOrder.findById(orderId);
-
-        console.log("🚀 ~ saveMessage ~ buyOrder:", buyOrder);
-
-        if (!buyOrder)
-          return res.status(404).json({ error: "Buy order not found" });
-
-        const sellOrderId = buyOrder.currentSellOrderInProgress;
-        console.log("🚀 ~ saveMessage ~ sellOrderId:", sellOrderId);
-
-        if (!sellOrderId)
-          return res.status(404).json({ error: "No linked sell order" });
-
-        sellOrder = await SellOrder.findById(sellOrderId);
-
-        if (!sellOrder)
-          return res.status(404).json({ error: "Linked sell order not found" });
-
-        if (buyOrder.userId.toString() !== userId) {
-          return res
-            .status(403)
-            .json({ error: ": Seller must start the chat " });
-        }
-
-        chat = new ChatSession({
+       chat = new ChatSession({
           orderId,
           orderType,
-          nickname,
-          username: user.username,
-          fullName: user.fullName,
-          phone: user.phone,
-          bankName: user.bankName,
-          bankAccount: user.bankAccount,
-          tetherAddress: user.tetherAddress,
-
-          referralCode: user.referralCode,
-          currentOrderInProgress: sellOrderId,
-        }); // Save orderType (buy/sell)
-        await chat.save();
-      }
-
-      if (orderType === "sell") {
-        sellOrder = await SellOrder.findById(orderId);
-        if (!sellOrder)
-          return res.status(404).json({ error: "Sell order not found" });
-
-        const buyOrderId = sellOrder.currentBuyOrderInProgress;
-        if (!buyOrderId)
-          return res.status(404).json({ error: "No linked buy order" });
-
-        buyOrder = await BuyOrder.findById(buyOrderId);
-
-        if (!buyOrder)
-          return res.status(404).json({ error: "Linked buy order not found" });
-
-        if (sellOrder.userId.toString() !== userId) {
-          return res
-            .status(403)
-            .json({ error: ": Seller must start the chat " });
-        }
-
-        chat = new ChatSession({
-          orderId,
-          orderType,
-          nickname,
-          username: user.username,
-          fullName: user.fullName,
-          phone: user.phone,
-          bankName: user.bankName,
-          bankAccount: user.bankAccount,
-          tetherAddress: user.tetherAddress,
-          referralCode: user.referralCode,
-          currentOrderInProgress: buyOrderId,
+          // nickname,
+          // username: user.username,
+          // fullName: user.fullName,
+          // phone: user.phone,
+          // bankName: user.bankName,
+          // bankAccount: user.bankAccount,
+          // tetherAddress: user.tetherAddress,
+          // referralCode: user.referralCode,
+          // currentOrderInProgress: buyOrderId,
         });
         await chat.save();
-      }
     }
 
     // If session is closed, block the message
@@ -146,6 +83,33 @@ export const getMessages = async (req, res) => {
   }
 };
 
+export const adminGetChatUserInfo = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    console.log("🚀 ~ adminGetChatUserInfo ~ orderId:", orderId);
+
+    let userInfo;
+    let userInfo2;
+
+    userInfo = await SellOrder.findOne({ _id: orderId }).populate(
+      "userId",
+      "nickname username phone bankName bankAccount tetherAddress referralCode fullName"
+    );
+    // "username nickname fullName phone bankName bankAccount"
+    
+    userInfo2 = await BuyOrder.findOne({ _id: orderId }).populate(
+      "userId",
+      "nickname username phone bankName bankAccount tetherAddress referralCode fullName"
+    );
+    
+    let chatDetails = userInfo ? userInfo.userId : userInfo2.userId;
+    console.log("🚀 ~ res.status ~ userInfo:", chatDetails);
+    res.status(200).json(chatDetails);
+  } catch (err) {
+    console.error("🔥 Error in getMessages:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
 export const adminGetMessages = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -373,5 +337,134 @@ export const getMatchedOrders = async (req, res) => {
   } catch (error) {
     console.error("❌ Error in getMatchedOrders:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+export const saveMessages = async (req, res) => {
+  try {
+    const { orderId, orderType, image, sender, content } = req.body;
+    console.log("🚀 ~ saveMessage ~ image:", image);
+    const nickname = req.user.nickname;
+    const userId = req.user.id;
+
+    if (!["buy", "sell"].includes(orderType)) {
+      return res.status(400).json({ error: "Invalid type parameter" });
+    }
+
+    let chat = await ChatSession.findOne({ orderId });
+
+    console.log("🚀 ~ saveMessage ~ chat:", chat);
+
+    // If no session exists, create one with the orderId and orderType
+    if (!chat) {
+      if (!orderType) {
+        return res
+          .status(400)
+          .json({ message: "Order type is required to create a new session." });
+      }
+
+      let buyOrder, sellOrder, user;
+
+      user = await userModel.findOne({ nickname });
+
+      if (orderType === "buy") {
+        buyOrder = await BuyOrder.findById(orderId);
+
+        console.log("🚀 ~ saveMessage ~ buyOrder:", buyOrder);
+
+        if (!buyOrder)
+          return res.status(404).json({ error: "Buy order not found" });
+
+        const sellOrderId = buyOrder.currentSellOrderInProgress;
+        console.log("🚀 ~ saveMessage ~ sellOrderId:", sellOrderId);
+
+        if (!sellOrderId)
+          return res.status(404).json({ error: "No linked sell order" });
+
+        sellOrder = await SellOrder.findById(sellOrderId);
+
+        if (!sellOrder)
+          return res.status(404).json({ error: "Linked sell order not found" });
+
+        if (buyOrder.userId.toString() !== userId) {
+          return res
+            .status(403)
+            .json({ error: ": Seller must start the chat " });
+        }
+
+        chat = new ChatSession({
+          orderId,
+          orderType,
+          nickname,
+          username: user.username,
+          fullName: user.fullName,
+          phone: user.phone,
+          bankName: user.bankName,
+          bankAccount: user.bankAccount,
+          tetherAddress: user.tetherAddress,
+
+          referralCode: user.referralCode,
+          currentOrderInProgress: sellOrderId,
+        }); // Save orderType (buy/sell)
+        await chat.save();
+      }
+
+      if (orderType === "sell") {
+        sellOrder = await SellOrder.findById(orderId);
+        if (!sellOrder)
+          return res.status(404).json({ error: "Sell order not found" });
+
+        const buyOrderId = sellOrder.currentBuyOrderInProgress;
+        if (!buyOrderId)
+          return res.status(404).json({ error: "No linked buy order" });
+
+        buyOrder = await BuyOrder.findById(buyOrderId);
+
+        if (!buyOrder)
+          return res.status(404).json({ error: "Linked buy order not found" });
+
+        if (sellOrder.userId.toString() !== userId) {
+          return res
+            .status(403)
+            .json({ error: ": Seller must start the chat " });
+        }
+
+        chat = new ChatSession({
+          orderId,
+          orderType,
+          nickname,
+          username: user.username,
+          fullName: user.fullName,
+          phone: user.phone,
+          bankName: user.bankName,
+          bankAccount: user.bankAccount,
+          tetherAddress: user.tetherAddress,
+          referralCode: user.referralCode,
+          currentOrderInProgress: buyOrderId,
+        });
+        await chat.save();
+      }
+    }
+
+    // If session is closed, block the message
+    if (chat?.isClosed) {
+      return res.status(403).json({ message: "Chat is closed." });
+    }
+
+    const message = new ChatModel({
+      orderId,
+      image,
+      sender,
+      content,
+      timestamp: new Date().toISOString(),
+    });
+    await message.save();
+    const messages = `New Chat Session created by ${nickname || "a user"}`;
+    await createNewAdminNotification(messages, userId, "chat", orderId);
+    res.status(201).json(message);
+  } catch (err) {
+    console.error("🔥 Error in saveMessage:", err);
+    res.status(500).json({ error: err.message });
   }
 };

@@ -7,7 +7,8 @@ import {
   getOpenChats,
   adminGetMessages,
   adminGetConcludedMessages,
-  getCloseChats
+  getCloseChats,
+  adminGetChatUserInfo
 } from "../controllers/chatController.js";
 import { authenticate } from "../middleware/autheticate.js";
 
@@ -16,6 +17,7 @@ const router = express.Router();
 router.post("/",authenticate, saveMessage);
 router.get("/messages/:orderId", getMessages);
 router.get("/admin/messages/:orderId", adminGetMessages);
+router.get("/admin/userInfo/:orderId", adminGetChatUserInfo);
 router.get("/admin/messages/end/:orderId", adminGetConcludedMessages);
 router.patch("/close/:orderId", closeChat);
 router.get("/chat/:orderId/status", getChatStatus);
