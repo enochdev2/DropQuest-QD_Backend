@@ -116,7 +116,7 @@ export const adminGetMessages = async (req, res) => {
     }
 
     res.status(200).json({
-      chatDetails: chat,
+      // chatDetails: chat,
       messages: messages,
     });
   } catch (err) {
