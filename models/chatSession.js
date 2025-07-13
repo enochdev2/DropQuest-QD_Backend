@@ -6,11 +6,11 @@ const chatSessionSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
-  currentOrderInProgress: {
-    type: String,
-    unique: true,
-    required: false,
-  },
+  // currentOrderInProgress: {
+  //   type: String,
+  //   unique: false,
+  //   required: false,
+  // },
   orderType: {
     // New field added to differentiate between buy and sell
     type: String,
