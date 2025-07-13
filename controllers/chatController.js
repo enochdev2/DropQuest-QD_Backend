@@ -96,6 +96,7 @@ export const adminGetChatUserInfo = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 export const adminGetMessages = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -105,15 +106,15 @@ export const adminGetMessages = async (req, res) => {
     );
 
     // Fetch chat session details
-    const chat = await ChatSession.findOne({ orderId }).select(
-      "nickname username phone bankName bankAccount tetherAddress referralCode fullName"
-    );
+    // const chat = await ChatSession.findOne({ orderId }).select(
+    //   "nickname username phone bankName bankAccount tetherAddress referralCode fullName"
+    // );
 
-    if (!chat) {
-      return res
-        .status(404)
-        .json({ error: "Chat session not found for this orderId." });
-    }
+    // if (!chat) {
+    //   return res
+    //     .status(404)
+    //     .json({ error: "Chat session not found for this orderId." });
+    // }
 
     res.status(200).json({
       // chatDetails: chat,
