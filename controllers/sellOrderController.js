@@ -37,12 +37,17 @@ export const createSellOrder = async (req, res) => {
     });
     await newOrder.save();
 
-    let message 
+    let message;
 
-    storedLanguage === "ko" ? message = ` ${userName}님이 새로운 판매 주문을 생성했습니다: ${amount} USDT / 총액 ${krwAmount} KRW ` : message = `New sell order created by ${userName}: ${amount} USDT (Total: ${krwAmount} KRW).`;
+    if (storedLanguage === "ko") {
+      message = ` ${userName}님이 새로운 판매 주문을 생성했습니다: ${amount} USDT / 총액 ${krwAmount} KRW `;
+    } else {
+      message = `New sell order created by ${userName}: ${amount} USDT (Total: ${krwAmount} KRW).`;
+    }
     const type = "sellOrder";
     const referenceId = newOrder._id;
 
+    console.log("🚀 ~ createSellOrder ~ message:", message);
     await createNewAdminNotification(message, userId, type, referenceId);
 
     await createNewAdminNotification(
@@ -51,7 +56,7 @@ export const createSellOrder = async (req, res) => {
       "sellOrder",
       newOrder._id
     );
-    const messages = `you have successful placed a sell order of $ ${amount}.`;
+    const messages = storedLanguage === "ko" ? ` $ ${amount}의 구매 주문을 성공적으로 등록하였습니다.`: `you have successful placed a sell order of $ ${amount}.`;
     await createNewUserNotification(
       messages,
       userId,
@@ -69,7 +74,9 @@ export const createSellOrder = async (req, res) => {
 export const cancelSellOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { orderId, nickname, storedLanguage } = req.params;
+    const { orderId  } = req.params;
+    const { storedLanguage } = req.body;
+    console.log("🚀 ~ cancelSellOrder ~ storedLanguage:", storedLanguage)
 
     const { admin } = req.user;
 
@@ -84,7 +91,6 @@ export const cancelSellOrder = async (req, res) => {
     };
 
     const order = await SellOrder.findOne(query);
-    console.log("🚀 ~ cancelSellOrder ~ order:", order);
 
     if (!order) {
       return res
@@ -96,15 +102,12 @@ export const cancelSellOrder = async (req, res) => {
     await SellOrder.findByIdAndDelete(orderId);
 
     let message;
-    storedLanguage === "ko" ? message = `판매 주문 #${orderId}가 취소되었습니다 ` : message = `Your sell order #${orderId} has been cancelled.`;
+    storedLanguage === "ko"
+      ? (message = `판매 주문 #${orderId}가 취소되었습니다 `)
+      : (message = `Your sell order #${orderId} has been cancelled.`);
 
     // Notify user
-    await createNewUserNotification(
-      message,
-      userId,
-      "sellOrder",
-      orderId
-    );
+    await createNewUserNotification(message, userId, "sellOrder", orderId);
 
     res.json({ message: "Sell order cancelled successfully" });
   } catch (error) {
@@ -132,15 +135,12 @@ export const admindeletSellOrder = async (req, res) => {
     await SellOrder.findByIdAndDelete(orderId);
 
     let message;
-    storedLanguage === "ko" ? message = `판매 주문 #${orderId}가 취소되었습니다 ` : message = `Your sell order #${orderId} has been cancelled.`;
+    storedLanguage === "ko"
+      ? (message = `판매 주문 #${orderId}가 취소되었습니다 `)
+      : (message = `Your sell order #${orderId} has been cancelled.`);
 
     // Notify user
-    await createNewUserNotification(
-      message,
-      userId,
-      "sellOrder",
-      orderId
-    );
+    await createNewUserNotification(message, userId, "sellOrder", orderId);
 
     res.json({ message: "Sell order cancelled successfully" });
   } catch (error) {
@@ -178,9 +178,10 @@ export const approveSellOrder = async (req, res) => {
     order.amountRemaining = order.amount;
     await order.save();
 
-
     let message;
-    storedLanguage === "ko" ? message = `판매 주문 #${orderId}가 승인되어 판매 중입니다 ` : message = ` Your sell order #${orderId} has been approved and is now On Sale.`;
+    storedLanguage === "ko"
+      ? (message = `판매 주문 #${orderId}가 승인되어 판매 중입니다 `)
+      : (message = ` Your sell order #${orderId} has been approved and is now On Sale.`);
     // Notify user
     await createNewUserNotification(
       message,
@@ -207,7 +208,9 @@ export const rejectSellOrder = async (req, res) => {
     await order.deleteOne();
 
     let message;
-    storedLanguage === "ko" ? message = `판매 주문 #${orderId}가 거절되었습니다. ` : message = ` Your sell order #${orderId} has been rejected.`;
+    storedLanguage === "ko"
+      ? (message = `판매 주문 #${orderId}가 거절되었습니다. `)
+      : (message = ` Your sell order #${orderId} has been rejected.`);
 
     // Notify user about rejection
     await createNewUserNotification(
@@ -608,7 +611,7 @@ export const getAllCompletedMatchedOrders = async (req, res) => {
   }
 };
 
-// ~! yet to complete 
+// ~! yet to complete
 
 export const completeOrders = async (req, res) => {
   try {
