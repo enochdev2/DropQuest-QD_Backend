@@ -13,7 +13,7 @@ export const createSellOrder = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const { amount, price, krwAmount } = req.body;
+    const { amount, price, krwAmount, storedLanguage } = req.body;
 
     const user = await userModel
       .findById(userId)
@@ -38,7 +38,9 @@ export const createSellOrder = async (req, res) => {
     });
     await newOrder.save();
 
-    const message = `New sell order created by ${userName}: ${amount} USDT (Total: ${krwAmount} KRW).`;
+    let message 
+
+    storedLanguage === "ko" ? message = ` ${userName}님이 새로운 판매 주문을 생성했습니다: ${amount} USDT / 총액 ${krwAmount} KRW ` : message = `New sell order created by ${userName}: ${amount} USDT (Total: ${krwAmount} KRW).`;
     const type = "sellOrder";
     const referenceId = newOrder._id;
 
