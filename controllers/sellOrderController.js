@@ -7,7 +7,6 @@ import {
   createNewAdminNotification,
   createNewUserNotification,
 } from "./notificationController.js";
-import { emitNotification } from "../utils/emitNotification.js";
 
 export const createSellOrder = async (req, res) => {
   try {
@@ -608,6 +607,8 @@ export const getAllCompletedMatchedOrders = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
+
+// ~! yet to complete 
 
 export const completeOrders = async (req, res) => {
   try {
