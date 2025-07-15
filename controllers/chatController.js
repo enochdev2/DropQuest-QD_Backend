@@ -9,7 +9,7 @@ import { createNewAdminNotification } from "./notificationController.js";
 
 export const saveMessage = async (req, res) => {
   try {
-    const { orderId, orderType, image, sender, content } = req.body;
+    const { orderId, orderType, image, sender, content,currentOrderInProgress } = req.body;
     console.log("🚀 ~ saveMessage ~ image:", image);
     const nickname = req.user.nickname;
     const userId = req.user.id;
@@ -31,6 +31,7 @@ export const saveMessage = async (req, res) => {
       }
       chat = new ChatSession({
         orderId,
+        currentOrderInProgress,
         orderType,
       });
       await chat.save();
