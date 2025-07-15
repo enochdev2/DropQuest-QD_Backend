@@ -41,13 +41,13 @@ router.get(
 );
 // router.get("/", getAllUsers); // Get all users
 router.post(
-  "/admin/sell-orders/:orderId/approve",
+  "/admin/sell-orders/:orderId/approve/:storedLanguage",
   authenticate,
   authorizeAdmin,
   approveSellOrder
 ); // Get user by nickname
 router.post(
-  "/admin/sell-orders/:orderId/reject",
+  "/admin/sell-orders/:orderId/reject/:storedLanguage",
   authenticate,
   authorizeAdmin,
   rejectSellOrder

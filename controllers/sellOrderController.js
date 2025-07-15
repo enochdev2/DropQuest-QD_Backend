@@ -70,12 +70,9 @@ export const createSellOrder = async (req, res) => {
 export const cancelSellOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { orderId, nickname } = req.params;
+    const { orderId, nickname, storedLanguage } = req.params;
 
     const { admin } = req.user;
-
-    console.log("🚀 ~ cancelBuyOrder ~ User ID:", userId);
-    console.log("🚀 ~ cancelBuyOrder ~ Order ID:", orderId);
 
     const query = {
       _id: orderId,
@@ -99,9 +96,12 @@ export const cancelSellOrder = async (req, res) => {
     // Remove the order
     await SellOrder.findByIdAndDelete(orderId);
 
+    let message;
+    storedLanguage === "ko" ? message = `판매 주문 #${orderId}가 취소되었습니다 ` : message = `Your sell order #${orderId} has been cancelled.`;
+
     // Notify user
     await createNewUserNotification(
-      `Your sell order #${orderId} has been cancelled.`,
+      message,
       userId,
       "sellOrder",
       orderId
@@ -116,12 +116,9 @@ export const cancelSellOrder = async (req, res) => {
 export const admindeletSellOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { orderId, nickname } = req.params;
+    const { orderId, nickname, storedLanguage } = req.params;
 
     const { admin } = req.user;
-
-    console.log("🚀 ~ cancelBuyOrder ~ User ID:", userId);
-    console.log("🚀 ~ cancelBuyOrder ~ Order ID:", orderId);
 
     const order = await SellOrder.findById(orderId);
     console.log("🚀 ~ cancelSellOrder ~ order:", order);
@@ -135,9 +132,12 @@ export const admindeletSellOrder = async (req, res) => {
     // Remove the order
     await SellOrder.findByIdAndDelete(orderId);
 
+    let message;
+    storedLanguage === "ko" ? message = `판매 주문 #${orderId}가 취소되었습니다 ` : message = `Your sell order #${orderId} has been cancelled.`;
+
     // Notify user
     await createNewUserNotification(
-      `Your sell order #${orderId} has been cancelled.`,
+      message,
       userId,
       "sellOrder",
       orderId
@@ -169,7 +169,7 @@ export const getPendingSellOrders = async (req, res) => {
 
 export const approveSellOrder = async (req, res) => {
   try {
-    const { orderId } = req.params;
+    const { orderId, storedLanguage } = req.params;
 
     const order = await SellOrder.findById(orderId);
     console.log("🚀 ~ approveSellOrder ~ order:", order);
@@ -178,9 +178,13 @@ export const approveSellOrder = async (req, res) => {
     order.status = "On Sale";
     order.amountRemaining = order.amount;
     await order.save();
+
+
+    let message;
+    storedLanguage === "ko" ? message = `판매 주문 #${orderId}가 승인되어 판매 중입니다 ` : message = ` Your sell order #${orderId} has been approved and is now On Sale.`;
     // Notify user
     await createNewUserNotification(
-      `Your sell order #${orderId} has been approved and is now On Sale.`,
+      message,
       order.userId,
       "sellOrder",
       order._id
@@ -195,7 +199,7 @@ export const approveSellOrder = async (req, res) => {
 
 export const rejectSellOrder = async (req, res) => {
   try {
-    const { orderId } = req.params;
+    const { orderId, storedLanguage } = req.params;
 
     const order = await SellOrder.findById(orderId);
     if (!order) return res.status(404).json({ error: "Order not found" });
@@ -203,9 +207,12 @@ export const rejectSellOrder = async (req, res) => {
     // You might want to delete or mark rejected orders differently
     await order.deleteOne();
 
+    let message;
+    storedLanguage === "ko" ? message = `판매 주문 #${orderId}가 거절되었습니다. ` : message = ` Your sell order #${orderId} has been rejected.`;
+
     // Notify user about rejection
     await createNewUserNotification(
-      `Your sell order #${orderId}  has been rejected.`,
+      message,
       order.userId,
       "sellOrder",
       order._id
