@@ -34,6 +34,8 @@ export const createBuyOrder = async (req, res) => {
     });
     await newBuyOrder.save();
 
+     const userName = user?.nickname || user?.username || "a user";
+
     const message =
       storedLanguage === "ko"
         ? `${userName}님이 새로운 구매 주문을 생성했습니다. 수량: ${amount}개`
