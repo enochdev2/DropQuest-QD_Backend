@@ -56,7 +56,10 @@ export const createSellOrder = async (req, res) => {
       "sellOrder",
       newOrder._id
     );
-    const messages = storedLanguage === "ko" ? ` $ ${amount}의 구매 주문을 성공적으로 등록하였습니다.`: `you have successful placed a sell order of $ ${amount}.`;
+    const messages =
+      storedLanguage === "ko"
+        ? ` $ ${amount}의 구매 주문을 성공적으로 등록하였습니다.`
+        : `you have successful placed a sell order of $ ${amount}.`;
     await createNewUserNotification(
       messages,
       userId,
@@ -74,9 +77,9 @@ export const createSellOrder = async (req, res) => {
 export const cancelSellOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { orderId  } = req.params;
+    const { orderId } = req.params;
     const { storedLanguage } = req.body;
-    console.log("🚀 ~ cancelSellOrder ~ storedLanguage:", storedLanguage)
+    console.log("🚀 ~ cancelSellOrder ~ storedLanguage:", storedLanguage);
 
     const { admin } = req.user;
 
@@ -615,7 +618,7 @@ export const getAllCompletedMatchedOrders = async (req, res) => {
 
 export const completeOrders = async (req, res) => {
   try {
-    const { buyerOrderId, sellerOrderId } = req.body;
+    const { buyerOrderId, sellerOrderId, storedLanguage } = req.body;
 
     const buyOrderMatches = buyerOrderId;
 
@@ -711,8 +714,15 @@ export const completeOrders = async (req, res) => {
     const sellUserName = sellOrder.userId?.nickname || "Seller";
     const buyUserName = buyOrder.userId?.nickname || "Buyer";
 
-    const sellerMsg = `Your sell order of ${matchAmount} USDT has been matched and completed with buyer ${buyUserName}.`;
-    const buyerMsg = `Your buy order of ${matchAmount} USDT has been matched and completed with seller ${sellUserName}.`;
+    const sellerMsg =
+      storedLanguage === "ko"
+        ? `${matchAmount} USDT 판매 주문이 구매자 ${buyUserName}님과 매칭되어 완료되었습니다.`
+        : `Your sell order of ${matchAmount} USDT has been matched and completed with buyer ${buyUserName}.`;
+
+    const buyerMsg =
+      storedLanguage === "ko"
+        ? `${matchAmount} USDT 구매 주문이 판매자 ${sellUserName}님과 매칭되어 완료되었습니다.`
+        : `Your buy order of ${matchAmount} USDT has been matched and completed with seller ${sellUserName}.`;
 
     // Send notifications to seller and buyer
     await Promise.all([
@@ -843,7 +853,7 @@ export const completeOrders = async (req, res) => {
 
 export const matchOrders = async (req, res) => {
   try {
-    const { buyerOrderId, sellerOrderId } = req.body;
+    const { buyerOrderId, sellerOrderId, storedLanguage } = req.body;
 
     // Fetch sell order and populate the nickname of the seller
     const sellOrder = await SellOrder.findById(sellerOrderId).populate(
@@ -919,8 +929,15 @@ export const matchOrders = async (req, res) => {
     await sellOrder.save();
 
     // Craft notification messages using nicknames
-    const sellerMsg = `Your sell order of ${sellOrder.amountRemaining} USDT has been matched with buyer ${buyerNickname}.`;
-    const buyerMsg = `Your buy order of ${buyOrder.amountRemaining} USDT has been matched with seller ${sellerNickname}.`;
+    const sellerMsg =
+      storedLanguage === "ko"
+        ? ` ${sellOrder.amountRemaining} USDT 판매 주문이 구매자 ${buyerNickname}님과 매칭되었습니다.`
+        : `Your sell order of ${sellOrder.amountRemaining} USDT has been matched with buyer ${buyerNickname}.`;
+
+    const buyerMsg =
+      storedLanguage === "ko"
+        ? ` ${buyOrder.amountRemaining} USDT 구매 주문이 판매자 ${sellerNickname}님과 매칭되었습니다.`
+        : `Your buy order of ${buyOrder.amountRemaining} USDT has been matched with seller ${sellerNickname}.`;
 
     // Send notifications to seller and buyer
     await Promise.all([
@@ -951,7 +968,7 @@ export const matchOrders = async (req, res) => {
 
 export const cancelTrade = async (req, res) => {
   try {
-    const { buyerOrderId, sellerOrderId } = req.body;
+    const { buyerOrderId, sellerOrderId, storedLanguage } = req.body;
 
     const sellOrder = await SellOrder.findById(sellerOrderId).populate(
       "userId",
@@ -994,8 +1011,15 @@ export const cancelTrade = async (req, res) => {
     const sellUserName = sellOrder.userId?.nickname || "Seller";
     const buyUserName = buyOrder.userId?.nickname || "Buyer";
 
-    const sellerMsg = `Your sell order of ${sellOrder.amountRemaining} USDT has been cancelled with buyer ${buyUserName}.`;
-    const buyerMsg = `Your buy order of ${buyOrder.amountRemaining} USDT has been cancelled with seller ${sellUserName}.`;
+    const sellerMsg =
+      storedLanguage === "ko"
+        ? `${sellOrder.amountRemaining} USDT 판매 주문이 구매자 ${buyUserName}님과 함께 취소되었습니다.`
+        : `Your sell order of ${sellOrder.amountRemaining} USDT has been cancelled with buyer ${buyUserName}.`;
+
+    const buyerMsg =
+      storedLanguage === "ko"
+        ? `${buyOrder.amountRemaining} USDT 구매 주문이 판매자 ${sellUserName}님과 함께 취소되었습니다.`
+        : `Your buy order of ${buyOrder.amountRemaining} USDT has been cancelled with seller ${sellUserName}.`;
 
     console.log("🚀 ~ cancelTrade ~ buyerMsg:", buyerMsg);
     // Send notifications to seller and buyer

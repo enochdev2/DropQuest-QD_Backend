@@ -11,7 +11,7 @@ export const createBuyOrder = async (req, res) => {
   try {
     const userId = req.user.id; //
     // const nickname = req.user.nickname; //
-    const { amount, krwAmount, price } = req.body;
+    const { amount, krwAmount, price, storedLanguage } = req.body;
 
     const user = await userModel
       .findById(userId)
@@ -34,16 +34,20 @@ export const createBuyOrder = async (req, res) => {
     });
     await newBuyOrder.save();
 
-    const message = `New buy order created by ${
-      user.nickname || "a user"
-    }: ${amount} units.`;
+    const message =
+      storedLanguage === "ko"
+        ? `${userName}님이 새로운 구매 주문을 생성했습니다. 수량: ${amount}개`
+        : `New buy order created by ${userName}: ${amount} units.`;
     await createNewAdminNotification(
       message,
       userId,
       "buyOrder",
       newBuyOrder._id
     );
-    const messages = `you have successful placed a buy order of $ ${amount}.`;
+    const messages =
+      storedLanguage === "ko"
+        ? `$${amount}의 구매 주문을 성공적으로 등록하였습니다.`
+        : `You have successfully placed a buy order of $${amount}.`;
     await createNewUserNotification(
       messages,
       userId,
@@ -62,7 +66,7 @@ export const cancelBuyOrder = async (req, res) => {
   try {
     const userId = req.user.id;
     const { orderId } = req.params;
-    const { nickname } = req.body; // nickname from request body
+    const { nickname, storedLanguage } = req.body; // nickname from request body
 
     const { admin } = req.user;
 
@@ -90,13 +94,13 @@ export const cancelBuyOrder = async (req, res) => {
     // Remove the order
     await BuyOrder.findByIdAndDelete(orderId);
 
+    const message =
+      storedLanguage === "ko"
+        ? `구매 주문 #${orderId}가 취소되었습니다.`
+        : `Your buy order #${orderId} has been cancelled.`;
+
     // Notify user
-    await createNewUserNotification(
-      `Your buy order #${orderId} has been cancelled.`,
-      userId,
-      "buyOrder",
-      orderId
-    );
+    await createNewUserNotification(message, userId, "buyOrder", orderId);
 
     res.json({ message: "Buy order cancelled successfully" });
   } catch (error) {
@@ -109,11 +113,9 @@ export const admindeleteBuyOrder = async (req, res) => {
   try {
     const userId = req.user.id;
     const { orderId } = req.params;
+    const { storedLanguage } = req.body;
 
     const { admin } = req.user;
-
-    console.log("🚀 ~ cancelBuyOrder ~ User ID:", userId);
-    console.log("🚀 ~ cancelBuyOrder ~ Order ID:", orderId);
 
     const order = await BuyOrder.findById(orderId);
 
@@ -126,13 +128,13 @@ export const admindeleteBuyOrder = async (req, res) => {
     // Remove the order
     await BuyOrder.findByIdAndDelete(orderId);
 
+    const message =
+      storedLanguage === "ko"
+        ? `구매 주문 #${orderId}가 취소되었습니다.`
+        : `Your buy order #${orderId} has been cancelled.`;
+
     // Notify user
-    await createNewUserNotification(
-      `Your buy order #${orderId} has been cancelled.`,
-      userId,
-      "buyOrder",
-      orderId
-    );
+    await createNewUserNotification(message, userId, "buyOrder", orderId);
 
     res.json({ message: "Buy order cancelled successfully" });
   } catch (error) {
@@ -161,6 +163,7 @@ export const getPendingBuyOrders = async (req, res) => {
 export const approveBuyOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
+    const { storedLanguage } = req.body;
 
     const order = await BuyOrder.findById(orderId);
     if (!order) return res.status(404).json({ error: "Buy order not found" });
@@ -168,10 +171,14 @@ export const approveBuyOrder = async (req, res) => {
     order.status = "Waiting for Buy";
     order.amountRemaining = order.amount;
     await order.save();
-    console.log("🚀 ~ approveBuyOrder ~ order:", order);
+
+    const message =
+      storedLanguage === "ko"
+        ? `구매 주문 #${orderId}가 승인되었습니다.`
+        : `Your buy order #${orderId} has been approved.`;
 
     await createNewUserNotification(
-      `Your buy order #${orderId} has been approved.`,
+      message,
       order.userId,
       "buyOrder",
       order._id
@@ -188,14 +195,20 @@ export const approveBuyOrder = async (req, res) => {
 export const rejectBuyOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
+    const { storedLanguage } = req.body;
 
     const order = await BuyOrder.findById(orderId);
     if (!order) return res.status(404).json({ error: "Buy order not found" });
 
     await order.deleteOne();
 
+    const message =
+      storedLanguage === "ko"
+        ? `구매 주문 #${orderId}가 거절되었습니다.`
+        : `Your buy order #${orderId} has been rejected.`;
+
     await createNewUserNotification(
-      `Your buy order #${orderId} has been rejected.`,
+      message,
       order.userId,
       "buyOrder",
       order._id
