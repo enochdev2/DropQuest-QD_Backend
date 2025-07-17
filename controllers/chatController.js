@@ -10,7 +10,8 @@ import { createNewAdminNotification } from "./notificationController.js";
 export const saveMessage = async (req, res) => {
   try {
     const { orderId, orderType, image, sender, content,currentOrderInProgress , storedLanguage  } = req.body;
-    console.log("🚀 ~ saveMessage ~ image:", image);
+    console.log("🚀 ~ saveMessage ~ orderType:", orderType)
+    console.log("🚀 ~ saveMessage ~ storedLanguage:", storedLanguage)
     const nickname = req.user.nickname;
     const userId = req.user.id;
 
@@ -56,7 +57,7 @@ export const saveMessage = async (req, res) => {
     await createNewAdminNotification(messages, userId, "chat", orderId);
     res.status(201).json(message);
   } catch (err) {
-    console.error("🔥 Error in saveMessage:", err);
+    console.error("🔥 Error in saveMessage:", err.message);
     res.status(500).json({ error: err.message });
   }
 };
