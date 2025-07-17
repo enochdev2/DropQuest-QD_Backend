@@ -9,7 +9,7 @@ import { createNewAdminNotification } from "./notificationController.js";
 
 export const saveMessage = async (req, res) => {
   try {
-    const { orderId, orderType, image, sender, content,currentOrderInProgress } = req.body;
+    const { orderId, orderType, image, sender, content,currentOrderInProgress , storedLanguage  } = req.body;
     console.log("🚀 ~ saveMessage ~ image:", image);
     const nickname = req.user.nickname;
     const userId = req.user.id;
@@ -50,7 +50,9 @@ export const saveMessage = async (req, res) => {
       timestamp: new Date().toISOString(),
     });
     await message.save();
-    const messages = `New Chat Session created by ${nickname || "a user"}`;
+    const messages = storedLanguage === "ko"
+        ? `${nickname || "사용자"}님이 새로운 1:1 채팅을 시작했습니다.`
+        : `New Chat Session created by ${nickname || "a user"}`;
     await createNewAdminNotification(messages, userId, "chat", orderId);
     res.status(201).json(message);
   } catch (err) {

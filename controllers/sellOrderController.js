@@ -614,11 +614,11 @@ export const getAllCompletedMatchedOrders = async (req, res) => {
   }
 };
 
-// ~! yet to complete
 
 export const completeOrders = async (req, res) => {
   try {
     const { buyerOrderId, sellerOrderId, storedLanguage } = req.body;
+    console.log("🚀 ~ completeOrders ~ storedLanguage:", storedLanguage)
 
     const buyOrderMatches = buyerOrderId;
 
