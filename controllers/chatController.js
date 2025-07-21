@@ -9,9 +9,17 @@ import { createNewAdminNotification } from "./notificationController.js";
 
 export const saveMessage = async (req, res) => {
   try {
-    const { orderId, orderType, image, sender, content,currentOrderInProgress , storedLanguage  } = req.body;
-    console.log("🚀 ~ saveMessage ~ orderType:", orderType)
-    console.log("🚀 ~ saveMessage ~ storedLanguage:", storedLanguage)
+    const {
+      orderId,
+      orderType,
+      image,
+      sender,
+      content,
+      currentOrderInProgress,
+      storedLanguage,
+    } = req.body;
+    console.log("🚀 ~ saveMessage ~ orderType:", orderType);
+    console.log("🚀 ~ saveMessage ~ storedLanguage:", storedLanguage);
     const nickname = req.user.nickname;
     const userId = req.user.id;
 
@@ -30,12 +38,46 @@ export const saveMessage = async (req, res) => {
           .status(400)
           .json({ message: "Order type is required to create a new session." });
       }
-      chat = new ChatSession({
-        orderId,
-        currentOrderInProgress,
-        orderType,
-      });
-      await chat.save();
+
+      let buyOrder, sellOrder;
+
+      if (orderType === "buy") {
+        buyOrder = await BuyOrder.findById(orderId);
+
+        if (!buyOrder)
+          return res.status(404).json({ error: "Buy order not found" });
+
+        chat = new ChatSession({
+          orderId,
+          currentOrderInProgress,
+          orderType,
+          nickname: buyOrder.buyerNickname,
+        });
+        console.log("🚀 ~ saveMessage ~ chat:", chat)
+        await chat.save();
+      }
+
+       if (orderType === "sell") {
+        sellOrder = await SellOrder.findById(orderId);
+        if (!sellOrder)
+          return res.status(404).json({ error: "Sell order not found" });
+
+        chat = new ChatSession({
+          orderId,
+          currentOrderInProgress,
+          orderType,
+          nickname: sellOrder.sellerNickname,
+        });
+        console.log("🚀 ~ saveMessage ~ chat:", chat)
+        await chat.save();
+      }
+
+      // chat = new ChatSession({
+      //   orderId,
+      //   currentOrderInProgress,
+      //   orderType,
+      // });
+      // await chat.save();
     }
 
     // If session is closed, block the message
@@ -51,7 +93,8 @@ export const saveMessage = async (req, res) => {
       timestamp: new Date().toISOString(),
     });
     await message.save();
-    const messages = storedLanguage === "ko"
+    const messages =
+      storedLanguage === "ko"
         ? `${nickname || "사용자"}님이 새로운 1:1 채팅을 시작했습니다.`
         : `New Chat Session created by ${nickname || "a user"}`;
     await createNewAdminNotification(messages, userId, "chat", orderId);
@@ -197,6 +240,8 @@ export const closeChat = async (req, res) => {
 
     await ChatModel.deleteMany({ orderId });
     const session = await ChatSession.findOneAndDelete({ orderId });
+    // await ChatSession.deleteOne({ orderId });
+    console.log("🚀 ~ closeChat ~ session:", session);
 
     res.status(200).json({ message: "Chat closed", session });
   } catch (err) {
