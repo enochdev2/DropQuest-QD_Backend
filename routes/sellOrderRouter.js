@@ -14,6 +14,7 @@ import {
   getAllInProgressApprovalOrders,
   getAllOnSaleOrders,
   getAllPendingApprovalOrders,
+  getManagerDashboardStats,
   getPendingSellOrders,
   getSummaryStats,
   getUserInProgressOrders,
@@ -92,4 +93,11 @@ router.post(
 );
 router.post("/admin/cancel-orders", authenticate, authorizeAdmin, cancelTrade);
 
+
+// &  Manager Dashboard Routes
+router.get(
+  "/manager/getallstats",
+  authenticate,
+  getManagerDashboardStats
+);
 export default router;

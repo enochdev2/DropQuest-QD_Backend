@@ -1162,3 +1162,45 @@ export const getAdminDashboardStats = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch admin dashboard stats" });
   }
 };
+export const getManagerDashboardStats = async (req, res) => {
+  try {
+    // Count users
+    const userCountPromise = userModel.countDocuments();
+
+    // Total sale amount from completed sell orders
+    const totalSalesPromise = SellOrder.aggregate([
+      { $match: { status: "Sale Completed" } },
+      { $group: { _id: null, totalSalesAmount: { $sum: "$amount" } } },
+    ]);
+
+    // Total buy amount from completed buy orders
+    const totalBuysPromise = BuyOrder.aggregate([
+      { $match: { status: "Buy Completed" } },
+      { $group: { _id: null, totalBuyAmount: { $sum: "$amount" } } },
+    ]);
+
+    // Total fee from completed buy orders
+    const totalFeesPromise = BuyOrder.aggregate([
+      { $match: { status: "Buy Completed", fee: { $ne: null } } },
+      { $group: { _id: null, totalFees: { $sum: "$fee" } } },
+    ]);
+
+    // Await all promises
+    const [userCount, sales, buys, fees] = await Promise.all([
+      userCountPromise,
+      totalSalesPromise,
+      totalBuysPromise,
+      totalFeesPromise,
+    ]);
+
+    res.json({
+      users: userCount,
+      totalSales: sales[0]?.totalSalesAmount || 0,
+      totalBuys: buys[0]?.totalBuyAmount || 0,
+      totalFees: fees[0]?.totalFees || 0,
+    });
+  } catch (error) {
+    console.error("Dashboard stats error:", error);
+    res.status(500).json({ error: "Failed to fetch admin dashboard stats" });
+  }
+};
