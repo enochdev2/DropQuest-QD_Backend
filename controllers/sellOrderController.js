@@ -1162,7 +1162,7 @@ export const getAdminDashboardStats = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch admin dashboard stats" });
   }
 };
-export const getManagerDashboardStats = async (req, res) => {
+export const getManagerDashboardStat = async (req, res) => {
   try {
     // Count users
     const userCountPromise = userModel.countDocuments();
@@ -1204,3 +1204,89 @@ export const getManagerDashboardStats = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch admin dashboard stats" });
   }
 };
+
+export const getManagerDashboardStats = async (req, res) => {
+  try {
+     // Get the userId of the logged-in user (assumed to be the manager)
+    const userId = req.user.id;
+
+    // Fetch the user document to get the manager's referral code
+    const user = await userModel
+      .findById(userId)
+      .select("referralCode");
+
+    // Check if the user exists and has a referralCode
+    if (!user || !user.referralCode) {
+      return res.status(404).json({ error: "Manager not found or missing referral code" });
+    }
+
+    const managerReferralCode = user.referralCode
+
+    // 1. Count users who are not managers and have the same referral code as the manager
+    const userCountPromise = userModel.countDocuments({
+      referralCode: managerReferralCode,
+      admin: { $ne: true }  // Exclude managers (admin: true)
+    });
+
+    // 2. Total sale amount from completed sell orders where the user is referred by the manager
+    const totalSalesPromise = SellOrder.aggregate([
+      { $match: { status: "Sale Completed" } },
+      { $lookup: {
+        from: "users", 
+        localField: "userId", 
+        foreignField: "_id", 
+        as: "user"
+      }},
+      { $unwind: "$user" },
+      { $match: { "user.referralCode": managerReferralCode } },  // Filter by manager's referral code
+      { $group: { _id: null, totalSalesAmount: { $sum: "$amount" } } }
+    ]);
+
+    // 3. Total buy amount from completed buy orders where the user is referred by the manager
+    const totalBuysPromise = BuyOrder.aggregate([
+      { $match: { status: "Buy Completed" } },
+      { $lookup: {
+        from: "users", 
+        localField: "userId", 
+        foreignField: "_id", 
+        as: "user"
+      }},
+      { $unwind: "$user" },
+      { $match: { "user.referralCode": managerReferralCode } },  // Filter by manager's referral code
+      { $group: { _id: null, totalBuyAmount: { $sum: "$amount" } } }
+    ]);
+
+    // 4. Total fee from completed buy orders where the user is referred by the manager
+    const totalFeesPromise = BuyOrder.aggregate([
+      { $match: { status: "Buy Completed", fee: { $ne: null } } },
+      { $lookup: {
+        from: "users", 
+        localField: "userId", 
+        foreignField: "_id", 
+        as: "user"
+      }},
+      { $unwind: "$user" },
+      { $match: { "user.referralCode": managerReferralCode } },  // Filter by manager's referral code
+      { $group: { _id: null, totalFees: { $sum: "$fee" } } }
+    ]);
+
+    // Await all promises
+    const [userCount, sales, buys, fees] = await Promise.all([
+      userCountPromise,
+      totalSalesPromise,
+      totalBuysPromise,
+      totalFeesPromise,
+    ]);
+
+    res.json({
+      users: userCount,
+      totalSales: sales[0]?.totalSalesAmount || 0,
+      totalBuys: buys[0]?.totalBuyAmount || 0,
+      totalFees: fees[0]?.totalFees || 0,
+    });
+  } catch (error) {
+    console.error("Dashboard stats error:", error);
+    res.status(500).json({ error: "Failed to fetch manager dashboard stats" });
+  }
+};
+
