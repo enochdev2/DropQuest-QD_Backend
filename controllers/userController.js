@@ -351,6 +351,36 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+export const getManagerUsers = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await userModel.findById(userId).select("referralCode");
+
+    // Check if the manager exists and has a referral code
+    if (!user || !user.referralCode) {
+      return res
+        .status(404)
+        .json({ error: "Manager not found or missing referral code" });
+    }
+
+    const managerReferralCode = user.referralCode;
+
+    // Get all users who registered through this manager's referral code
+    const users = await userModel
+      .find({
+        referralCode: managerReferralCode,
+        admin: { $ne: true }, // Exclude managers
+      })
+      .select("nickname username phone fullName bankName"); // Specify fields to select
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error fetching manager's users:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Get single user by username (instead of wallet address)
 export const getUserProfile = async (req, res) => {
   try {

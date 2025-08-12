@@ -13,7 +13,8 @@ import {
   verifyPhoneNumber,
   editUserImage,
   sendVerificationCode,
-  checkNicknameExists
+  checkNicknameExists,
+  getManagerUsers
 } from "../controllers/userController.js";
 import multer from 'multer';
 
@@ -25,6 +26,7 @@ const router = express.Router();
 router.post("/users", createUserProfile); // Register new user
 router.get("/check-nickname/:nickname", checkNicknameExists);
 router.get("/users", authenticate, authorizeAdmin, getAllUsers); // Get all users
+router.get("/manager/users", authenticate, getManagerUsers); // Get all users
 router.post("/users/verify", verifyPhoneNumber);
 router.post("/users/sendCode", sendVerificationCode);
 router.post("/users/resendverify", resendVerificationCode);

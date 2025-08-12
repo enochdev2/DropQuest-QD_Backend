@@ -60,6 +60,7 @@ const userSchema = new Schema(
       required: true,
       unique: true,
     },
+    
     telegram: {
       type: String,
       required: true,
@@ -82,6 +83,12 @@ const userSchema = new Schema(
     status: {
       type: String,
       default: "inactive",
+    },
+
+    // Manager field to mark if a user is a manager
+    manager: {
+      type: Boolean,
+      default: false, // Assume users are not admins by default
     },
 
     // Admin field to mark if a user is an admin
