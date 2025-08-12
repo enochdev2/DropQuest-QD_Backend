@@ -372,7 +372,7 @@ export const getManagerUsers = async (req, res) => {
         referralCode: managerReferralCode,
         admin: { $ne: true }, // Exclude managers
       })
-      .select("nickname username phone fullName bankName"); // Specify fields to select
+      .select("nickname username phone fullName bankName dob"); // Specify fields to select
 
     res.status(200).json(users);
   } catch (error) {
