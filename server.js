@@ -1,43 +1,23 @@
-import express from "express";
-import morgan from "morgan";
-import cors from "cors";
 import bodyParse from "body-parser";
-import connectDB from "./config/db.js";
-import http from "http";
-import { Server } from "socket.io";
-import userRouter from "./routes/userRouter.js";
-// import feeRouter from "./routes/feeRouter.js";
-import notificationRouter from "./routes/notificationRouter.js";
-import sellOrderRouter from "./routes/sellOrderRouter.js";
-import buyOrderRouter from "./routes/buyOrderRoutes.js";
-import inquiryRouter from "./routes/inquiryRouter.js";
-import tetherPriceRouter from "./routes/tetherPriceRouter.js";
-import chatRouter from "./routes/chatRouter.js";
-import uploadRoute from "./routes/upload.js";
 import cookieParser from "cookie-parser";
+import cors from "cors";
+import express from "express";
+import http from "http";
+import morgan from "morgan";
+import connectDB from "./config/db.js";
+import notificationRouter from "./routes/notificationRouter.js";
+import uploadRoute from "./routes/upload.js";
+import userRouter from "./routes/userRouter.js";
+import pointsRouter from "./routes/ponitsRouter.js";
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: [
-      "https://tether-p2p.vercel.app",
-      "http://localhost:5173",
-      "https://www.tetherzone-p2p.com",
-      "https://tetherzone-p2p.com",
-    ], // Allow only localhost:5173
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
-    credentials: true,
-  },
-  path: "/socket.io",
-});
+
 // auto import routes
 // const { readdirSync } = require("fs");
 
 // connect db
 connectDB();
-//Twilio Auth Token -- 516c74e562566c0ff9e76348ef81b409
-//Twilio Account SID --
 
 const corsOptions = {
   origin: [
@@ -66,84 +46,12 @@ app.get("/", (req, res) => {
 
 
 app.use("/api/v1/user", userRouter);
-// app.use("/api/v1/fee", feeRouter);
+app.use("/api/v1/point", pointsRouter);
 app.use("/api/v1/notification", notificationRouter);
-app.use("/api/v1/sell", sellOrderRouter);
-app.use("/api/v1/tetherprice", tetherPriceRouter);
-app.use("/api/v1/buy", buyOrderRouter);
-app.use("/api/v1/inquiry", inquiryRouter);
-app.use("/api/v1/chat", chatRouter);
 app.use("/api/v1/upload", uploadRoute);
 
-app.get('/sms/status-report', (req, res) => {
-  const {
-    id,
-    reference,
-    recipient,
-    status,
-    statusDescription,
-    statusDatetime
-  } = req.query;
-
-  console.log("SMS Delivery Report:", {
-    id,
-    reference,
-    recipient,
-    status,
-    statusDescription,
-    statusDatetime
-  });
-
-  res.sendStatus(200); // Must return 200 OK
-});
-
-let rooms = {}; // Store rooms and their participants
-const userSocketMap = {}; // Map userId => socket.id
-const roleRoomMap = { admin: "admin" };
-
-io.on("connection", (socket) => {
-  console.log("New client connected");
-
-  // Handle joining a room
-  socket.on("joinRoom", (orderId) => {
-    socket.join(orderId); // Join room based on orderId
-    console.log(`Client joined room: ${orderId}`);
-  });
-
-  socket.on("registerUser", ({ userId, role }) => {
-    userSocketMap[userId] = socket.id;
-    if (role) {
-      socket.join(role); // Join 'admin' room, etc.
-    }
-    console.log(`User ${userId} with role ${role} registered`);
-  });
-
-  // Handle leaving a room
-  socket.on("leaveRoom", (orderId) => {
-    socket.leave(orderId);
-    console.log(`Client left room: ${orderId}`);
-  });
-
-  // Handle receiving and emitting messages
-  socket.on("sendMessage", (message) => {
-    const { orderId } = message;
-    io.to(orderId).emit("message", message); // Broadcast message to the specific room
-    console.log(`Message sent to room ${orderId}: ${message.content}`);
-  });
-
-  socket.on("disconnect", () => {
-     for (const [uid, sid] of Object.entries(userSocketMap)) {
-      if (sid === socket.id) delete userSocketMap[uid];
-    }
-    console.log("Client disconnected");
-  });
-});
 
 const PORT = process.env.PORT || 3000;
-// app.listen(PORT, () =>
-//   console.log(`Server is running on port: ${PORT}  🎉🎉🎉`)
-// );
-
-server.listen(PORT, () => {
-  console.log(`Server is running on port: ${PORT} 🎉🎉🎉`);
-});
+app.listen(PORT, () =>
+  console.log(`Server is running on port: ${PORT}  🎉🎉🎉`)
+);

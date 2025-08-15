@@ -1,104 +1,59 @@
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
+import crypto from "crypto";
 const Schema = mongoose.Schema;
 
-// User schema definition
 const userSchema = new Schema(
   {
-    // Added username field
-    username: {
-      type: String,
-      required: true,
-      lowercase: true,
-    },
-
-    // Added nickname field
-    nickname: {
+    email: {
       type: String,
       required: true,
       unique: true,
     },
-
     password: {
       type: String,
       required: true,
     },
-
-    // Added full name field
-    fullName: {
+    name: {
       type: String,
       required: true,
     },
-
-    // Added date of birth field
-    dob: {
-      type: String,
-      required: true,
-    },
-
     // Added phone number field
     phone: {
       type: String,
       required: true,
     },
 
-    // Added bank name field
-    bankName: {
-      type: String,
-      required: true,
-    },
-
-    // Added bank account number field
-    bankAccount: {
-      type: Number,
-      required: true,
-    },
-
-    // Added tether address field
-    tetherAddress: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    
-    telegram: {
-      type: String,
-      required: true,
-      // unique: true,
-    },
-
-    tetherIdImage: {
-      type: String,
-      required: true,
-    },
-
-    // Added referral code field
-    referralCode: {
+    telegramId: {
       type: String,
       required: true,
     },
     isVerified: { type: Boolean, default: false },
-
-    // Added status field, default value is 'inactive'
-    status: {
-      type: String,
-      default: "inactive",
-    },
-
-    // Manager field to mark if a user is a manager
-    manager: {
-      type: Boolean,
-      default: false, // Assume users are not admins by default
-    },
-
-    // Admin field to mark if a user is an admin
     admin: {
       type: Boolean,
       default: false, // Assume users are not admins by default
     },
+    // Referral system fields
+    referralCode: {
+      type: String,
+      unique: true,
+    },
+    referredBy: {
+      type: String,
+      default: null,
+    },
+    points: { type: mongoose.Schema.Types.ObjectId, ref: "Points" },
   },
   { timestamps: true }
 );
+
+// Generate referral code before saving
+userSchema.pre("save", async function (next) {
+  if (!this.referralCode) {
+    this.referralCode = crypto.randomBytes(4).toString("hex").toUpperCase();
+  }
+  next();
+});
 
 // Hash password before saving the user document
 userSchema.pre("save", async function (next) {
@@ -118,19 +73,18 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password); // Compare hashed password
 };
 
-// Model export
 export const userModel = mongoose.model("User", userSchema);
 
 // Utility functions
 export const getUsers = () => userModel.find();
-export const getUserByNickname = (nickname) => userModel.findOne({ nickname });
+export const getUserByEmail = (email) => userModel.findOne({ email });
 export const createUser = async (values) => {
   const user = new userModel(values);
   await user.save();
   return user.toObject();
 };
-export const deleteUserByNickname = (nickname) =>
-  userModel.findOneAndDelete({ nickname });
+export const deleteUserByEmail = (email) =>
+  userModel.findOneAndDelete({ email });
 
-export const updateUserByNickname = (nickname, values, newOption = true) =>
-  userModel.findOneAndUpdate({ nickname }, values, { new: newOption });
+export const updateUserByEmail = (email, values, newOption = true) =>
+  userModel.findOneAndUpdate({ email }, values, { new: newOption });
