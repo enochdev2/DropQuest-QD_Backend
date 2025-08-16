@@ -9,6 +9,8 @@ import notificationRouter from "./routes/notificationRouter.js";
 import uploadRoute from "./routes/upload.js";
 import userRouter from "./routes/userRouter.js";
 import pointsRouter from "./routes/ponitsRouter.js";
+import announcement from "./routes/announcementRouter.js";
+import { startCronJobs } from "./job.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -47,11 +49,15 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/point", pointsRouter);
+app.use("/api/v1/announcement", announcement);
 app.use("/api/v1/notification", notificationRouter);
 app.use("/api/v1/upload", uploadRoute);
+
+startCronJobs();
 
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>
   console.log(`Server is running on port: ${PORT}  🎉🎉🎉`)
 );
+ 

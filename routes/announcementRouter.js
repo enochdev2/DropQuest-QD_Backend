@@ -4,7 +4,7 @@ import {
   getAllAnnouncements,
   getAnnouncementById,
   deleteAnnouncement,
-} from "../controllers/announcementController.js";
+} from "../controllers/annoucementController.js";
 
 const router = express.Router();
 

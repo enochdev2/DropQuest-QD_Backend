@@ -1,7 +1,6 @@
 import { MongoClient } from 'mongodb';
 
 // MongoDB Atlas connection string
-const uri = "mongodb+srv://enochpromiseva:Enoch2558@usdtp2p.ilws8ja.mongodb.net/?retryWrites=true&w=majority&appName=UsdtP2P"; // Replace with your connection string
 
 // Sample documents to insert into MongoDB
 

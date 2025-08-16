@@ -4,13 +4,13 @@ import { userModel } from "../models/userModel.js"; // Assuming you have a user 
 // Function to create a new announcement
 export const createAnnouncement = async (req, res) => {
   const { title, content } = req.body;
-  const createdBy = req.user._id; // Assuming the admin is logged in
+  // const createdBy = req.user._id; // Assuming the admin is logged in
 
   try {
     const newAnnouncement = new announcementModel({
       title,
       content,
-      createdBy,
+      // createdBy,
     });
 
     await newAnnouncement.save();
@@ -27,7 +27,7 @@ export const createAnnouncement = async (req, res) => {
 // Function to get all announcements
 export const getAllAnnouncements = async (req, res) => {
   try {
-    const announcements = await announcementModel.find({ isDeleted: false });
+    const announcements = await announcementModel.find();
     res.status(200).json(announcements);
   } catch (error) {
     console.error("Error fetching announcements:", error);
