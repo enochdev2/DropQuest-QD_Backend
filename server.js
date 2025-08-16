@@ -24,9 +24,8 @@ connectDB();
 const corsOptions = {
   origin: [
     "http://localhost:5173",
-    "https://tether-p2p.vercel.app",
+    "https://drop-quest-qd.vercel.app",
     "https://www.tetherzone-p2p.com",
-    "https://tetherzone-p2p.com",
   ],
   credentials: true,
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
