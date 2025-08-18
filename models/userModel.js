@@ -46,6 +46,10 @@ const userSchema = new Schema(
       type: String,
       default: null,
     },
+    referredByEmail: {
+      type: String,
+      default: null,
+    },
     points: { type: mongoose.Schema.Types.ObjectId, ref: "Points" },
   },
   { timestamps: true }

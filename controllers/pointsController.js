@@ -120,7 +120,7 @@ export const claimPoints = async (req, res) => {
 
     let referredBy = user.referredBy;
     if (referredBy) { 
-      let referrer = await userModel.findOne({userId: referredBy});
+      let referrer = await pointsModel.findOne({userId: referredBy});
       if (referrer) {
         referrer.totalPoints += 10; // Add 10 points to the referrer
         await referrer.save();

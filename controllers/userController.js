@@ -50,7 +50,8 @@ export const createUserProfile = async (req, res) => {
       phone,
       telegramId,
       referredBy: referredBy._id || null,
-      referredByName: referredBy.email || null,
+      referredByName: referredBy.name || null,
+      referredByEmail: referredBy.email || null,
     });
 
     // create points for this user
