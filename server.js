@@ -24,6 +24,7 @@ connectDB();
 const corsOptions = {
   origin: [
     "http://localhost:5173",
+    "https://www.drop-quest.com",
     "https://drop-quest-qd.vercel.app",
     "https://www.drop-quest.com/",
   ],
