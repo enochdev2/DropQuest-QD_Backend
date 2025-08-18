@@ -25,7 +25,7 @@ const corsOptions = {
   origin: [
     "http://localhost:5173",
     "https://drop-quest-qd.vercel.app",
-    "https://www.tetherzone-p2p.com",
+    "https://www.drop-quest.com/",
   ],
   credentials: true,
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
