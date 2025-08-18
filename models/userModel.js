@@ -42,6 +42,10 @@ const userSchema = new Schema(
       type: String,
       default: null,
     },
+    referredByName: {
+      type: String,
+      default: null,
+    },
     points: { type: mongoose.Schema.Types.ObjectId, ref: "Points" },
   },
   { timestamps: true }
@@ -88,3 +92,4 @@ export const deleteUserByEmail = (email) =>
 
 export const updateUserByEmail = (email, values, newOption = true) =>
   userModel.findOneAndUpdate({ email }, values, { new: newOption });
+ 

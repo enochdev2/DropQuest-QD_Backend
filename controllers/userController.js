@@ -24,7 +24,7 @@ const generateToken = (user) => {
 
 export const createUserProfile = async (req, res) => {
   try {
-    const { email, password, name, phone, telegramId, referredBy } = req.body;
+    const { email, password, name, phone, telegramId, referralCode } = req.body;
 
     if (!email || !password || !phone || !name || !telegramId) {
       res.status(400).json({
@@ -32,6 +32,7 @@ export const createUserProfile = async (req, res) => {
       });
       return;
     }
+    const referredBy = userModel.findOne({referralCode: referralCode})
 
     const existingUser = await getUserByEmail(email);
 
@@ -48,7 +49,8 @@ export const createUserProfile = async (req, res) => {
       name,
       phone,
       telegramId,
-      referredBy: referredBy || null,
+      referredBy: referredBy._id || null,
+      referredByName: referredBy.email || null,
     });
 
     // create points for this user
@@ -77,7 +79,7 @@ export const createUserProfile = async (req, res) => {
 // Get all users referred by a specific code
 export const getReferralList = async (req, res) => {
   const { referralCode } = req.params;
-  console.log("🚀 ~ getReferralList ~ referralCode:", referralCode)
+  console.log("🚀 ~ getReferralList ~ referralCode:", referralCode);
 
   try {
     const referredUsers = await userModel
@@ -86,7 +88,7 @@ export const getReferralList = async (req, res) => {
         { name: 1, email: 1, createdAt: 1 } // only select needed fields
       )
       .sort({ createdAt: -1 });
-    console.log("🚀 ~ getReferralList ~ referredUsers:", referredUsers)
+    console.log("🚀 ~ getReferralList ~ referredUsers:", referredUsers);
 
     res.status(200).json(referredUsers);
   } catch (error) {
@@ -204,8 +206,46 @@ export const logoutUser = (req, res) => {
 // Get all users
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await getUsers();
+    const users = await userModel.find().populate({
+      path: "points",
+      model: "Points",
+      select: "points totalPoints lastClaimed", // exclude unwanted fields
+    });
     res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getTotalUsers = async (req, res) => {
+  try {
+    // Count the number of users in the database
+    const userCount = await userModel.find().countDocuments();
+    const totalPoints = await pointsModel.aggregate([
+      {
+        $lookup: {
+          from: "users", // Joining with the users collection
+          localField: "userId",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      { $unwind: "$userDetails" },
+      {
+        $group: {
+          _id: null, // No grouping by any field, just to sum all points
+          totalPoints: { $sum: "$points" }, // Sum all points
+        },
+      },
+    ]);
+
+    // If totalPoints array is empty, return 0, otherwise, return the total points
+    const total = totalPoints.length > 0 ? totalPoints[0].totalPoints : 0;
+
+    // res.status(200).json({ totalPoints: total });
+
+    // Return the count as the response
+    res.status(200).json({ totalUsers: userCount, totalPoints: total });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -229,7 +269,7 @@ export const getUserProfile = async (req, res) => {
       model: "Points",
       select: "points totalPoints lastClaimed", // exclude unwanted fields
     });
-    
+
     if (!user) {
       res.status(404).json({ message: "User not found" });
     }

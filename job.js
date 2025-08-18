@@ -17,8 +17,8 @@ import { pointsModel } from "./models/pointsModel.js";
 
 export const startCronJobs = () => {
   // Run every day at midnight
-  cron.schedule("0 0 * * *", async () => {
-  // cron.schedule("* * * * *", async () => {
+  // cron.schedule("0 0 * * *", async () => {
+  cron.schedule("* * * * *", async () => {
     try {
       await pointsModel.updateMany({}, { points: 100 });
       console.log("✅ Points have been refilled for all users at midnight.");

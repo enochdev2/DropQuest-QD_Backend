@@ -110,9 +110,22 @@ export const modifyPoints = async (req, res) => {
 // Function to claim points (only once per day)
 export const claimPoints = async (req, res) => {
   const { userId } = req.body;
-  console.log("🚀 ~ claimPoints ~ userId:", userId)
+  console.log("🚀 ~ claimPoints ~ userId:", userId);
 
   try {
+    let user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    } 
+
+    let referredBy = user.referredBy;
+    if (referredBy) { 
+      let referrer = await userModel.findOne({userId: referredBy});
+      if (referrer) {
+        referrer.totalPoints += 10; // Add 10 points to the referrer
+        await referrer.save();
+      }
+    }
     let userPoints = await pointsModel.findOne({ userId });
 
     if (!userPoints) {
