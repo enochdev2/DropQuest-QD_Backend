@@ -17,13 +17,31 @@ import { pointsModel } from "./models/pointsModel.js";
 
 export const startCronJobs = () => {
   // Run every day at midnight
-  // cron.schedule("0 0 * * *", async () => {
-  cron.schedule("* * * * *", async () => {
-    try {
-      await pointsModel.updateMany({}, { points: 100 });
-      console.log("✅ Points have been refilled for all users at midnight.");
-    } catch (error) {
-      console.error("❌ Error refilling points:", error);
+
+  cron.schedule(
+    "0 0 * * *", // every day at 00:00
+    async () => {
+      try {
+        await pointsModel.updateMany({}, { points: 100 });
+        console.log(
+          "✅ Points have been refilled for all users at Korea midnight (KST)."
+        );
+      } catch (error) {
+        console.error("❌ Error refilling points:", error);
+      }
+    },
+    {
+      scheduled: true,
+      timezone: "Asia/Seoul", // 🔥 set timezone to Korea
     }
-  });
+  );
+  // cron.schedule("* * * * *", async () => {
+  // cron.schedule("0 0 * * *", async () => {
+  //   try {
+  //     await pointsModel.updateMany({}, { points: 100 });
+  //     console.log("✅ Points have been refilled for all users at midnight.");
+  //   } catch (error) {
+  //     console.error("❌ Error refilling points:", error);
+  //   }
+  // });
 };
