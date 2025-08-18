@@ -110,7 +110,6 @@ export const modifyPoints = async (req, res) => {
 // Function to claim points (only once per day)
 export const claimPoints = async (req, res) => {
   const { userId } = req.body;
-  console.log("🚀 ~ claimPoints ~ userId:", userId);
 
   try {
     let user = await userModel.findById(userId);

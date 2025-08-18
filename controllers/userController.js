@@ -25,6 +25,7 @@ const generateToken = (user) => {
 export const createUserProfile = async (req, res) => {
   try {
     const { email, password, name, phone, telegramId, referralCode } = req.body;
+    console.log("🚀 ~ createUserProfile ~ referralCode:", referralCode)
 
     if (!email || !password || !phone || !name || !telegramId) {
       res.status(400).json({
@@ -32,7 +33,7 @@ export const createUserProfile = async (req, res) => {
       });
       return;
     }
-    const referredBy = userModel.findOne({referralCode: referralCode})
+    const referredBy = await userModel.findOne({referralCode: referralCode})
 
     const existingUser = await getUserByEmail(email);
 
