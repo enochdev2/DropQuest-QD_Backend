@@ -80,19 +80,19 @@ export const createUserProfile = async (req, res) => {
 
 // Get all users referred by a specific code
 export const getReferralList = async (req, res) => {
-  const { userId } = req.user;
+  const { id } = req.user;
+  console.log("🚀 ~ getReferralList ~ userId:", id)
   
   const { referralCode } = req.params;
-  console.log("🚀 ~ getReferralList ~ referralCode:", referralCode);
 
   try {
     const referredUsers = await userModel
       .find(
-        { referredBy: userId },
-        { name: 1, email: 1, createdAt: 1, totalPoints: 1 } // only select needed fields
-      )
-      .sort({ createdAt: -1 });
-    console.log("🚀 ~ getReferralList ~ referredUsers:", referredUsers);
+        { referredBy: id },
+         { name: 1, email: 1, createdAt: 1, points: 1 } 
+    )
+    .populate("points", "totalPoints") // Populate the 'points' field with 'totalPoints' from the Points model
+    .sort({ createdAt: -1 });
 
     res.status(200).json(referredUsers);
   } catch (error) {
