@@ -89,7 +89,7 @@ export const getReferralList = async (req, res) => {
     const referredUsers = await userModel
       .find(
         { referredBy: userId },
-        { name: 1, email: 1, createdAt: 1 } // only select needed fields
+        { name: 1, email: 1, createdAt: 1, totalPoints: 1 } // only select needed fields
       )
       .sort({ createdAt: -1 });
     console.log("🚀 ~ getReferralList ~ referredUsers:", referredUsers);
