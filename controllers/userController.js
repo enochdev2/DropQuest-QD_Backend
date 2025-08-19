@@ -33,7 +33,13 @@ export const createUserProfile = async (req, res) => {
       });
       return;
     }
-    const referredBy = await userModel.findOne({referralCode: referralCode})
+
+    let referredBy
+
+    if(referralCode){
+
+       referredBy = await userModel.findOne({referralCode: referralCode})
+    }
 
     const existingUser = await getUserByEmail(email);
 
@@ -50,9 +56,9 @@ export const createUserProfile = async (req, res) => {
       name,
       phone,
       telegramId,
-      referredBy: referredBy._id || null,
-      referredByName: referredBy.name || null,
-      referredByEmail: referredBy.email || null,
+      referredBy: referredBy?._id || null,
+      referredByName: referredBy?.name || null,
+      referredByEmail: referredBy?.email || null,
     });
 
     // create points for this user
