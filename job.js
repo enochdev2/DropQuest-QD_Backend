@@ -21,6 +21,7 @@ export const startCronJobs = () => {
   cron.schedule(
     "0 0 * * *", // every day at 00:00
     async () => {
+    // cron.schedule("* * * * *", async () => {
       try {
         await pointsModel.updateMany({}, { points: 100 });
         console.log(

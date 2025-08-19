@@ -80,13 +80,15 @@ export const createUserProfile = async (req, res) => {
 
 // Get all users referred by a specific code
 export const getReferralList = async (req, res) => {
+  const { userId } = req.user;
+  
   const { referralCode } = req.params;
   console.log("🚀 ~ getReferralList ~ referralCode:", referralCode);
 
   try {
     const referredUsers = await userModel
       .find(
-        { referredBy: referralCode },
+        { referredBy: userId },
         { name: 1, email: 1, createdAt: 1 } // only select needed fields
       )
       .sort({ createdAt: -1 });
