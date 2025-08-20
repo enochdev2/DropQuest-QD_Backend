@@ -5,11 +5,12 @@ import {
   getAnnouncementById,
   deleteAnnouncement,
 } from "../controllers/annoucementController.js";
+import { authenticate, authorizeAdmin } from "../middleware/autheticate.js";
 
 const router = express.Router();
 
 // Route to create a new announcement
-router.post("/announcements", createAnnouncement);
+router.post("/announcements", authenticate, authorizeAdmin, createAnnouncement);
 
 // Route to get all announcements
 router.get("/announcements", getAllAnnouncements);
