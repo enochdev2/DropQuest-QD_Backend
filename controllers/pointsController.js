@@ -149,6 +149,9 @@ export const claimPoints = async (req, res) => {
       userPoints.points = 0; // Reset points to 0 after claiming
 
       userPoints.lastClaimed = new Date();
+      userPoints.previosDayTwoClaimed = userPoints.PreviusDayOneClaimed;
+      userPoints.PreviusDayOneClaimed = userPoints.CurrentDayClaimed;
+      userPoints.CurrentDayClaimed = true;
 
       await userPoints.save();
       res.status(200).json({
