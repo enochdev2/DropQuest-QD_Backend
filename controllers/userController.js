@@ -277,7 +277,7 @@ export const getUserProfile = async (req, res) => {
     const user = await userModel.findOne({ email }).populate({
       path: "points",
       model: "Points",
-      select: "points totalPoints lastClaimed", // exclude unwanted fields
+      select: "points totalPoints lastClaimed CurrentDayClaimed PreviusDayOneClaimed previosDayTwoClaimed", // exclude unwanted fields
     });
 
     if (!user) {
