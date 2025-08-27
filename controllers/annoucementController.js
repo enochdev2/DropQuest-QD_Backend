@@ -33,13 +33,18 @@ export const createAnnouncement = async (req, res) => {
 
 export const EditAnnouncement = async (req, res) => {
   const { announcementId } = req.params;
-  const { title, content } = req.body;
+    const { 
+    title, 
+    titlekorean, 
+    content, 
+    contentkorean 
+  } = req.body;
   
   try {
     // Find the announcement by ID and update it
     const announcement = await announcementModel.findByIdAndUpdate(
       announcementId, // The ID of the announcement to update
-      { title, content }, // Fields to update
+      { title, titlekorean, content, contentkorean }, // Fields to update
       { new: true } // Return the updated announcement
     );
 
