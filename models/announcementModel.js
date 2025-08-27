@@ -7,7 +7,15 @@ const announcementSchema = new Schema(
       type: String,
       required: true,
     },
+    titlekorean: {
+      type: String,
+      required: true,
+    },
     content: {
+      type: String,
+      required: true,
+    },
+    contentkorean: {
       type: String,
       required: true,
     },

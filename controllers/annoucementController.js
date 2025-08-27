@@ -3,13 +3,20 @@ import { userModel } from "../models/userModel.js"; // Assuming you have a user 
 
 // Function to create a new announcement
 export const createAnnouncement = async (req, res) => {
-  const { title, content } = req.body;
+  const { 
+    title, 
+    titlekorean, 
+    content, 
+    contentkorean 
+  } = req.body;
   // const createdBy = req.user._id; // Assuming the admin is logged in
 
   try {
     const newAnnouncement = new announcementModel({
       title,
+      titlekorean,
       content,
+      contentkorean,
       // createdBy,
     });
 
