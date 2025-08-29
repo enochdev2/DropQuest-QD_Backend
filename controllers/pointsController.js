@@ -1,7 +1,6 @@
 import { pointsModel } from "../models/pointsModel.js";
 import { userModel } from "../models/userModel.js";
 
-
 // Function to get all users with their points
 export const getAllPoints = async (req, res) => {
   try {
@@ -56,33 +55,17 @@ export const searchUserPoints = async (req, res) => {
 // Function to grant/remove points for specific users
 export const modifyPoints = async (req, res) => {
   const { userId, points, action } = req.body;
-  if (action !== "grant" && action !== "remove") {
-    return res
-      .status(400)
-      .json({ error: "Action must be either 'grant' or 'remove'" });
-  }
-
   try {
     let userPoints = await pointsModel.findOne({ userId });
 
     if (!userPoints) {
       userPoints = new pointsModel({
         userId,
-        points: 0,
+        points: points,
         lastClaimed: new Date(),
       });
     }
 
-    userPoints.points =
-      action === "grant"
-        ? userPoints.points + points
-        : userPoints.points - points;
-
-    if (userPoints.points < 0) {
-      return res.status(400).json({ error: "Points cannot be negative" });
-    }
-
-    await userPoints.save();
     res.status(200).json({
       message: `Points successfully ${action}ed`,
       points: userPoints.points,
@@ -93,6 +76,30 @@ export const modifyPoints = async (req, res) => {
   }
 };
 
+export const modifyUserPoints = async (req, res) => {
+  const { userId, points } = req.body;
+  try {
+    // Find or create & update points directly
+    const userPoints = await pointsModel.findOneAndUpdate(
+      { userId },
+      {
+        $inc: { totalPoints: points }, // increase numbers
+        $set: { lastClaimed: new Date() },             // set date
+      },
+      { new: true, upsert: true } // create if not exist, return updated
+    );
+
+    res.status(200).json({
+      message: "Points successfully updated",
+      totalPoints: userPoints.totalPoints,
+    });
+  } catch (error) {
+    console.error("Error modifying points:", error);
+    res.status(500).json({ error: "Failed to modify points" });
+  }
+};
+
+
 // Function to claim points (only once per day)
 export const claimPoints = async (req, res) => {
   const { userId } = req.body;
@@ -101,11 +108,11 @@ export const claimPoints = async (req, res) => {
     let user = await userModel.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
-    } 
+    }
 
     let referredBy = user.referredBy;
-    if (referredBy) { 
-      let referrer = await pointsModel.findOne({userId: referredBy});
+    if (referredBy) {
+      let referrer = await pointsModel.findOne({ userId: referredBy });
       if (referrer) {
         referrer.totalPoints += 10; // Add 10 points to the referrer
         await referrer.save();
@@ -156,6 +163,7 @@ export const claimPoints = async (req, res) => {
     res.status(500).json({ error: "Failed to claim points" });
   }
 };
+
 export const UserPoints = async (req, res) => {
   const { userId } = req.body;
 
@@ -163,11 +171,11 @@ export const UserPoints = async (req, res) => {
     let user = await userModel.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
-    } 
+    }
 
     let referredBy = user.referredBy;
-    if (referredBy) { 
-      let referrer = await pointsModel.findOne({userId: referredBy});
+    if (referredBy) {
+      let referrer = await pointsModel.findOne({ userId: referredBy });
       if (referrer) {
         referrer.totalPoints += 10; // Add 10 points to the referrer
         await referrer.save();

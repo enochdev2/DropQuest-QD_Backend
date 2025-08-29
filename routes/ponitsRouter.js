@@ -4,6 +4,7 @@ import {
   searchUserPoints,
   modifyPoints,
   claimPoints,
+  modifyUserPoints,
 } from "../controllers/pointsController.js";
 import { authenticate, authorizeAdmin } from "../middleware/autheticate.js";
 
@@ -17,6 +18,7 @@ router.get("/points/search", searchUserPoints);
 
 // Route to grant/remove points for specific users
 router.put("/points/modify", modifyPoints);
+router.put("/points/usermodify", authenticate, authorizeAdmin, modifyUserPoints);
 
 // Route for users to claim points (once per day)
 router.post("/points/claim", authenticate,  claimPoints);
