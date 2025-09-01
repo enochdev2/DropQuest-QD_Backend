@@ -99,7 +99,6 @@ export const modifyUserPoints = async (req, res) => {
   }
 };
 
-
 // Function to claim points (only once per day)
 export const claimPoints = async (req, res) => {
   const { userId } = req.body;
