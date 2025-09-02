@@ -43,47 +43,68 @@ export const initSlot = async (req, res) => {
 
 // Get all slots for a user
 export const getUserSlots = async (req, res) => {
-    try {
-      const { userId } = req.params;
-      console.log("🚀 ~ getUserSlots ~ userId:", userId)
-      let slots
-      slots = await tokenSlotModel.find().sort({ slotId: 1 });
-      
-      res.status(200).json(slots);
-    } catch (error) {
-      console.error("Error fetching slots:", error);
-      res.status(500).json({ error: "Failed to fetch slots" });
-    }
+  try {
+    const { userId } = req.params;
+    console.log("🚀 ~ getUserSlots ~ userId:", userId);
+    let slots;
+    slots = await tokenSlotModel.find().sort({ slotId: 1 });
+
+    res.status(200).json(slots);
+  } catch (error) {
+    console.error("Error fetching slots:", error);
+    res.status(500).json({ error: "Failed to fetch slots" });
+  }
 };
 
 // Update one slot (e.g. BTC → GLM)
 export const updateSlot = async (req, res) => {
   try {
-    const { userId, slotId } = req.params;
-    const updateData = req.body; // { tokenName, pointRatio, img, etc. }
+    const {  name, slotId } = req.body;
+    console.log("🚀 ~ updateSlot ~ slotId:", slotId);
+    console.log("🚀 ~ updateSlot ~ name:", name);
 
-    const updated = await tokenSlotModel.findOneAndUpdate(
-      { userId, slotId },
-      { $set: updateData },
-      { new: true }
-    );
+    let updatedSlot;
+    if (name.toString() !== "GLM") {
+      updatedSlot = await tokenSlotsModel.findOneAndUpdate(
+        { _id:slotId },
+        {
+          $set: {
+            tokenName: "BTC",
+            pointRatio: "$???",
+            img: "https://raw.githubusercontent.com/enochdev2/token-metadata/main/DQ%20Bitcoin%20Image.png",
+          },
+        },
+        { new: true }
+      );
+    } else {
+      updatedSlot = await tokenSlotModel.findOneAndUpdate(
+        { _id: slotId },
+        {
+          $set: {
+            tokenName: "GLM",
+            pointRatio: "$GLM",
+            img: "https://raw.githubusercontent.com/enochdev2/token-metadata/main/Golem%20LOGO.png",
+          },
+        },
+        { new: true }
+      );
+    }
 
-    if (!updated) {
+    if (!updatedSlot) {
       return res.status(404).json({ error: "Slot not found" });
     }
 
-    res.status(200).json(updated);
+    res.status(200).json(updatedSlot);
   } catch (error) {
-    console.error("Error updating slot:", error);
+    console.error("Error updating slot:", error.message);
     res.status(500).json({ error: "Failed to update slot" });
   }
 };
 
-
 export const buySlot = async (req, res) => {
   try {
     const { userId, slotId } = req.body;
-    console.log("🚀 ~ buySlot ~ userId, slotId:", userId, slotId)
+    console.log("🚀 ~ buySlot ~ userId, slotId:", userId, slotId);
 
     // 1 GLM costs 1000 points
     const cost = 1000;
@@ -130,7 +151,6 @@ export const buySlot = async (req, res) => {
     res.status(500).json({ error: "Failed to buy slot" });
   }
 };
-
 
 export const initSlots = async (userId) => {
   try {

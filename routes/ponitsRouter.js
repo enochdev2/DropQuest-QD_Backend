@@ -28,7 +28,7 @@ router.post("/points/claim", authenticate,  claimPoints);
 
 router.post("/init-slots/:userId", initSlot);
 router.get("/slots/:userId", getUserSlots);
-router.put("/update-slot/:userId/:slotId", updateSlot);
+router.put("/updateslot", updateSlot);
 router.put("/buyslot", buySlot);
 
 export default router;
