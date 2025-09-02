@@ -71,7 +71,6 @@ export const createUserProfile = async (req, res) => {
 
     // link to user
     newUser.points = pointsDoc._id;
-    await initSlots(newUser._id);
     await newUser.save();
 
     const { password: _, ...userData } = newUser.toObject();

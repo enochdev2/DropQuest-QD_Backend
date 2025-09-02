@@ -1,5 +1,6 @@
 import { pointsModel } from "../models/pointsModel.js";
 import { tokenSlotModel } from "../models/tokenSlotModel.js";
+import { tokenSlotsModel } from "../models/tokenSlotsModel.js";
 
 // Initialize slots for a user (only once)
 export const initSlot = async (req, res) => {
@@ -46,9 +47,9 @@ export const getUserSlots = async (req, res) => {
       const { userId } = req.params;
       console.log("🚀 ~ getUserSlots ~ userId:", userId)
       let slots
-      slots = await tokenSlotModel.find({ userId }).sort({ slotId: 1 });
+      slots = await tokenSlotModel.find().sort({ slotId: 1 });
       if(slots.length === 0) {
-        slots = initSlots(userId);
+        slots = initSlots();
       }
       console.log("🚀 ~ getUserSlots ~ slots:", slots)
       res.status(200).json(slots);
@@ -136,13 +137,6 @@ export const buySlot = async (req, res) => {
 
 export const initSlots = async (userId) => {
   try {
-
-    // Check if slots already exist for this user
-    const existing = await tokenSlotModel.find({ userId });
-    if (existing.length > 0) {
-      return res.status(400).json({ error: "Slots already initialized" });
-    }
-
     // Create slots
     const initialSlots = [
       {
@@ -163,7 +157,7 @@ export const initSlots = async (userId) => {
       })),
     ];
 
-    await tokenSlotModel.insertMany(initialSlots);
+    await tokenSlotsModel.insertMany(initialSlots);
     res.status(201).json({ message: "Slots initialized successfully" });
   } catch (error) {
     console.error("Error initializing slots:", error);
