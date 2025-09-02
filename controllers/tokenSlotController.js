@@ -48,10 +48,7 @@ export const getUserSlots = async (req, res) => {
       console.log("🚀 ~ getUserSlots ~ userId:", userId)
       let slots
       slots = await tokenSlotModel.find().sort({ slotId: 1 });
-      if(slots.length === 0) {
-        slots = initSlots();
-      }
-      console.log("🚀 ~ getUserSlots ~ slots:", slots)
+      
       res.status(200).json(slots);
     } catch (error) {
       console.error("Error fetching slots:", error);
