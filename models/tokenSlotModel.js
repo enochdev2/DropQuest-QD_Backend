@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
-const tokenSlotSchema = new Schema(
+const tokenSchema = new Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -9,7 +9,8 @@ const tokenSlotSchema = new Schema(
       required: true,
     },
     slotId: {
-      type: Number,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "TokenSlots",
       required: true,
     },
     tokenName: {
@@ -20,6 +21,10 @@ const tokenSlotSchema = new Schema(
     pointRatio: {
       type: String, // e.g. "$GLM" or "$???"
       default: "$???",
+    },
+    pointExchanged: {
+      type: Number, // 
+      default: 0,
     },
     isConfigured: {
       type: Boolean,
@@ -33,4 +38,4 @@ const tokenSlotSchema = new Schema(
   { timestamps: true }
 );
 
-export const tokenSlotModel = mongoose.model("TokenSlot", tokenSlotSchema);
+export const tokenModel = mongoose.model("Token", tokenSchema);

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
-const tokenSlotsSchema = new Schema(
+const tokenSlotSchema = new Schema(
   {
     slotId: {
       type: Number,
@@ -28,4 +28,4 @@ const tokenSlotsSchema = new Schema(
   { timestamps: true }
 );
 
-export const tokenSlotsModel = mongoose.model("TokenSlots", tokenSlotsSchema);
+export const tokenSlotModel = mongoose.model("TokenSlot", tokenSlotSchema);

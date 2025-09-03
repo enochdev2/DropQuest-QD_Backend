@@ -7,7 +7,7 @@ import {
   modifyUserPoints,
 } from "../controllers/pointsController.js";
 import { authenticate, authorizeAdmin } from "../middleware/autheticate.js";
-import { buySlot, getUserSlots, initSlot, updateSlot } from "../controllers/tokenSlotController.js";
+import { buySlot, getAllUserSlots, getSlots, getUserSlots, initSlot, updateSlot } from "../controllers/tokenSlotController.js";
 
 const router = express.Router();
 
@@ -27,7 +27,9 @@ router.post("/points/claim", authenticate,  claimPoints);
 // token slots routes
 
 router.post("/init-slots/:userId", initSlot);
-router.get("/slots/:userId", getUserSlots);
+router.get("/slots/:userId", getSlots);
+router.get("/slots", authenticate, getUserSlots);
+router.get("/allslots", authenticate, getAllUserSlots);
 router.put("/updateslot", updateSlot);
 router.put("/buyslot", buySlot);
 
