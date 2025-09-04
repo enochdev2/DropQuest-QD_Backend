@@ -90,7 +90,7 @@ export const getAllUserSlots = async (req, res) => {
 // Update one slot (e.g. BTC → GLM)
 export const updateSlot = async (req, res) => {
   try {
-    const { name, slotId } = req.body;
+    const { name, slotId, token, points } = req.body;
     console.log("🚀 ~ updateSlot ~ slotId:", slotId);
     console.log("🚀 ~ updateSlot ~ name:", name);
 
@@ -101,6 +101,8 @@ export const updateSlot = async (req, res) => {
         {
           $set: {
             tokenName: "BTC",
+            token: 0,
+            points: 0,
             pointRatio: "$???",
             img: "https://raw.githubusercontent.com/enochdev2/token-metadata/main/DQ%20Bitcoin%20Image.png",
           },
@@ -113,6 +115,8 @@ export const updateSlot = async (req, res) => {
         {
           $set: {
             tokenName: "GLM",
+            token: token,
+            points: points,
             pointRatio: "$GLM",
             img: "https://raw.githubusercontent.com/enochdev2/token-metadata/main/Golem%20LOGO.png",
           },

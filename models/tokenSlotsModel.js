@@ -12,6 +12,14 @@ const tokenSlotSchema = new Schema(
       enum: ["GLM", "BTC"],
       required: true,
     },
+    token: {
+      type: Number,
+      required: true,
+    },
+    points: {
+      type: Number,
+      required: true,
+    },
     pointRatio: {
       type: String, // e.g. "$GLM" or "$???"
       default: "$???",
