@@ -156,10 +156,7 @@ export const buySlot = async (req, res) => {
     if (userPoints.totalPoints < amount) {
       return res.status(400).json({ error: "Not enough points to buy slot" });
     }
-    const alreadyPurchased = await tokenModel.findOne({ userId, slotId });
-    if (alreadyPurchased) {
-      return res.status(400).json({ error: "Slot already purchased" });
-    }
+    
 
     const pointExchange = await tokenModel.create({
       userId: userId,
