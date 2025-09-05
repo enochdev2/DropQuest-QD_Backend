@@ -1,6 +1,20 @@
+import { v2 as cloudinary } from "cloudinary";
 import { pointsModel } from "../models/pointsModel.js";
 import { tokenModel } from "../models/tokenSlotModel.js";
 import { tokenSlotModel } from "../models/tokenSlotsModel.js";
+
+cloudinary.config({
+  cloud_name: "dg9ikhw52",
+  api_key: "741795432579663",
+  api_secret: "hajeGPi0lFqi-Vg635bJJ6fTp8c",
+});
+
+const bufferToStream = (buffer) => {
+  const stream = new Readable();
+  stream.push(buffer);
+  stream.push(null);
+  return stream;
+};
 
 // Initialize slots for a user (only once)
 export const initSlot = async (req, res) => {
@@ -90,19 +104,19 @@ export const getAllUserSlots = async (req, res) => {
 // Update one slot (e.g. BTC → GLM)
 export const updateSlot = async (req, res) => {
   try {
-    const { name, slotId, token, points } = req.body;
+    const { name, slotId, token, points, img } = req.body;
     console.log("🚀 ~ updateSlot ~ slotId:", slotId);
     console.log("🚀 ~ updateSlot ~ name:", name);
 
     let updatedSlot;
-    if (name.toString() !== "GLM") {
+    if (name.toString() === "BTC") {
       updatedSlot = await tokenSlotModel.findOneAndUpdate(
         { _id: slotId },
         {
           $set: {
             tokenName: "BTC",
-            token: 0,
-            points: 0,
+            token: 1,
+            points: 1000,
             pointRatio: "$???",
             img: "https://raw.githubusercontent.com/enochdev2/token-metadata/main/DQ%20Bitcoin%20Image.png",
           },
@@ -118,7 +132,7 @@ export const updateSlot = async (req, res) => {
             token: token,
             points: points,
             pointRatio: "$GLM",
-            img: "https://raw.githubusercontent.com/enochdev2/token-metadata/main/Golem%20LOGO.png",
+            img: img,
           },
         },
         { new: true }
