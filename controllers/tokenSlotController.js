@@ -128,7 +128,7 @@ export const updateSlot = async (req, res) => {
         { _id: slotId },
         {
           $set: {
-            tokenName: "GLM",
+            tokenName: name,
             token: token,
             points: points,
             pointRatio: "$GLM",
