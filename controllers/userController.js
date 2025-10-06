@@ -219,7 +219,8 @@ export const getAllUsers = async (req, res) => {
       path: "points",
       model: "Points",
       select: "points totalPoints lastClaimed", // exclude unwanted fields
-    });
+    })
+    .sort({ createdAt: -1 });
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
