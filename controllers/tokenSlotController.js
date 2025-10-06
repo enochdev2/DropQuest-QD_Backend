@@ -109,12 +109,12 @@ export const updateSlot = async (req, res) => {
     console.log("🚀 ~ updateSlot ~ name:", name);
 
     let updatedSlot;
-    if (name.toString() === "BTC") {
+    if (name.toString() === "???") {
       updatedSlot = await tokenSlotModel.findOneAndUpdate(
         { _id: slotId },
         {
           $set: {
-            tokenName: "BTC",
+            tokenName: "???",
             token: 1,
             points: 1000,
             pointRatio: "$???",
@@ -131,7 +131,7 @@ export const updateSlot = async (req, res) => {
             tokenName: name,
             token: token,
             points: points,
-            pointRatio: "$GLM",
+            pointRatio: `$${name.toString()}`,
             img: img,
           },
         },
