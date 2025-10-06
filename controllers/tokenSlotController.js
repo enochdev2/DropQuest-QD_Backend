@@ -76,7 +76,7 @@ export const getUserSlots = async (req, res) => {
     const { userId } = req.params;
     console.log("🚀 ~ getUserSlots ~ userId:", userId);
     let slots;
-    slots = await tokenModel.find({ userId: id }).sort({ slotId: 1 });
+    slots = await tokenModel.find({ userId: id }).sort({ slotId: -1 });
     console.log("🚀 ~ getUserSlots ~ slots:", slots);
 
     res.status(200).json(slots);
