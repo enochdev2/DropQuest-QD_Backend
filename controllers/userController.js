@@ -24,7 +24,7 @@ const generateToken = (user) => {
 
 export const createUserProfile = async (req, res) => {
   try {
-    const { email, password, name, phone, telegramId, referralCode } = req.body;
+    const { email, password, name, phone, telegramId, referralCode,  } = req.body;
     console.log("🚀 ~ createUserProfile ~ referralCode:", referralCode)
 
     if (!email || !password || !phone || !name || !telegramId) {

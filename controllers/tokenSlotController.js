@@ -152,7 +152,9 @@ export const updateSlot = async (req, res) => {
 
 export const buySlot = async (req, res) => {
   try {
-    const { userId, slotId, amount } = req.body;
+    const { userId, slotId, amount, tokenName, imageUrl } = req.body;
+    console.log("🚀 ~ buySlot ~ imageUrl:", imageUrl)
+    console.log("🚀 ~ buySlot ~ tokenName:", tokenName)
     console.log("🚀 ~ buySlot ~ amount:", amount)
     console.log("🚀 ~ buySlot ~ userId, slotId:", userId, slotId);
 
@@ -175,11 +177,11 @@ export const buySlot = async (req, res) => {
     const pointExchange = await tokenModel.create({
       userId: userId,
       slotId: slotId,
-      tokenName: "GLM",
-      pointRatio: "$GLM",
+      tokenName: `${tokenName.toString()}`,
+      pointRatio:  `$${tokenName.toString()}`,
       pointExchanged: amount,
       isConfigured: true,
-      img: "https://raw.githubusercontent.com/enochdev2/token-metadata/main/Golem%20LOGO.png",
+      img: imageUrl,
     });
     console.log("🚀 ~ buySlot ~ pointExchange:", pointExchange);
     pointExchange.save();

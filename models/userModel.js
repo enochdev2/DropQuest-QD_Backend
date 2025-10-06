@@ -23,7 +23,10 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
-
+    img: {
+      type: String,
+      required: true,
+    },
     telegramId: {
       type: String,
       required: true,

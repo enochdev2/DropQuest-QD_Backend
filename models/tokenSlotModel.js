@@ -15,7 +15,10 @@ const tokenSchema = new Schema(
     },
     tokenName: {
       type: String,
-      enum: ["GLM", "BTC"],
+      required: true,
+    },
+    img: {
+      type: String,
       required: true,
     },
     pointRatio: {
