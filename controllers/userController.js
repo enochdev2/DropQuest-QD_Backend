@@ -340,12 +340,17 @@ export const deleteUserProfile = async (req, res) => {
   }
 };
 
+// cloudinary.config({
+//   cloud_name: "dg9ikhw52",
+//   api_key: "741795432579663",
+//   api_secret: "hajeGPi0lFqi-Vg635bJJ6fTp8c",
+// });
 cloudinary.config({
-  cloud_name: "dg9ikhw52",
-  api_key: "741795432579663",
-  api_secret: "hajeGPi0lFqi-Vg635bJJ6fTp8c",
+  cloud_name: "dh7hyvhri",
+  api_key: "775871657756254",
+  api_secret: "Q2FVZ52fWew2hzcOZnXUgFFOj_s",
 });
-
+// Q2FVZ52fWew2hzcOZnXUgFFOj_s
 const bufferToStream = (buffer) => {
   const stream = new Readable();
   stream.push(buffer);
