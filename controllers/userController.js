@@ -5,6 +5,7 @@ import {
   deleteUserByEmail,
   getUserByEmail,
   getUsers,
+  updateUserByEmail,
   userModel,
 } from "../models/userModel.js";
 import { pointsModel } from "../models/pointsModel.js";
@@ -24,21 +25,22 @@ const generateToken = (user) => {
 
 export const createUserProfile = async (req, res) => {
   try {
-    const { email, password, name, phone, telegramId, referralCode,  } = req.body;
-    console.log("🚀 ~ createUserProfile ~ referralCode:", referralCode)
+    const { email, password, name, phone, telegramId, referralCode, image } =
+      req.body;
+    console.log("🚀 ~ createUserProfile ~ referralCode:", referralCode);
 
-    if (!email || !password || !phone || !name || !telegramId) {
+    if (!email || !password || !phone || !name || !telegramId || !image) {
       res.status(400).json({
-        error: "Email, password, phone, name, and telegramId are required",
+        error:
+          "Email, password, phone, name, image and telegramId are required",
       });
       return;
     }
 
-    let referredBy
+    let referredBy;
 
-    if(referralCode){
-
-       referredBy = await userModel.findOne({referralCode: referralCode})
+    if (referralCode) {
+      referredBy = await userModel.findOne({ referralCode: referralCode });
     }
 
     const existingUser = await getUserByEmail(email);
@@ -59,6 +61,7 @@ export const createUserProfile = async (req, res) => {
       referredBy: referredBy?._id || null,
       referredByName: referredBy?.name || null,
       referredByEmail: referredBy?.email || null,
+      img: image,
     });
 
     // create points for this user
@@ -78,7 +81,7 @@ export const createUserProfile = async (req, res) => {
     // Respond with the newly created user profile
     res.status(201).json(userData);
   } catch (error) {
-    // res.status(400).json({ error: error.message });
+    res.status(400).json({ error: error.message });
     console.log("🚀 ~ createUserProfile ~ error.message:", error.message);
   }
 };
@@ -86,18 +89,15 @@ export const createUserProfile = async (req, res) => {
 // Get all users referred by a specific code
 export const getReferralList = async (req, res) => {
   const { id } = req.user;
-  console.log("🚀 ~ getReferralList ~ userId:", id)
-  
+  console.log("🚀 ~ getReferralList ~ userId:", id);
+
   const { referralCode } = req.params;
 
   try {
     const referredUsers = await userModel
-      .find(
-        { referredBy: id },
-         { name: 1, email: 1, createdAt: 1, points: 1 } 
-    )
-    .populate("points", "totalPoints") // Populate the 'points' field with 'totalPoints' from the Points model
-    .sort({ createdAt: -1 });
+      .find({ referredBy: id }, { name: 1, email: 1, createdAt: 1, points: 1 })
+      .populate("points", "totalPoints") // Populate the 'points' field with 'totalPoints' from the Points model
+      .sort({ createdAt: -1 });
 
     res.status(200).json(referredUsers);
   } catch (error) {
@@ -215,12 +215,14 @@ export const logoutUser = (req, res) => {
 // Get all users
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await userModel.find().populate({
-      path: "points",
-      model: "Points",
-      select: "points totalPoints lastClaimed", // exclude unwanted fields
-    })
-    .sort({ createdAt: -1 });
+    const users = await userModel
+      .find()
+      .populate({
+        path: "points",
+        model: "Points",
+        select: "points totalPoints lastClaimed", // exclude unwanted fields
+      })
+      .sort({ createdAt: -1 });
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -277,7 +279,8 @@ export const getUserProfile = async (req, res) => {
     const user = await userModel.findOne({ email }).populate({
       path: "points",
       model: "Points",
-      select: "points totalPoints lastClaimed CurrentDayClaimed PreviusDayOneClaimed previosDayTwoClaimed", // exclude unwanted fields
+      select:
+        "points totalPoints lastClaimed CurrentDayClaimed PreviusDayOneClaimed previosDayTwoClaimed", // exclude unwanted fields
     });
 
     if (!user) {
@@ -298,7 +301,8 @@ export const updateUserProfile = async (req, res) => {
     const { email } = req.params; // Get nickname from request params
     const { admin } = req.user; // Access the admin status from the decoded token
     const nick = req.user.email;
-
+    
+    console.log("🚀 ~ updateUserProfile ~ email:", email)
     // Check if the logged-in user is either the user themselves or an admin
     if (email !== req.user.email && !admin) {
       return res
@@ -314,6 +318,7 @@ export const updateUserProfile = async (req, res) => {
     const { password: _, ...userData } = user.toObject();
     res.status(200).json(userData);
   } catch (error) {
+    console.log("🚀 ~ updateUserProfile ~ error:", error)
     return res.status(400).json({ error: error.message });
   }
 };
