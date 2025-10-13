@@ -104,7 +104,7 @@ export const getAllUserSlots = async (req, res) => {
 // Update one slot (e.g. BTC → GLM)
 export const updateSlot = async (req, res) => {
   try {
-    const { name, slotId, token, points, img } = req.body;
+    const { link, name, slotId, token, points, img } = req.body;
     console.log("🚀 ~ updateSlot ~ slotId:", slotId);
     console.log("🚀 ~ updateSlot ~ name:", name);
 
@@ -114,6 +114,7 @@ export const updateSlot = async (req, res) => {
         { _id: slotId },
         {
           $set: {
+            link: " ",
             tokenName: "???",
             token: 1,
             points: 1000,
@@ -128,6 +129,7 @@ export const updateSlot = async (req, res) => {
         { _id: slotId },
         {
           $set: {
+            link: link,
             tokenName: name,
             token: token,
             points: points,
