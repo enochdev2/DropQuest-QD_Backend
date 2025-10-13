@@ -7,6 +7,10 @@ const tokenSlotSchema = new Schema(
       type: Number,
       required: true,
     },
+    link: {
+      type: String,
+      default: " ",
+    },
     tokenName: {
       type: String,
       enum: ["GLM", "BTC"],
