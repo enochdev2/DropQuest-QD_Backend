@@ -10,9 +10,10 @@ import {
   logoutUser,
   updateUserProfile,
   editUserImage,
-  checkNicknameExists,
+  // checkNicknameExists,
   getReferralList,
   getTotalUsers,
+  checkEmailExists,
 } from "../controllers/userController.js";
 import multer from 'multer';
 
@@ -22,7 +23,7 @@ import { authenticate, authorizeAdmin } from "../middleware/autheticate.js";
 const router = express.Router();
 
 router.post("/users", createUserProfile); // Register new user
-router.get("/check-nickname/:nickname", checkNicknameExists);
+router.get("/check-email/:email", checkEmailExists);
 router.get("/users", authenticate, authorizeAdmin, getAllUsers); // Get all users
 router.get("/totalUsers", authenticate, authorizeAdmin, getTotalUsers); // Get all users
 router.get("/users/:email", authenticate, getUserProfile); // Get user by nickname

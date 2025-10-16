@@ -107,7 +107,7 @@ export const getReferralList = async (req, res) => {
 };
 
 // Check if a nickname exists
-export const checkNicknameExists = async (req, res) => {
+export const checkEmailExists = async (req, res) => {
   try {
     const email = req.params.email;
 
@@ -115,9 +115,12 @@ export const checkNicknameExists = async (req, res) => {
       return res.status(400).json({ error: "email is required" });
     }
 
-    // Convert nickname to lowercase before querying
+    // 2️⃣ Normalize email (trim and lowercase)
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // 3️⃣ Check existence (case-insensitive exact match)
     const existingUser = await userModel.findOne({
-      nickname: { $regex: new RegExp(`^${email}$`, "i") }, // case-insensitive exact match
+      email: { $regex: new RegExp(`^${normalizedEmail}$`, "i") },
     });
 
     res.status(200).json({ exists: !!existingUser });
