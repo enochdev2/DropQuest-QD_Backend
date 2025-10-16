@@ -140,13 +140,19 @@ export const checkTelegramExists = async (req, res) => {
 
     // 1️⃣ Normalize handle: trim, lowercase, remove leading @ if present
     const normalizedHandle = telegramId.trim().toLowerCase().replace(/^@/, "");
+    const normalizedHandles = telegramId.trim().toLowerCase().replace(/^@/, "");
 
     // 2️⃣ Check existence (case-insensitive exact match)
     const existingUser = await userModel.findOne({
       telegramId: { $regex: new RegExp(`^${normalizedHandle}$`, "i") },
     });
+    const existingUse = await userModel.findOne({
+      telegramId: { $regex: new RegExp(`^${normalizedHandles}$`, "i") },
+    });
 
-    res.status(200).json({ exists: !!existingUser });
+    const existing = existingUser ? existingUser : existingUse;
+
+    res.status(200).json({ exists: !!existing });
   } catch (error) {
     console.log("🚀 ~ checkTelegramExists ~ error:", error);
     return res.status(500).json({ error: error.message });
