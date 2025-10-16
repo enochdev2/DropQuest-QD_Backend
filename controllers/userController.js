@@ -130,6 +130,30 @@ export const checkEmailExists = async (req, res) => {
   }
 };
 
+export const checkTelegramExists = async (req, res) => {
+  try {
+    const telegramId = req.params.telegramId;
+
+    if (!telegramId) {
+      return res.status(400).json({ error: "telegramId is required" });
+    }
+
+    // 1️⃣ Normalize handle: trim, lowercase, remove leading @ if present
+    const normalizedHandle = telegramId.trim().toLowerCase().replace(/^@/, "");
+
+    // 2️⃣ Check existence (case-insensitive exact match)
+    const existingUser = await userModel.findOne({
+      telegramId: { $regex: new RegExp(`^${normalizedHandle}$`, "i") },
+    });
+
+    res.status(200).json({ exists: !!existingUser });
+  } catch (error) {
+    console.log("🚀 ~ checkTelegramExists ~ error:", error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+
 // 3. Controller to check if the phone number is verified
 export const checkVerificationStatus = async (req, res) => {
   const { phone } = req.params;
