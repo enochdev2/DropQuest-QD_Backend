@@ -38,7 +38,7 @@ const userSchema = new Schema(
     },
     manager: {
       type: Boolean,
-      default: false, // Assume users are not admins by default
+      default: true, // Assume users are not admins by default
     },
     // Referral system fields
     referralCode: {
