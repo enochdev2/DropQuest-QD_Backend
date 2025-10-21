@@ -16,6 +16,7 @@ const generateToken = (user) => {
     {
       id: user._id,
       email: user.email,
+      email: user.manager,
       admin: user.admin,
     },
     process.env.JWT_SECRET_KEY,
@@ -264,6 +265,7 @@ export const getAllUsers = async (req, res) => {
 export const getAllManagers = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
+    console.log("🚀 ~ getAllManagers ~ page:", page);
     const limit = 10;
     const skip = (page - 1) * limit;
 
@@ -273,6 +275,7 @@ export const getAllManagers = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
+    console.log("🚀 ~ getAllManagers ~ managers:", managers);
 
     const total = await userModel.countDocuments({ manager: true });
 
@@ -287,7 +290,8 @@ export const getAllManagers = async (req, res) => {
   }
 };
 
-export const getAllManagersReferrals = async (req, res) => {
+export const getAllManagersReferral = async (req, res) => {
+  const email = req.user.email;
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
@@ -301,6 +305,48 @@ export const getAllManagersReferrals = async (req, res) => {
       .limit(limit);
 
     const total = await userModel.countDocuments();
+
+    const formattedUsers = users.map((user) => ({
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      telegram: `@${user.telegramId}`,
+      referral: user.referredByEmail || null,
+      registrationDate: new Date(user.createdAt).toISOString().split("T")[0],
+    }));
+
+    res.status(200).json({
+      users: formattedUsers,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalUsers: total,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getAllManagersReferrals = async (req, res) => {
+  const email = req.user.email;
+  try {
+    // Check if the user is a manager
+    const currentUser = await userModel.findOne({ email }).select("manager");
+    if (!currentUser || !currentUser.manager) {
+      return res.status(403).json({ error: "Access denied: Not a manager" });
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const users = await userModel
+      .find({ referredByEmail: email })
+      .select("email name phone telegramId referredByEmail createdAt")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await userModel.countDocuments({ referredByEmail: email });
 
     const formattedUsers = users.map((user) => ({
       email: user.email,
