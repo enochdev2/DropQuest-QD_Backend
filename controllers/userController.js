@@ -159,7 +159,6 @@ export const checkTelegramExists = async (req, res) => {
   }
 };
 
-
 // 3. Controller to check if the phone number is verified
 export const checkVerificationStatus = async (req, res) => {
   const { phone } = req.params;
@@ -262,6 +261,67 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+export const getAllManagers = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const managers = await userModel
+      .find({ manager: true })
+      .select("email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await userModel.countDocuments({ manager: true });
+
+    res.status(200).json({
+      managers,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalManagers: total,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getAllManagersReferrals = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const users = await userModel
+      .find()
+      .select("email name phone telegramId referredByEmail createdAt")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await userModel.countDocuments();
+
+    const formattedUsers = users.map((user) => ({
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      telegram: `@${user.telegramId}`,
+      referral: user.referredByEmail || null,
+      registrationDate: new Date(user.createdAt).toISOString().split("T")[0],
+    }));
+
+    res.status(200).json({
+      users: formattedUsers,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalUsers: total,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const getTotalUsers = async (req, res) => {
   try {
     // Count the number of users in the database
@@ -334,8 +394,8 @@ export const updateUserProfile = async (req, res) => {
     const { email } = req.params; // Get nickname from request params
     const { admin } = req.user; // Access the admin status from the decoded token
     const nick = req.user.email;
-    
-    console.log("🚀 ~ updateUserProfile ~ email:", email)
+
+    console.log("🚀 ~ updateUserProfile ~ email:", email);
     // Check if the logged-in user is either the user themselves or an admin
     if (email !== req.user.email && !admin) {
       return res
@@ -351,7 +411,7 @@ export const updateUserProfile = async (req, res) => {
     const { password: _, ...userData } = user.toObject();
     res.status(200).json(userData);
   } catch (error) {
-    console.log("🚀 ~ updateUserProfile ~ error:", error)
+    console.log("🚀 ~ updateUserProfile ~ error:", error);
     return res.status(400).json({ error: error.message });
   }
 };
