@@ -26,9 +26,9 @@ const generateToken = (user) => {
 
 export const createUserProfile = async (req, res) => {
   try {
-    const { email, password, name, phone, telegramId, referralCode, image } =
+    const { email, password, name, phone, telegramId, referralCode, image, referralEmail } =
       req.body;
-    console.log("🚀 ~ createUserProfile ~ referralCode:", referralCode);
+    console.log("🚀 ~ createUserProfile ~ referralEmail:", referralEmail)
 
     if (!email || !password || !phone || !name || !telegramId || !image) {
       res.status(400).json({
@@ -61,7 +61,7 @@ export const createUserProfile = async (req, res) => {
       telegramId,
       referredBy: referredBy?._id || null,
       referredByName: referredBy?.name || null,
-      referredByEmail: referredBy?.email || null,
+      referredByEmail: referralEmail || referredBy?.email,
       img: image,
     });
 
@@ -272,7 +272,7 @@ export const getAllManagers = async (req, res) => {
     const managers = await userModel
       .find({ manager: true })
       .select("email")
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: 1 })
       .skip(skip)
       .limit(limit);
     console.log("🚀 ~ getAllManagers ~ managers:", managers);
@@ -303,6 +303,7 @@ export const getAllManagersReferral = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
+    console.log("🚀 ~ getAllManagersReferral ~ users:", users)
 
     const total = await userModel.countDocuments();
 
@@ -345,6 +346,7 @@ export const getAllManagersReferrals = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
+    console.log("🚀 ~ getAllManagersReferrals ~ users:", users)
 
     const total = await userModel.countDocuments({ referredByEmail: email });
 
