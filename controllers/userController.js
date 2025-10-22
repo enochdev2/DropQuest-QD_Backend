@@ -327,6 +327,50 @@ export const getAllManagersReferral = async (req, res) => {
   }
 };
 
+export const getManagersReferral = async (req, res) => {
+  const email = req.user.email;
+  const { managerEmail, page: queryPage } = req.query; // CHANGED: Extract managerEmail from query
+  try {
+    const page = parseInt(queryPage) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    // CHANGED: Determine filter - use managerEmail if provided, else current user's email
+    const filter = managerEmail 
+      ? { referredByEmail: managerEmail }
+      : { referredByEmail: email };
+
+    const users = await userModel
+      .find(filter) // CHANGED: Apply the filter
+      .select("email name phone telegramId referredByEmail createdAt")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    console.log("🚀 ~ getAllManagersReferral ~ users:", users);
+
+    const total = await userModel.countDocuments(filter); // CHANGED: Count with filter
+
+    const formattedUsers = users.map((user) => ({
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      telegram: `@${user.telegramId}`,
+      referral: user.referredByEmail || null,
+      registrationDate: new Date(user.createdAt).toISOString().split("T")[0],
+    }));
+
+    res.status(200).json({
+      users: formattedUsers,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalUsers: total,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const getAllManagersReferrals = async (req, res) => {
   const email = req.user.email;
   try {

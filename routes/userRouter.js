@@ -17,6 +17,7 @@ import {
   checkTelegramExists,
   getAllManagers,
   getAllManagersReferrals,
+  getManagersReferral,
 } from "../controllers/userController.js";
 import multer from 'multer';
 
@@ -31,6 +32,7 @@ router.get("/check-telegram/:telegramId", checkTelegramExists);
 router.get("/users", authenticate, authorizeAdmin, getAllUsers); // Get all users
 router.get("/managers", authenticate, getAllManagers); // Get all users
 router.get("/managersref", authenticate, getAllManagersReferrals); // Get all users
+router.get("/managerref", authenticate, getManagersReferral); // Get all users
 router.get("/totalUsers", authenticate, authorizeAdmin, getTotalUsers); // Get all users
 router.get("/users/:email", authenticate, getUserProfile); // Get user by nickname
 router.put("/users/:email", authenticate, authorizeAdmin, updateUserProfile); // Update user profile
