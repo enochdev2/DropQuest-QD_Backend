@@ -69,7 +69,7 @@ export const createUserProfile = async (req, res) => {
     const pointsDoc = await pointsModel.create({
       userId: newUser._id,
       points: 100,
-      totalPoints: 0,
+      totalPoints: 300,
       lastClaimed: new Date(),
     });
 
