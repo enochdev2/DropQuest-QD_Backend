@@ -19,6 +19,8 @@ import {
   getAllManagersReferrals,
   getManagersReferral,
   searchUserByNameAndPhone,
+  searchUserByNameAndPhoneAndEmail,
+  resetPassword,
 } from "../controllers/userController.js";
 import multer from 'multer';
 
@@ -30,6 +32,8 @@ const router = express.Router();
 router.post("/users", createUserProfile); // Register new user
 router.get("/check-email/:email", checkEmailExists);
 router.post("/check-nameandphone", searchUserByNameAndPhone);
+router.post("/check-nameandphoneandemail", searchUserByNameAndPhoneAndEmail);
+router.post("/resetpassword", resetPassword);
 router.get("/check-telegram/:telegramId", checkTelegramExists);
 router.get("/users", authenticate, authorizeAdmin, getAllUsers); // Get all users
 router.get("/managers", authenticate, getAllManagers); // Get all users

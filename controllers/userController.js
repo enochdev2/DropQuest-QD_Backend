@@ -161,6 +161,68 @@ export const searchUserByNameAndPhone = async (req, res) => {
   }
 };
 
+export const searchUserByNameAndPhoneAndEmail = async (req, res) => {
+  try {
+    const { name, phone, email } = req.body;
+    console.log("🚀 ~ searchUserByNameAndPhone ~ phone:", phone)
+
+    if (!name || !phone || !email) {
+      res.status(400).json({
+        error: "Name, phone and email number are required",
+      });
+      return;
+    }
+
+    const existingUser = await userModel.findOne({ name, phone, email });
+
+    if (!existingUser) {
+      res.status(404).json({ error: "No user found with this name and phone number." });
+      return;
+    }
+
+    // Exclude sensitive fields like password
+    const { password: _, ...userData } = existingUser.toObject();
+
+    // Respond with the user data, including email
+    res.status(200).json(userData);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+    console.log("🚀 ~ searchUserByNameAndPhone ~ error.message:", error.message);
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { newPassword, email } = req.body;
+
+    if (!email || !newPassword) {
+      res.status(400).json({
+        error: "Email and new password are required",
+      });
+      return;
+    }
+
+    const existingUser = await userModel.findOne({ email });
+    console.log("🚀 ~ resetPassword ~ existingUser:", existingUser)
+
+    if (!existingUser) {
+      res.status(404).json({ error: "No user found with this email." });
+      return;
+    }
+
+    // Update the password (assuming your userModel schema auto-hashes it, e.g., via pre-save middleware with bcrypt)
+    existingUser.password = newPassword;
+    await existingUser.save();
+    console.log("🚀 ~ resetPassword ~ existingUser:", existingUser?.password)
+
+    // Respond with success message (no sensitive data returned)
+    res.status(200).json({ message: "Password reset successfully." });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+    console.log("🚀 ~ resetPassword ~ error.message:", error.message);
+  }
+};
+
 export const checkTelegramExists = async (req, res) => {
   try {
     const telegramId = req.params.telegramId;
