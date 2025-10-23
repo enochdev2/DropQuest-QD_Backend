@@ -134,6 +134,7 @@ export const checkEmailExists = async (req, res) => {
 export const searchUserByNameAndPhone = async (req, res) => {
   try {
     const { name, phone } = req.body;
+    console.log("🚀 ~ searchUserByNameAndPhone ~ phone:", phone)
 
     if (!name || !phone) {
       res.status(400).json({

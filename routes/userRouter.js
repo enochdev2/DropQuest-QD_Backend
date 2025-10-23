@@ -29,7 +29,7 @@ const router = express.Router();
 
 router.post("/users", createUserProfile); // Register new user
 router.get("/check-email/:email", checkEmailExists);
-router.get("/check-nameandphone", searchUserByNameAndPhone);
+router.post("/check-nameandphone", searchUserByNameAndPhone);
 router.get("/check-telegram/:telegramId", checkTelegramExists);
 router.get("/users", authenticate, authorizeAdmin, getAllUsers); // Get all users
 router.get("/managers", authenticate, getAllManagers); // Get all users
