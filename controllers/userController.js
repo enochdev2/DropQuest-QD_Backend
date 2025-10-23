@@ -131,6 +131,35 @@ export const checkEmailExists = async (req, res) => {
   }
 };
 
+export const searchUserByNameAndPhone = async (req, res) => {
+  try {
+    const { name, phone } = req.body;
+
+    if (!name || !phone) {
+      res.status(400).json({
+        error: "Name and phone number are required",
+      });
+      return;
+    }
+
+    const existingUser = await userModel.findOne({ name, phone });
+
+    if (!existingUser) {
+      res.status(404).json({ error: "No user found with this name and phone number." });
+      return;
+    }
+
+    // Exclude sensitive fields like password
+    const { password: _, ...userData } = existingUser.toObject();
+
+    // Respond with the user data, including email
+    res.status(200).json(userData);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+    console.log("🚀 ~ searchUserByNameAndPhone ~ error.message:", error.message);
+  }
+};
+
 export const checkTelegramExists = async (req, res) => {
   try {
     const telegramId = req.params.telegramId;
