@@ -16,6 +16,10 @@ const pointsSchema = new Schema(
       type: Number,
       default: 0,
     },
+    currentStreak: {
+      type: Number,
+      default: 0,
+    },
     lastClaimed: {
       type: Date,  // Timestamp of the last claim
       required: true,

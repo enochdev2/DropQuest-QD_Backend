@@ -84,7 +84,7 @@ export const modifyUserPoints = async (req, res) => {
       { userId },
       {
         $inc: { totalPoints: points }, // increase numbers
-        $set: { lastClaimed: new Date() },             // set date
+        $set: { lastClaimed: new Date() }, // set date
       },
       { new: true, upsert: true } // create if not exist, return updated
     );
@@ -100,7 +100,70 @@ export const modifyUserPoints = async (req, res) => {
 };
 
 // Function to claim points (only once per day)
-export const claimPoints = async (req, res) => {
+// export const claimPoints = async (req, res) => {
+//   const { userId } = req.body;
+
+//   try {
+//     let user = await userModel.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({ error: "User not found" });
+//     }
+
+//     let referredBy = user.referredBy;
+//     if (referredBy) {
+//       let referrer = await pointsModel.findOne({ userId: referredBy });
+//       if (referrer) {
+//         referrer.totalPoints += 10; // Add 10 points to the referrer
+//         await referrer.save();
+//       }
+//     }
+//     let userPoints = await pointsModel.findOne({ userId });
+
+//     if (!userPoints) {
+//       // If the user doesn't have a record, create one
+//       userPoints = new pointsModel({
+//         userId,
+//         points: 100,
+//         totalPoints: 0,
+//         lastClaimed: new Date(),
+//       });
+//     }
+
+//     if (userPoints.points === 0) {
+//       return res
+//         .status(400)
+//         .json({ error: "You have already claimed points today." });
+//     }
+
+//     // If the user has points left, they can claim it
+//     if (userPoints.points > 0) {
+//       userPoints.totalPoints += userPoints.points; // Add the current points to totalPoints
+//       userPoints.points = 0; // Reset points to 0 after claiming
+
+//       userPoints.lastClaimed = new Date();
+//       userPoints.previosDayTwoClaimed = userPoints.PreviusDayOneClaimed;
+//       userPoints.PreviusDayOneClaimed = userPoints.CurrentDayClaimed;
+//       userPoints.CurrentDayClaimed = true;
+
+//       await userPoints.save();
+//       res.status(200).json({
+//         message: "Points claimed successfully",
+//         points: userPoints.points,
+//         totalPoints: userPoints.totalPoints,
+//       });
+//     } else {
+//       // If points are zero, throw an error because they have already claimed for the day
+//       return res
+//         .status(400)
+//         .json({ error: "No points available to claim today." });
+//     }
+//   } catch (error) {
+//     console.error("Error claiming points:", error);
+//     res.status(500).json({ error: "Failed to claim points" });
+//   }
+// };
+
+export const UserPoints = async (req, res) => {
   const { userId } = req.body;
 
   try {
@@ -163,63 +226,98 @@ export const claimPoints = async (req, res) => {
   }
 };
 
-export const UserPoints = async (req, res) => {
+
+// Helper to check if two dates are the same day (ignores time)
+const isSameDay = (date1, date2) => {
+  return date1.toDateString() === date2.toDateString();
+};
+
+// Function to claim points (only once per day)
+export const claimPoints = async (req, res) => {
   const { userId } = req.body;
 
   try {
-    let user = await userModel.findById(userId);
+    const user = await userModel.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    let referredBy = user.referredBy;
-    if (referredBy) {
-      let referrer = await pointsModel.findOne({ userId: referredBy });
-      if (referrer) {
-        referrer.totalPoints += 10; // Add 10 points to the referrer
-        await referrer.save();
-      }
-    }
+    const today = new Date();
     let userPoints = await pointsModel.findOne({ userId });
 
-    if (!userPoints) {
-      // If the user doesn't have a record, create one
-      userPoints = new pointsModel({
-        userId,
-        points: 100,
-        totalPoints: 0,
-        lastClaimed: new Date(),
-      });
-    }
-
-    if (userPoints.points === 0) {
+    // Check if already claimed today
+    const isAlreadyClaimed =
+      userPoints &&
+      userPoints.lastClaimed &&
+      isSameDay(userPoints.lastClaimed, today);
+    if (isAlreadyClaimed) {
       return res
         .status(400)
         .json({ error: "You have already claimed points today." });
     }
 
-    // If the user has points left, they can claim it
-    if (userPoints.points > 0) {
-      userPoints.totalPoints += userPoints.points; // Add the current points to totalPoints
-      userPoints.points = 0; // Reset points to 0 after claiming
-
-      userPoints.lastClaimed = new Date();
-      userPoints.previosDayTwoClaimed = userPoints.PreviusDayOneClaimed;
-      userPoints.PreviusDayOneClaimed = userPoints.CurrentDayClaimed;
-      userPoints.CurrentDayClaimed = true;
-
-      await userPoints.save();
-      res.status(200).json({
-        message: "Points claimed successfully",
-        points: userPoints.points,
-        totalPoints: userPoints.totalPoints,
+    // Create record if new user
+    if (!userPoints) {
+      userPoints = new pointsModel({
+        userId,
+        totalPoints: 300,
+        currentStreak: 0,
+        lastClaimed: null,
       });
-    } else {
-      // If points are zero, throw an error because they have already claimed for the day
-      return res
-        .status(400)
-        .json({ error: "No points available to claim today." });
     }
+
+    // Calculate streak and points
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isConsecutive =
+      userPoints.lastClaimed && isSameDay(userPoints.lastClaimed, yesterday);
+
+    let newStreak = 1;
+    if (isConsecutive) {
+      if (userPoints.currentStreak === 7) {
+        newStreak = 1; // Cycle back after Day 7
+      } else {
+        newStreak = userPoints.currentStreak + 1;
+      }
+    } // Else: reset to 1 on miss or first claim
+
+    let pointsToClaim;
+    if (newStreak <= 5) {
+      pointsToClaim = 100;
+    } else if (newStreak === 6) {
+      pointsToClaim = 200;
+    } else if (newStreak === 7) {
+      pointsToClaim = 300;
+    } else {
+      // Fallback (shouldn't happen)
+      pointsToClaim = 100;
+      newStreak = 1;
+    }
+
+    // Award points to user
+    userPoints.totalPoints += pointsToClaim;
+    userPoints.currentStreak = newStreak;
+    userPoints.lastClaimed = today;
+
+    await userPoints.save();
+
+    // Referral bonus (10% of claimed points)
+    const referredBy = user.referredBy;
+    if (referredBy) {
+      const referrerPoints = await pointsModel.findOne({ userId: referredBy });
+      if (referrerPoints) {
+        const bonus = Math.floor(pointsToClaim * 0.1);
+        referrerPoints.totalPoints += bonus;
+        await referrerPoints.save();
+      }
+    }
+
+    res.status(200).json({
+      message: "Points claimed successfully",
+      day: newStreak,
+      pointsClaimed: pointsToClaim,
+      totalPoints: userPoints.totalPoints,
+    });
   } catch (error) {
     console.error("Error claiming points:", error);
     res.status(500).json({ error: "Failed to claim points" });

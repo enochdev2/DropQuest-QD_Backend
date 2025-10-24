@@ -24,6 +24,52 @@ const generateToken = (user) => {
   );
 };
 
+// Reusable create function based on your controller logic
+export const createUserProfileBatch = async (userData) => {
+  const { email, password, name, phone, telegramId, referralCode, referralEmail, image } = userData;
+  console.log("🚀 ~ createUserProfileBatch ~ email:", email)
+
+  if (!email || !password || !phone || !name || !telegramId || !image) {
+    throw new Error("Email, password, phone, name, image and telegramId are required");
+  }
+
+
+  const existingUser = await getUserByEmail(email);
+  console.log("🚀 ~ createUserProfileBatch ~ existingUser:", existingUser)
+  if (existingUser) {
+    console.log(`User with email ${email} already exists. Skipping...`);
+    return null;
+  }
+
+  const newUser = new userModel({
+    email,
+    password,
+    name,
+    phone,
+    telegramId,
+    referredBy: referredBy?._id || null,
+    referredByName: referredBy?.name || null,
+    referredByEmail: referralEmail || "",
+    img: image,
+  });
+
+  // Create points for this user
+  const pointsDoc = await pointsModel.create({
+    userId: newUser._id,
+    points: 100,
+    totalPoints: 300,
+    lastClaimed: new Date(),
+  });
+
+  // Link to user
+  newUser.points = pointsDoc._id;
+  await newUser.save();
+
+  const { password: _, ...userObj } = newUser.toObject();
+  console.log(`Created user: ${email}`);
+  return userObj;
+};
+
 export const createUserProfile = async (req, res) => {
   try {
     const { email, password, name, phone, telegramId, referralCode, image, referralEmail } =
