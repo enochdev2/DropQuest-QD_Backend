@@ -586,6 +586,7 @@ export const getTotalUsers = async (req, res) => {
   }
 };
 
+
 // Get single user by username (instead of wallet address)
 export const getUserProfile = async (req, res) => {
   try {
@@ -603,7 +604,7 @@ export const getUserProfile = async (req, res) => {
       path: "points",
       model: "Points",
       select:
-        "points totalPoints lastClaimed CurrentDayClaimed PreviusDayOneClaimed previosDayTwoClaimed", // exclude unwanted fields
+        "points totalPoints currentStreak lastClaimed CurrentDayClaimed PreviusDayOneClaimed previosDayTwoClaimed", // exclude unwanted fields
     });
 
     if (!user) {
