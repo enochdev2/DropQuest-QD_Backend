@@ -28,6 +28,11 @@ const tokenSlotSchema = new Schema(
       type: String, // e.g. "$GLM" or "$???"
       default: "$???",
     },
+     sortType: {
+      type: String,
+      enum: ["default", "price", "popularity"],
+      default: "default",
+    },
     isConfigured: {
       type: Boolean,
       default: false,
