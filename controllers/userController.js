@@ -26,16 +26,26 @@ const generateToken = (user) => {
 
 // Reusable create function based on your controller logic
 export const createUserProfileBatch = async (userData) => {
-  const { email, password, name, phone, telegramId, referralCode, referralEmail, image } = userData;
-  console.log("🚀 ~ createUserProfileBatch ~ email:", email)
+  const {
+    email,
+    password,
+    name,
+    phone,
+    telegramId,
+    referralCode,
+    referralEmail,
+    image,
+  } = userData;
+  console.log("🚀 ~ createUserProfileBatch ~ email:", email);
 
   if (!email || !password || !phone || !name || !telegramId || !image) {
-    throw new Error("Email, password, phone, name, image and telegramId are required");
+    throw new Error(
+      "Email, password, phone, name, image and telegramId are required"
+    );
   }
 
-
   const existingUser = await getUserByEmail(email);
-  console.log("🚀 ~ createUserProfileBatch ~ existingUser:", existingUser)
+  console.log("🚀 ~ createUserProfileBatch ~ existingUser:", existingUser);
   if (existingUser) {
     console.log(`User with email ${email} already exists. Skipping...`);
     return null;
@@ -72,9 +82,17 @@ export const createUserProfileBatch = async (userData) => {
 
 export const createUserProfile = async (req, res) => {
   try {
-    const { email, password, name, phone, telegramId, referralCode, image, referralEmail } =
-      req.body;
-    console.log("🚀 ~ createUserProfile ~ referralEmail:", referralEmail)
+    const {
+      email,
+      password,
+      name,
+      phone,
+      telegramId,
+      referralCode,
+      image,
+      referralEmail,
+    } = req.body;
+    console.log("🚀 ~ createUserProfile ~ referralEmail:", referralEmail);
 
     if (!email || !password || !phone || !name || !telegramId || !image) {
       res.status(400).json({
@@ -116,7 +134,8 @@ export const createUserProfile = async (req, res) => {
       userId: newUser._id,
       points: 100,
       totalPoints: 300,
-      lastClaimed: new Date(),
+      lastClaimed: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+      // lastClaimed: new Date(),
     });
 
     // link to user
@@ -180,7 +199,7 @@ export const checkEmailExists = async (req, res) => {
 export const searchUserByNameAndPhone = async (req, res) => {
   try {
     const { name, phone } = req.body;
-    console.log("🚀 ~ searchUserByNameAndPhone ~ phone:", phone)
+    console.log("🚀 ~ searchUserByNameAndPhone ~ phone:", phone);
 
     if (!name || !phone) {
       res.status(400).json({
@@ -192,7 +211,9 @@ export const searchUserByNameAndPhone = async (req, res) => {
     const existingUser = await userModel.findOne({ name, phone });
 
     if (!existingUser) {
-      res.status(404).json({ error: "No user found with this name and phone number." });
+      res
+        .status(404)
+        .json({ error: "No user found with this name and phone number." });
       return;
     }
 
@@ -203,14 +224,17 @@ export const searchUserByNameAndPhone = async (req, res) => {
     res.status(200).json(userData);
   } catch (error) {
     res.status(400).json({ error: error.message });
-    console.log("🚀 ~ searchUserByNameAndPhone ~ error.message:", error.message);
+    console.log(
+      "🚀 ~ searchUserByNameAndPhone ~ error.message:",
+      error.message
+    );
   }
 };
 
 export const searchUserByNameAndPhoneAndEmail = async (req, res) => {
   try {
     const { name, phone, email } = req.body;
-    console.log("🚀 ~ searchUserByNameAndPhone ~ phone:", phone)
+    console.log("🚀 ~ searchUserByNameAndPhone ~ phone:", phone);
 
     if (!name || !phone || !email) {
       res.status(400).json({
@@ -222,7 +246,9 @@ export const searchUserByNameAndPhoneAndEmail = async (req, res) => {
     const existingUser = await userModel.findOne({ name, phone, email });
 
     if (!existingUser) {
-      res.status(404).json({ error: "No user found with this name and phone number." });
+      res
+        .status(404)
+        .json({ error: "No user found with this name and phone number." });
       return;
     }
 
@@ -233,7 +259,10 @@ export const searchUserByNameAndPhoneAndEmail = async (req, res) => {
     res.status(200).json(userData);
   } catch (error) {
     res.status(400).json({ error: error.message });
-    console.log("🚀 ~ searchUserByNameAndPhone ~ error.message:", error.message);
+    console.log(
+      "🚀 ~ searchUserByNameAndPhone ~ error.message:",
+      error.message
+    );
   }
 };
 
@@ -249,7 +278,7 @@ export const resetPassword = async (req, res) => {
     }
 
     const existingUser = await userModel.findOne({ email });
-    console.log("🚀 ~ resetPassword ~ existingUser:", existingUser)
+    console.log("🚀 ~ resetPassword ~ existingUser:", existingUser);
 
     if (!existingUser) {
       res.status(404).json({ error: "No user found with this email." });
@@ -259,7 +288,7 @@ export const resetPassword = async (req, res) => {
     // Update the password (assuming your userModel schema auto-hashes it, e.g., via pre-save middleware with bcrypt)
     existingUser.password = newPassword;
     await existingUser.save();
-    console.log("🚀 ~ resetPassword ~ existingUser:", existingUser?.password)
+    console.log("🚀 ~ resetPassword ~ existingUser:", existingUser?.password);
 
     // Respond with success message (no sensitive data returned)
     res.status(200).json({ message: "Password reset successfully." });
@@ -441,7 +470,7 @@ export const getAllManagersReferral = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
-    console.log("🚀 ~ getAllManagersReferral ~ users:", users)
+    console.log("🚀 ~ getAllManagersReferral ~ users:", users);
 
     const total = await userModel.countDocuments();
 
@@ -474,7 +503,7 @@ export const getManagersReferral = async (req, res) => {
     const skip = (page - 1) * limit;
 
     // CHANGED: Determine filter - use managerEmail if provided, else current user's email
-    const filter = managerEmail 
+    const filter = managerEmail
       ? { referredByEmail: managerEmail }
       : { referredByEmail: email };
 
@@ -528,7 +557,7 @@ export const getAllManagersReferrals = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
-    console.log("🚀 ~ getAllManagersReferrals ~ users:", users)
+    console.log("🚀 ~ getAllManagersReferrals ~ users:", users);
 
     const total = await userModel.countDocuments({ referredByEmail: email });
 
@@ -585,7 +614,6 @@ export const getTotalUsers = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 // Get single user by username (instead of wallet address)
 export const getUserProfile = async (req, res) => {
