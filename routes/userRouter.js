@@ -44,7 +44,7 @@ router.get("/users/:email", authenticate, getUserProfile); // Get user by nickna
 router.put("/users/:email", authenticate, authorizeAdmin, updateUserProfile); // Update user profile
 router.delete("/users/:email", authorizeAdmin, deleteUserProfile); // Delete user profile
 // PUT /api/users/:userId/image
-router.get("/:referralCode", authenticate, getReferralList);
+router.get("/:referralCode", authenticate, authenticate, getReferralList);
 router.put('/:userId/image', upload.single('file'), editUserImage);
 router.post("/login", loginUser); // Login user
 router.post("/logout", logoutUser); // Logout user
