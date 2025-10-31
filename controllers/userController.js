@@ -677,7 +677,7 @@ export const updateUserProfile = async (req, res) => {
 
 export const deleteUserProfile = async (req, res) => {
   try {
-    const { email } = req.params; // Get nickname from request params
+    const { email } = req.params; 
     const { userId, admin } = req.user; // Get userId and admin from the token
 
     // Check if the logged-in user is either the user themselves or an admin
@@ -687,7 +687,7 @@ export const deleteUserProfile = async (req, res) => {
         .json({ error: "You do not have permission to delete this profile" });
     }
 
-    const user = await deleteUserByEmail(nickname); // Delete user by nickname
+    const user = await deleteUserByEmail(email); // Delete user by email
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

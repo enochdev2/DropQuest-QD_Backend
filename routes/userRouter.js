@@ -42,7 +42,7 @@ router.get("/managerref", authenticate, getManagersReferral); // Get all users
 router.get("/totalUsers", authenticate, authorizeAdmin, getTotalUsers); // Get all users
 router.get("/users/:email", authenticate, getUserProfile); // Get user by nickname
 router.put("/users/:email", authenticate, authorizeAdmin, updateUserProfile); // Update user profile
-router.delete("/users/:nickname", authorizeAdmin, deleteUserProfile); // Delete user profile
+router.delete("/users/:email", authorizeAdmin, deleteUserProfile); // Delete user profile
 // PUT /api/users/:userId/image
 router.get("/:referralCode", authenticate, getReferralList);
 router.put('/:userId/image', upload.single('file'), editUserImage);
