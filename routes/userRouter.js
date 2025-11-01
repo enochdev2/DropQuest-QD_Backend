@@ -30,7 +30,7 @@ import { authenticate, authorizeAdmin, authorizeAdminorManager } from "../middle
 const router = express.Router();
 
 router.post("/users", createUserProfile); // Register new user
-router.post("/userscreated",authenticate, authorizeAdmin, createUserProfile); // Register new user
+router.post("/userscreated",authenticate, authorizeAdminorManager, createUserProfile); // Register new user
 router.get("/check-email/:email", checkEmailExists);
 router.post("/check-nameandphone", searchUserByNameAndPhone);
 router.post("/check-nameandphoneandemail", searchUserByNameAndPhoneAndEmail);
@@ -42,7 +42,7 @@ router.get("/managersref", authenticate, getAllManagersReferrals); // Get all us
 router.get("/managerref", authenticate, getManagersReferral); // Get all users
 router.get("/totalUsers", authenticate, authorizeAdmin, getTotalUsers); // Get all users
 router.get("/users/:email", authenticate, getUserProfile); // Get user by nickname
-router.put("/users/:email", authenticate, authorizeAdmin, updateUserProfile); // Update user profile
+router.put("/users/:email", authenticate, authorizeAdminorManager, updateUserProfile); // Update user profile
 router.delete("/users/:email", authenticate, authorizeAdmin, deleteUserProfile); // Delete user profile
 // PUT /api/users/:userId/image
 router.get("/:referralCode",  authenticate, getReferralList);

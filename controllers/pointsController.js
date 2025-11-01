@@ -228,11 +228,119 @@ export const UserPoints = async (req, res) => {
 
 
 // Helper to check if two dates are the same day (ignores time)
-const isSameDay = (date1, date2) => {
-  return date1.toDateString() === date2.toDateString();
+// const isSameDay = (date1, date2) => {
+//   return date1.toDateString() === date2.toDateString();
+// };
+
+// // Function to claim points (only once per day)
+// export const claimPoints = async (req, res) => {
+//   const { userId } = req.body;
+
+//   try {
+//     const user = await userModel.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({ error: "User not found" });
+//     }
+
+//     const today = new Date();
+//     let userPoints = await pointsModel.findOne({ userId });
+
+//     // Check if already claimed today
+//     const isAlreadyClaimed =
+//       userPoints &&
+//       userPoints.lastClaimed &&
+//       isSameDay(userPoints.lastClaimed, today);
+//     if (isAlreadyClaimed) {
+//       return res
+//         .status(400)
+//         .json({ error: "You have already claimed points today." });
+//     }
+
+//     // Create record if new user
+//     if (!userPoints) {
+//       userPoints = new pointsModel({
+//         userId,
+//         totalPoints: 300,
+//         currentStreak: 0,
+//         lastClaimed: null,
+//       });
+//     }
+
+//     // Calculate streak and points
+//     const yesterday = new Date(today);
+//     yesterday.setDate(yesterday.getDate() - 1);
+//     const isConsecutive =
+//       userPoints.lastClaimed && isSameDay(userPoints.lastClaimed, yesterday);
+
+//     let newStreak = 1;
+//     if (isConsecutive) {
+//       if (userPoints.currentStreak === 7) {
+//         newStreak = 1; // Cycle back after Day 7
+//       } else {
+//         newStreak = userPoints.currentStreak + 1;
+//       }
+//     } // Else: reset to 1 on miss or first claim
+
+//     let pointsToClaim;
+//     if (newStreak <= 5) {
+//       pointsToClaim = 100;
+//     } else if (newStreak === 6) {
+//       pointsToClaim = 200;
+//     } else if (newStreak === 7) {
+//       pointsToClaim = 300;
+//     } else {
+//       // Fallback (shouldn't happen)
+//       pointsToClaim = 100;
+//       newStreak = 1;
+//     }
+
+//     // Award points to user
+//     userPoints.totalPoints += pointsToClaim;
+//     userPoints.currentStreak = newStreak;
+//     userPoints.lastClaimed = today;
+
+//     await userPoints.save();
+
+//     // Referral bonus (10% of claimed points)
+//     const referredBy = user.referredBy;
+//     if (referredBy) {
+//       const referrerPoints = await pointsModel.findOne({ userId: referredBy });
+//       if (referrerPoints) {
+//         const bonus = Math.floor(pointsToClaim * 0.1);
+//         referrerPoints.totalPoints += bonus;
+//         await referrerPoints.save();
+//       }
+//     }
+
+//     res.status(200).json({
+//       message: "Points claimed successfully",
+//       day: newStreak,
+//       pointsClaimed: pointsToClaim,
+//       totalPoints: userPoints.totalPoints,
+//     });
+//   } catch (error) {
+//     console.error("Error claiming points:", error);
+//     res.status(500).json({ error: "Failed to claim points" });
+//   }
+// };
+
+
+// Helper to get YYYY-MM-DD string in KST (Asia/Seoul) for consistent day comparison
+const getKSTDateString = (date) => {
+  if (!(date instanceof Date) || isNaN(date)) return null;
+  return new Intl.DateTimeFormat('en-CA', { 
+    timeZone: 'Asia/Seoul' 
+  }).format(date); // Outputs YYYY-MM-DD
 };
 
-// Function to claim points (only once per day)
+// Updated isSameDay to use KST strings (replaces the old local toDateString)
+const isSameDayKST = (date1, date2) => {
+  const date1KST = getKSTDateString(date1);
+  const date2KST = getKSTDateString(date2);
+  return date1KST === date2KST;
+};
+
+// Function to claim points (only once per day, KST-aware)
 export const claimPoints = async (req, res) => {
   const { userId } = req.body;
 
@@ -242,14 +350,14 @@ export const claimPoints = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const today = new Date();
+    const today = new Date(); // Still use this, but normalize below
     let userPoints = await pointsModel.findOne({ userId });
 
-    // Check if already claimed today
-    const isAlreadyClaimed =
-      userPoints &&
-      userPoints.lastClaimed &&
-      isSameDay(userPoints.lastClaimed, today);
+    // KST-aware check if already claimed today
+    const lastClaimedDate = userPoints?.lastClaimed ? new Date(userPoints.lastClaimed) : null;
+    const isValidLastClaimed = lastClaimedDate instanceof Date && !isNaN(lastClaimedDate);
+    const isAlreadyClaimed = isValidLastClaimed && isSameDayKST(lastClaimedDate, today);
+    
     if (isAlreadyClaimed) {
       return res
         .status(400)
@@ -266,11 +374,10 @@ export const claimPoints = async (req, res) => {
       });
     }
 
-    // Calculate streak and points
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const isConsecutive =
-      userPoints.lastClaimed && isSameDay(userPoints.lastClaimed, yesterday);
+    // KST-aware streak calculation
+    const yesterdayKST = new Date(today);
+    yesterdayKST.setUTCDate(yesterdayKST.getUTCDate() - 1); // Use UTC arithmetic to avoid local bias, then normalize
+    const isConsecutive = isValidLastClaimed && isSameDayKST(lastClaimedDate, yesterdayKST);
 
     let newStreak = 1;
     if (isConsecutive) {
@@ -294,14 +401,14 @@ export const claimPoints = async (req, res) => {
       newStreak = 1;
     }
 
-    // Award points to user
+    // Award points to user (save lastClaimed as-is; comparisons handle TZ)
     userPoints.totalPoints += pointsToClaim;
     userPoints.currentStreak = newStreak;
-    userPoints.lastClaimed = today;
+    userPoints.lastClaimed = today; // Timestamp is UTC under the hood, but we normalize on compare
 
     await userPoints.save();
 
-    // Referral bonus (10% of claimed points)
+    // Referral bonus (10% of claimed points) - unchanged
     const referredBy = user.referredBy;
     if (referredBy) {
       const referrerPoints = await pointsModel.findOne({ userId: referredBy });
