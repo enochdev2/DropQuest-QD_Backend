@@ -31,4 +31,17 @@ export const authorizeAdmin = (req, res, next) => {
 
   return res.status(403).json({ message: "Forbidden: Admins only" });
 };
+export const authorizeAdminorManager = (req, res, next) => {
+  // Make sure authenticate middleware ran before this and set req.user
+  if (!req.user) {
+    return res.status(401).json({ message: "Unauthorized: No user info found" });
+  }
+
+  // Check if user has admin role - adjust field name as per your user model / JWT payload 
+  if (req.user.admin || req.user.manager) {
+    return next();
+  }
+
+  return res.status(403).json({ message: "Forbidden: Admins only" });
+};
 
