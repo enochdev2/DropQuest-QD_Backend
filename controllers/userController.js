@@ -652,15 +652,22 @@ export const updateUserProfile = async (req, res) => {
   try {
     const { email } = req.params; // Get nickname from request params
     const { admin } = req.user; // Access the admin status from the decoded token
+    const { manager } = req.user; // Access the admin status from the decoded token
     const nick = req.user.email;
 
     console.log("🚀 ~ updateUserProfile ~ email:", email);
     // Check if the logged-in user is either the user themselves or an admin
-    if (email !== req.user.email && !admin) {
-      return res
-        .status(403)
-        .json({ error: "You do not have permission to update this profile" });
-    }
+    // if (email !== req.user.email && !admin && !manager) {
+    //   return res
+    //     .status(403)
+    //     .json({ error: "You do not have permission to update this profile" });
+    // }
+
+    if (email !== req.user.email && (!admin && !manager)) {
+  return res
+    .status(403)
+    .json({ error: "You do not have permission to update this profile" });
+}
 
     // Proceed with updating the user profile
     const user = await updateUserByEmail(email, req.body, true);
@@ -677,7 +684,7 @@ export const updateUserProfile = async (req, res) => {
 
 export const deleteUserProfile = async (req, res) => {
   try {
-    const { email } = req.params; 
+    const { email } = req.params;
     const { userId, admin } = req.user; // Get userId and admin from the token
 
     // Check if the logged-in user is either the user themselves or an admin
