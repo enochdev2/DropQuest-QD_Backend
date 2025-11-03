@@ -40,7 +40,7 @@ router.get("/users", authenticate, authorizeAdminorManager, getAllUsers); // Get
 router.get("/managers", authenticate, getAllManagers); // Get all users
 router.get("/managersref", authenticate, getAllManagersReferrals); // Get all users
 router.get("/managerref", authenticate, getManagersReferral); // Get all users
-router.get("/totalUsers", authenticate, authorizeAdmin, getTotalUsers); // Get all users
+router.get("/totalUsers", authenticate, authorizeAdminorManager, getTotalUsers); // Get all users
 router.get("/users/:email", authenticate, getUserProfile); // Get user by nickname
 router.put("/users/:email", authenticate, authorizeAdminorManager, updateUserProfile); // Update user profile
 router.delete("/users/:email", authenticate, authorizeAdminorManager, deleteUserProfile); // Delete user profile
