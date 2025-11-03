@@ -685,7 +685,7 @@ export const updateUserProfile = async (req, res) => {
 export const deleteUserProfile = async (req, res) => {
   try {
     const { email } = req.params;
-    const { userId, admin } = req.user; // Get userId and admin from the token
+    const { userId, admin, manager } = req.user; // Get userId and admin from the token
 
     // Check if the logged-in user is either the user themselves or an admin
     if (email !== req.user.email && !admin && !manager) {
