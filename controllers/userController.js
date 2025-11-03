@@ -663,11 +663,11 @@ export const updateUserProfile = async (req, res) => {
     //     .json({ error: "You do not have permission to update this profile" });
     // }
 
-    if (email !== req.user.email && (!admin && !manager)) {
-  return res
-    .status(403)
-    .json({ error: "You do not have permission to update this profile" });
-}
+    if (email !== req.user.email && !admin && !manager) {
+      return res
+        .status(403)
+        .json({ error: "You do not have permission to update this profile" });
+    }
 
     // Proceed with updating the user profile
     const user = await updateUserByEmail(email, req.body, true);
@@ -688,7 +688,7 @@ export const deleteUserProfile = async (req, res) => {
     const { userId, admin } = req.user; // Get userId and admin from the token
 
     // Check if the logged-in user is either the user themselves or an admin
-    if (email !== req.user.email && !admin) {
+    if (email !== req.user.email && !admin && !manager) {
       return res
         .status(403)
         .json({ error: "You do not have permission to delete this profile" });
