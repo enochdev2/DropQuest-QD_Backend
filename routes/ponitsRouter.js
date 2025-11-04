@@ -6,7 +6,7 @@ import {
   claimPoints,
   modifyUserPoints,
 } from "../controllers/pointsController.js";
-import { authenticate, authorizeAdmin } from "../middleware/autheticate.js";
+import { authenticate, authorizeAdmin, authorizeAdminorManager } from "../middleware/autheticate.js";
 import { buySlot, getAllUserSlots, getSlots, getUserSlots, initSlot, updateSlot } from "../controllers/tokenSlotController.js";
 
 const router = express.Router();
@@ -19,7 +19,7 @@ router.get("/points/search", searchUserPoints);
 
 // Route to grant/remove points for specific users
 router.put("/points/modify", modifyPoints);
-router.put("/points/usermodify", authenticate, authorizeAdmin, modifyUserPoints);
+router.put("/points/usermodify", authenticate, authorizeAdminorManager, modifyUserPoints);
 
 // Route for users to claim points (once per day)
 router.post("/points/claim", authenticate,  claimPoints);
