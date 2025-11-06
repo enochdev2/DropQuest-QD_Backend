@@ -21,6 +21,7 @@ import {
   searchUserByNameAndPhone,
   searchUserByNameAndPhoneAndEmail,
   resetPassword,
+  getReferralListByAdmin,
 } from "../controllers/userController.js";
 import multer from 'multer';
 
@@ -46,6 +47,7 @@ router.put("/users/:email", authenticate, authorizeAdminorManager, updateUserPro
 router.delete("/users/:email", authenticate, authorizeAdminorManager, deleteUserProfile); // Delete user profile
 // PUT /api/users/:userId/image
 router.get("/:referralCode",  authenticate, getReferralList);
+router.get("/referralCode/:id", getReferralListByAdmin);
 router.put('/:userId/image', upload.single('file'), editUserImage);
 router.post("/login", loginUser); // Login user
 router.post("/logout", logoutUser); // Logout user

@@ -172,6 +172,26 @@ export const getReferralList = async (req, res) => {
   }
 };
 
+
+export const getReferralListByAdmin = async (req, res) => {
+  const { id } = req.params;
+  console.log("🚀 ~ getReferralList ~ userId:", id);
+
+  const { referralCode } = req.params;
+
+  try {
+    const referredUsers = await userModel
+      .find({ referredBy: id }, { name: 1, email: 1, createdAt: 1, points: 1 })
+      .populate("points", "totalPoints") // Populate the 'points' field with 'totalPoints' from the Points model
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(referredUsers);
+  } catch (error) {
+    console.error("Error fetching referral list:", error);
+    res.status(500).json({ error: "Failed to fetch referral list" });
+  }
+};
+
 // Check if a nickname exists
 export const checkEmailExists = async (req, res) => {
   try {
