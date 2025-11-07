@@ -172,7 +172,6 @@ export const getReferralList = async (req, res) => {
   }
 };
 
-
 export const getReferralListByAdmin = async (req, res) => {
   const { id } = req.params;
   console.log("🚀 ~ getReferralList ~ userId:", id);
@@ -437,6 +436,7 @@ export const getAllUsers = async (req, res) => {
   try {
     const users = await userModel
       .find()
+      .select("-password -__v")
       .populate({
         path: "points",
         model: "Points",
@@ -448,6 +448,75 @@ export const getAllUsers = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+
+// export const getAllUsers = async (req, res) => {
+//   try {
+//     const users = await userModel
+//       .find()
+//       .select("-password -__v") // Hide sensitive fields
+//       .populate({
+//         path: "points",
+//         model: "Points",
+//         select: "points totalPoints lastClaimed",
+//       })
+//       .sort({ createdAt: -1 });
+
+//     // Step 1: Collect unique valid ObjectId strings from referredBy
+//     const uniqueReferredByIds = new Set();
+//     users.forEach((user) => {
+//       const ref = user.referredBy;
+//       if (ref && mongoose.Types.ObjectId.isValid(ref)) {
+//         uniqueReferredByIds.add(ref);
+//       }
+//     });
+
+//     // Step 2: Batch query all referrers by their _ids (one query)
+//     const referrerMap = {}; // { id: { email: '...' } }
+//     if (uniqueReferredByIds.size > 0) {
+//       const referrers = await userModel.find(
+//         { _id: { $in: Array.from(uniqueReferredByIds) } },
+//         { email: 1 } // Only fetch email for efficiency
+//       );
+//       referrers.forEach((ref) => {
+//         referrerMap[ref._id.toString()] = { email: ref.email };
+//       });
+//     }
+
+//     // Step 3: Transform each user to set referredBy as email
+//     const transformedUsers = users.map((user) => {
+//       const transformed = user.toObject();
+//       const ref = user.referredBy;
+
+//       if (ref) {
+//         if (mongoose.Types.ObjectId.isValid(ref)) {
+//           // Valid ID: Use looked-up email (or fallback to denormalized)
+//           transformed.referredBy =
+//             referrerMap[ref]?.email || user.referredByEmail || ref;
+//         } else if (ref.includes("@")) {
+//           // Already an email: Keep it
+//           transformed.referredBy = ref;
+//         } else {
+//           // Invalid/non-email string: Fallback to denormalized or keep
+//           transformed.referredBy = user.referredByEmail || ref;
+//         }
+//       } else {
+//         transformed.referredBy = null;
+//       }
+
+//       // Optional: Hide raw referredBy if you don't want it in response
+//       // delete transformed.referredByEmail;  // Or keep for frontend use
+//       // delete transformed.referredByName;
+
+//       return transformed;
+//     });
+
+//     res.status(200).json(transformedUsers);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 
 // export const getAllUsers = async (req, res) => {
 //   try {
