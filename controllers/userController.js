@@ -433,16 +433,39 @@ export const logoutUser = (req, res) => {
 };
 
 // Get all users
+// export const getAllUsers = async (req, res) => {
+//   try {
+//     const users = await userModel
+//       .find()
+//       .populate({
+//         path: "points",
+//         model: "Points",
+//         select: "points totalPoints lastClaimed", // exclude unwanted fields
+//       })
+//       .sort({ createdAt: -1 });
+//     res.status(200).json(users);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 export const getAllUsers = async (req, res) => {
   try {
     const users = await userModel
       .find()
+      .select('-password -__v') // Hide password and version field (add more exclusions as needed, e.g., '-phone -telegramId')
       .populate({
         path: "points",
         model: "Points",
-        select: "points totalPoints lastClaimed", // exclude unwanted fields
+        select: "points totalPoints lastClaimed", // Keep existing points population
+      })
+      .populate({
+        path: "referredBy", // Populate referrer with only email (replaces ID with email value)
+        model: "User",
+        select: "email",
       })
       .sort({ createdAt: -1 });
+
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
