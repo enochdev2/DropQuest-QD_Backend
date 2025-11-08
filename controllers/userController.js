@@ -271,12 +271,12 @@ export const searchUserByNameAndPhoneAndEmail = async (req, res) => {
       return;
     }
 
-    if (existingUser?.admin || existingUser?.manager) {
-      res
-        .status(404)
-        .json({ error: "manager or admin account can not be changed." });
-      return;
-    }
+    // if (existingUser?.admin || existingUser?.manager) {
+    //   res
+    //     .status(404)
+    //     .json({ error: "manager or admin account can not be changed." });
+    //   return;
+    // }
 
     // Exclude sensitive fields like password
     const { password: _, ...userData } = existingUser.toObject();
